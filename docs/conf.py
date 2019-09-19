@@ -23,10 +23,11 @@ project = 'LiNGAM'
 copyright = '2019, T.Ikeuchi, G.Haraoka, S.Shimizu'
 author = 'T.Ikeuchi, G.Haraoka, S.Shimizu'
 
-# The short X.Y version
-version = '0.1'
+import lingam
+version = lingam.__version__
+
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = lingam.__version__
 
 
 # -- General configuration ---------------------------------------------------
