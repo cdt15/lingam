@@ -40,7 +40,7 @@ class BootstrapMixin():
         # Bootstrapping
         adjacency_matrices = []
         for _ in range(n_sampling):
-            model = self.fit(resample(X, random_state=self._random_state))
+            model = self.fit(resample(X))
             adjacency_matrices.append(model.adjacency_matrix_)
         return BootstrapResult(adjacency_matrices)
 
