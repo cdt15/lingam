@@ -9,4 +9,4 @@ from .bootstrap import BootstrapResult
 
 __all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult']
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
