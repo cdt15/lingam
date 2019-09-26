@@ -2,6 +2,26 @@ Tutorial
 ========
 In this tutorial, we will show you how to run LiNGAM algorithms and see the results. We will also show you how to run the bootstrap method and check the results.
 
+Requirements
+------------
+
+The following packages must be installed in order to run this tutorial:
+
+* numpy
+* pandas
+* scikit-learn
+* graphviz
+
+Then, import the package:
+
+.. code-block:: python
+
+    import numpy as np
+    import pandas as pd
+    import scikit-learn
+    import graphviz
+
+
 Run LiNGAM algorithms
 ---------------------
 
@@ -17,6 +37,8 @@ Then, if we want to run DirectLiNGAM algorithm, we create a :class:`~lingam.Dire
 
     model = lingam.DirectLiNGAM()
     model.fit(X)
+
+* If you want to use the ICA-LiNGAM algorithm, replace :class:`~lingam.DirectLiNGAM` above with :class:`~lingam.ICALiNGAM`.
 
 Using the :attr:`~lingam.DirectLiNGAM.causal_order_` properties, we can see the causal ordering as a result of the causal discovery.
 
@@ -51,7 +73,7 @@ For example, we can draw a causal graph by using graphviz as follows:
 
 .. image:: image/dag.png
 
-For details, see also https://github.com/cdt15/lingam/example/DirectLiNGAM.ipynb
+For details, see also https://github.com/cdt15/lingam/blob/master/examples/DirectLiNGAM.ipynb
 
 Run Bootstrapping
 -----------------
@@ -136,4 +158,4 @@ For example, we can check the result as follows:
         x4 <--- x5
         x5 <--- x0
 
-For details, see also https://github.com/cdt15/lingam/example/Bootstrap.ipynb
+For details, see also https://github.com/cdt15/lingam/blob/master/examples/Bootstrap.ipynb
