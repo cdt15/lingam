@@ -5,22 +5,12 @@ In this tutorial, we will show you how to run LiNGAM algorithms and see the resu
 Requirements
 ------------
 
-The following packages must be installed in order to run this tutorial:
+The following packages must be installed in order to run this tutorial. And import if necessary:
 
 * numpy
 * pandas
 * scikit-learn
 * graphviz
-
-Then, import the package:
-
-.. code-block:: python
-
-    import numpy as np
-    import pandas as pd
-    import scikit-learn
-    import graphviz
-
 
 Run LiNGAM algorithms
 ---------------------
