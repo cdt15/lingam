@@ -70,7 +70,7 @@ class BootstrapResult(object):
         """
         return self._adjacency_matrices
 
-    def get_causal_direction_counts(self, n_directions=None, min_causal_effect=None):
+    def get_causal_direction_counts(self, n_directions=None, min_causal_effect=None, split_by_causal_effect_sign=False):
         """Get causal direction count as a result of bootstrapping.
 
         Parameters
@@ -80,6 +80,8 @@ class BootstrapResult(object):
         min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction. 
             If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+        split_by_causal_effect_sign : boolean, optional (default=False)
+            If True, then causal directions are split depending on the sign of the causal effect.
 
         Returns
         -------
@@ -108,12 +110,20 @@ class BootstrapResult(object):
                 raise ValueError('min_causal_effect must be an value greater than 0.')
 
         # Count causal directions
-        directions = [
-            np.array(np.where(np.abs(am) > min_causal_effect)).T for am in self._adjacency_matrices]
+        directions = []
+        for am in self._adjacency_matrices:
+            direction = np.array(np.where(np.abs(am) > min_causal_effect))
+            if split_by_causal_effect_sign:
+                signs = np.array([np.sign(am[i][j]) for i, j in direction.T]).astype('int64').T
+                direction = np.vstack([direction, signs])
+            directions.append(direction.T)
         directions = np.concatenate(directions)
 
         if len(directions) == 0:
-            return {'from': [], 'to': [], 'count': []}
+            cdc = {'from': [], 'to': [], 'count': []}
+            if split_by_causal_effect_sign:
+                cdc['sign'] = []
+            return cdc
 
         directions, counts = np.unique(directions, axis=0, return_counts=True)
         sort_order = np.argsort(-counts)
@@ -121,13 +131,17 @@ class BootstrapResult(object):
         counts = counts[sort_order]
         directions = directions[sort_order]
 
-        return {
+        cdc = {
             'from': directions[:, 1].tolist(),
             'to': directions[:, 0].tolist(),
             'count': counts.tolist()
         }
+        if split_by_causal_effect_sign:
+            cdc['sign'] = directions[:, 2].tolist()
 
-    def get_directed_acyclic_graph_counts(self, n_dags=None, min_causal_effect=None):
+        return cdc
+
+    def get_directed_acyclic_graph_counts(self, n_dags=None, min_causal_effect=None, split_by_causal_effect_sign=False):
         """Get DAGs count as a result of bootstrapping.
 
         Parameters
@@ -137,11 +151,13 @@ class BootstrapResult(object):
         min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction. 
             If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+        split_by_causal_effect_sign : boolean, optional (default=False)
+            If True, then causal directions are split depending on the sign of the causal effect.
 
         Returns
         -------
         directed_acyclic_graph_counts : dict
-            List of directed acyclic graphs graphs sorted by count in descending order. 
+            List of directed acyclic graphs sorted by count in descending order. 
             The dictionary has the following format:: 
 
             {'dag': [n_dags], 'count': [n_dags]}.
@@ -164,16 +180,32 @@ class BootstrapResult(object):
                 raise ValueError('min_causal_effect must be an value greater than 0.')
 
         # Count directed acyclic graphs
-        dags = [np.abs(am) > min_causal_effect for am in self._adjacency_matrices]
+        dags = []
+        for am in self._adjacency_matrices:
+            dag = np.abs(am) > min_causal_effect
+            if split_by_causal_effect_sign:
+                direction = np.array(np.where(dag))
+                signs = np.zeros_like(dag).astype('int64')
+                for i, j in direction.T:
+                    signs[i][j] = np.sign(am[i][j]).astype('int64')
+                dag = signs
+            dags.append(dag)
+
         dags, counts = np.unique(dags, axis=0, return_counts=True)
         sort_order = np.argsort(-counts)
         sort_order = sort_order[:n_dags] if n_dags is not None else sort_order
         counts = counts[sort_order]
         dags = dags[sort_order]
 
-        dags = [{
-            'from': np.where(dag)[1].tolist(),
-            'to': np.where(dag)[0].tolist()} for dag in dags]
+        if split_by_causal_effect_sign:
+            dags = [{
+                'from': np.where(dag)[1].tolist(),
+                'to': np.where(dag)[0].tolist(),
+                'sign': [dag[i][j] for i, j in np.array(np.where(dag)).T]} for dag in dags]
+        else:
+            dags = [{
+                'from': np.where(dag)[1].tolist(),
+                'to': np.where(dag)[0].tolist()} for dag in dags]
 
         return {
             'dag': dags,

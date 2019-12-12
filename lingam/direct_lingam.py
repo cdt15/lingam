@@ -20,15 +20,18 @@ class DirectLiNGAM(_BaseLiNGAM):
        Journal of Machine Learning Research 14:111-152, 2013. 
     """
 
-    def __init__(self, random_state=None):
+    def __init__(self, random_state=None, prior_knowledge=None):
         """Construct a DirectLiNGAM model.
 
         Parameters
         ----------
         random_state : int, optional (default=None)
             ``random_state`` is the seed used by the random number generator.
+        prior_knowledge : array-like, shape (n_features, n_features), optional (default=None)
+            Prior knowledge used for causal discovery, where ``n_features`` is the number of features.
         """
         super().__init__(random_state)
+        self._prior_knowledge = prior_knowledge
 
     def fit(self, X):
         """Fit the model to X.
@@ -44,19 +47,29 @@ class DirectLiNGAM(_BaseLiNGAM):
         self : object
             Returns the instance itself.
         """
+        # Check parameters
         X = check_array(X)
+        n_features = X.shape[1]
 
-        U = np.arange(X.shape[1])
+        if self._prior_knowledge is not None:
+            self._Aknw = check_array(self._prior_knowledge)
+            self._Aknw = np.where(self._Aknw < 0, np.nan, self._Aknw)
+            if (n_features, n_features) != self._Aknw.shape:
+                raise ValueError('The shape of prior knowledge must be (n_features, n_features)')
+        else:
+            self._Aknw = None
+
+        # Causal discovery
+        U = np.arange(n_features)
         K = []
         X_ = np.copy(X)
-        for _ in range(X.shape[1]):
-            m = self._search_causal_order(X_)
-            for i in range(X_.shape[1]):
+        for _ in range(n_features):
+            m = self._search_causal_order(X_, U)
+            for i in U:
                 if i != m:
                     X_[:, i] = self._residual(X_[:, i], X_[:, m])
-            K.append(U[m])
-            U = np.delete(U, m)
-            X_ = np.delete(X_, m, 1)
+            K.append(m)
+            U = U[U != m]
 
         self._causal_order = K
         return self._estimate_adjacency_matrix(X)
@@ -74,21 +87,63 @@ class DirectLiNGAM(_BaseLiNGAM):
             k1 * (np.mean(np.log(np.cosh(u))) - gamma)**2 - \
             k2 * (np.mean(u * np.exp((-u**2) / 2)))**2
 
-    def _diff_mutual_information(self, xi, xj):
+    def _diff_mutual_info(self, xi_std, xj_std, ri_j, rj_i):
         """Calculate the difference of the mutual informations."""
-        xi_std = (xi - np.mean(xi)) / np.std(xi)
-        xj_std = (xj - np.mean(xj)) / np.std(xj)
-        ri_j = self._residual(xi_std, xj_std)
-        rj_i = self._residual(xj_std, xi_std)
         return (self._entropy(xj_std) + self._entropy(ri_j / np.std(ri_j))) - \
-            (self._entropy(xi_std) + self._entropy(rj_i / np.std(rj_i)))
+               (self._entropy(xi_std) + self._entropy(rj_i / np.std(rj_i)))
 
-    def _search_causal_order(self, X):
+    def _search_candidate(self, U):
+        """ Search for candidate features """
+        # If no prior knowledge is specified, nothing to do.
+        if self._Aknw is None:
+            return U, []
+
+        # Find exogenous features
+        Uc = []
+        for j in U:
+            index = U[U != j]
+            if self._Aknw[j][index].sum() == 0:
+                Uc.append(j)
+
+        # Find endogenous features, and then find candidate features
+        if len(Uc) == 0:
+            U_end = []
+            for j in U:
+                index = U[U != j]
+                if np.nansum(self._Aknw[j][index]) > 0:
+                    U_end.append(j)
+
+            # Find sink features (original)
+            for i in U:
+                index = U[U != i]
+                if self._Aknw[index, i].sum() == 0:
+                    U_end.append(i)
+            Uc = [i for i in U if i not in set(U_end)]
+
+        # make V^(j)
+        Vj = []
+        for i in U:
+            if i in Uc:
+                continue
+            if self._Aknw[i][Uc].sum() == 0:
+                Vj.append(i)
+        return Uc, Vj
+
+    def _search_causal_order(self, X, U):
         """Search the causal ordering."""
+        Uc, Vj = self._search_candidate(U)
+        if len(Uc) == 1:
+            return Uc[0]
+
         M_list = []
-        for i in range(X.shape[1]):
+        for i in Uc:
             M = 0
-            for j in np.delete(range(X.shape[1]), i):
-                M += np.min([0, self._diff_mutual_information(X[:, i], X[:, j])])**2
+            for j in U:
+                if i != j:
+                    xi_std = (X[:, i] - np.mean(X[:, i])) / np.std(X[:, i])
+                    xj_std = (X[:, j] - np.mean(X[:, j])) / np.std(X[:, j])
+                    ri_j = xi_std if i in Vj and j in Uc else self._residual(xi_std, xj_std)
+                    rj_i = xj_std if j in Vj and i in Uc else self._residual(xj_std, xi_std)
+                    M += np.min([0, self._diff_mutual_info(xi_std, xj_std, ri_j, rj_i)])**2
             M_list.append(-1.0 * M)
-        return np.argmax(M_list)
+        return Uc[np.argmax(M_list)]

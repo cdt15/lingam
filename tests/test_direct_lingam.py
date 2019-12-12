@@ -30,6 +30,7 @@ def test_fit_success():
     am[3, 1] = 0.0
     assert np.sum(am) < 0.1
 
+
 def test_fit_invalid_data():
     # Not array data
     X = 1
@@ -73,6 +74,112 @@ def test_fit_invalid_data():
     X.iloc[100, 0] = np.inf
     try:
         model = DirectLiNGAM()
+        model.fit(X)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+
+def test_prior_knowledge_success():
+    # causal direction: x0 --> x1 --> x3
+    x0 = np.random.uniform(size=1000)
+    x1 = 2.0*x0 + np.random.uniform(size=1000)
+    x2 = np.random.uniform(size=1000)
+    x3 = 4.0*x1 + np.random.uniform(size=1000)
+    X = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
+                     columns=['x0', 'x1', 'x2', 'x3'])
+
+    # prior knowledge: nothing
+    pk = np.array([
+        [0, -1, -1, -1],
+        [-1,  0, -1, -1],
+        [-1, -1,  0, -1],
+        [-1, -1, -1,  0],
+    ])
+
+    model = DirectLiNGAM(prior_knowledge=pk)
+    model.fit(X)
+    co = model.causal_order_
+    assert co.index(0) < co.index(1) < co.index(3)
+
+    # prior knowledge: x1 is exogenous
+    pk = np.array([
+        [0, -1, -1, -1],
+        [0,  0,  0,  0],
+        [-1, -1,  0, -1],
+        [-1, -1, -1,  0],
+    ])
+
+    model = DirectLiNGAM(prior_knowledge=pk)
+    model.fit(X)
+    co = model.causal_order_
+    print(co)
+    assert co.index(1) < co.index(0)
+    assert co.index(1) < co.index(2)
+    assert co.index(1) < co.index(3)
+
+    # prior knowledge: x0 is sink
+    pk = np.array([
+        [0, -1, -1, -1],
+        [0,  0, -1, -1],
+        [0, -1,  0, -1],
+        [0, -1, -1,  0],
+    ])
+
+    model = DirectLiNGAM(prior_knowledge=pk)
+    model.fit(X)
+    co = model.causal_order_
+    print(co)
+    assert co.index(0) > co.index(1)
+    assert co.index(0) > co.index(2)
+    assert co.index(0) > co.index(3)
+
+    # prior knowledge: x2-->x3 has path
+    pk = np.array([
+        [0, -1, -1, -1],
+        [-1,  0, -1, -1],
+        [-1, -1,  0,  0],
+        [-1, -1,  1,  0],
+    ])
+
+    model = DirectLiNGAM(prior_knowledge=pk)
+    model.fit(X)
+    co = model.causal_order_
+    print(co)
+    assert co.index(2) < co.index(3)
+
+    # prior knowledge: x1-->x3 does not have path
+    pk = np.array([
+        [0, -1, -1, -1],
+        [-1,  0, -1, -1],
+        [-1, -1,  0, -1],
+        [-1,  0, -1,  0],
+    ])
+
+    model = DirectLiNGAM(prior_knowledge=pk)
+    model.fit(X)
+
+
+def test_prior_knowledge_invalid():
+    # causal direction: x0 --> x1 --> x3
+    x0 = np.random.uniform(size=1000)
+    x1 = 2.0*x0 + np.random.uniform(size=1000)
+    x2 = np.random.uniform(size=1000)
+    x3 = 4.0*x1 + np.random.uniform(size=1000)
+    X = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
+                     columns=['x0', 'x1', 'x2', 'x3'])
+
+    # prior knowledge: invalid
+    pk = np.array([
+        [0, -1, -1],
+        [-1,  0, -1],
+        [-1, -1,  0],
+        [-1, -1, -1],
+    ])
+
+    try:
+        model = DirectLiNGAM(prior_knowledge=pk)
         model.fit(X)
     except ValueError:
         pass
