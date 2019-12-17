@@ -8,4 +8,6 @@ API Reference
 
     ica_lingam
     direct_lingam
+    multi_group_direct_lingam
     bootstrap
+    utils

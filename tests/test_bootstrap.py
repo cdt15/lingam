@@ -5,6 +5,7 @@ import pandas as pd
 
 from lingam.bootstrap import BootstrapMixin, BootstrapResult
 
+
 class DummyBoostrapMixin(BootstrapMixin):
     def __init__(self, random_state=None):
         self._random_state = random_state
@@ -122,48 +123,119 @@ def test_bootstrap_success():
 
     # No argument
     cdc = result.get_causal_direction_counts()
-    assert cdc['from'] == [2, 1, 0] and cdc['to'] == [3, 2, 1] and cdc['count'] == [4, 3, 2]
+    assert cdc['from'] == [2, 1, 0]
+    assert cdc['to'] == [3, 2, 1]
+    assert cdc['count'] == [4, 3, 2]
 
     # n_directions=2
     cdc = result.get_causal_direction_counts(n_directions=2)
-    assert cdc['from'] == [2, 1] and cdc['to'] == [3, 2] and cdc['count'] == [4, 3]
+    assert cdc['from'] == [2, 1]
+    assert cdc['to'] == [3, 2]
+    assert cdc['count'] == [4, 3]
 
     # min_causal_effect=0.2
     cdc = result.get_causal_direction_counts(min_causal_effect=0.2)
-    assert cdc['from'] == [2, 0, 1] and cdc['to'] == [3, 1, 2] and cdc['count'] == [4, 2, 2]
+    assert cdc['from'] == [2, 0, 1]
+    assert cdc['to'] == [3, 1, 2]
+    assert cdc['count'] == [4, 2, 2]
 
     # min_causal_effect=0.6
     cdc = result.get_causal_direction_counts(min_causal_effect=0.6)
-    assert cdc['from'] == [2, 0, 1] and cdc['to'] == [3, 1, 2] and cdc['count'] == [3, 2, 2]
+    assert cdc['from'] == [2, 0, 1]
+    assert cdc['to'] == [3, 1, 2]
+    assert cdc['count'] == [3, 2, 2]
+
+    # split_by_causal_effect_sign=True
+    cdc = result.get_causal_direction_counts(split_by_causal_effect_sign=True)
+    assert cdc['from'] == [1, 2, 0, 2]
+    assert cdc['to'] == [2, 3, 1, 3]
+    assert cdc['count'] == [3, 3, 2, 1]
+    assert cdc['sign'] == [1, 1, 1, -1]
 
     # No argument
     dagc = result.get_directed_acyclic_graph_counts()
     assert len(dagc['dag']) == 4
-    assert dagc['dag'][0]['from'] == [0, 1, 2] and dagc['dag'][0]['to'] == [1, 2, 3] and dagc['count'][0] == 2
-    assert not dagc['dag'][1]['from'] and not dagc['dag'][1]['to'] and dagc['count'][1] == 1
-    assert dagc['dag'][2]['from'] == [2] and dagc['dag'][2]['to'] == [3] and dagc['count'][2] == 1
-    assert dagc['dag'][3]['from'] == [1, 2] and dagc['dag'][3]['to'] == [2, 3] and dagc['count'][3] == 1
+    assert dagc['dag'][0]['from'] == [0, 1, 2]
+    assert dagc['dag'][0]['to'] == [1, 2, 3]
+    assert dagc['count'][0] == 2
+    assert not dagc['dag'][1]['from']
+    assert not dagc['dag'][1]['to']
+    assert dagc['count'][1] == 1
+    assert dagc['dag'][2]['from'] == [2]
+    assert dagc['dag'][2]['to'] == [3]
+    assert dagc['count'][2] == 1
+    assert dagc['dag'][3]['from'] == [1, 2]
+    assert dagc['dag'][3]['to'] == [2, 3]
+    assert dagc['count'][3] == 1
 
     # n_dags=2
     dagc = result.get_directed_acyclic_graph_counts(n_dags=2)
     assert len(dagc['dag']) == 2
-    assert dagc['dag'][0]['from'] == [0, 1, 2] and dagc['dag'][0]['to'] == [1, 2, 3] and dagc['count'][0] == 2
-    assert not dagc['dag'][1]['from'] and not dagc['dag'][1]['to'] and dagc['count'][1] == 1
+    assert dagc['dag'][0]['from'] == [0, 1, 2]
+    assert dagc['dag'][0]['to'] == [1, 2, 3]
+    assert dagc['count'][0] == 2
+    assert not dagc['dag'][1]['from']
+    assert not dagc['dag'][1]['to']
+    assert dagc['count'][1] == 1
 
     # min_causal_effect=0.2
     dagc = result.get_directed_acyclic_graph_counts(min_causal_effect=0.2)
     assert len(dagc['dag']) == 3
-    assert dagc['dag'][0]['from'] == [2] and dagc['dag'][0]['to'] == [3] and dagc['count'][0] == 2
-    assert dagc['dag'][1]['from'] == [0, 1, 2] and dagc['dag'][1]['to'] == [1, 2, 3] and dagc['count'][1] == 2
-    assert not dagc['dag'][2]['from'] and not dagc['dag'][2]['to'] and dagc['count'][2] == 1
+    assert dagc['dag'][0]['from'] == [2]
+    assert dagc['dag'][0]['to'] == [3]
+    assert dagc['count'][0] == 2
+    assert dagc['dag'][1]['from'] == [0, 1, 2]
+    assert dagc['dag'][1]['to'] == [1, 2, 3]
+    assert dagc['count'][1] == 2
+    assert not dagc['dag'][2]['from']
+    assert not dagc['dag'][2]['to']
+    assert dagc['count'][2] == 1
 
     # min_causal_effect=0.6
     dagc = result.get_directed_acyclic_graph_counts(min_causal_effect=0.6)
     assert len(dagc['dag']) == 4
-    assert dagc['dag'][0]['from'] == [2] and dagc['dag'][0]['to'] == [3] and dagc['count'][0] == 2
-    assert not dagc['dag'][1]['from'] and not dagc['dag'][1]['to'] and dagc['count'][1] == 1
-    assert dagc['dag'][2]['from'] == [0, 1] and dagc['dag'][2]['to'] == [1, 2] and dagc['count'][2] == 1
-    assert dagc['dag'][3]['from'] == [0, 1, 2] and dagc['dag'][3]['to'] == [1, 2, 3] and dagc['count'][3] == 1
+    assert dagc['dag'][0]['from'] == [2]
+    assert dagc['dag'][0]['to'] == [3]
+    assert dagc['count'][0] == 2
+    assert not dagc['dag'][1]['from']
+    assert not dagc['dag'][1]['to']
+    assert dagc['count'][1] == 1
+    assert dagc['dag'][2]['from'] == [0, 1]
+    assert dagc['dag'][2]['to'] == [1, 2]
+    assert dagc['count'][2] == 1
+    assert dagc['dag'][3]['from'] == [0, 1, 2]
+    assert dagc['dag'][3]['to'] == [1, 2, 3]
+    assert dagc['count'][3] == 1
+
+    # split_by_causal_effect_sign=True
+    dagc = result.get_directed_acyclic_graph_counts(split_by_causal_effect_sign=True)
+    assert len(dagc['dag']) == 5
+    print(dagc)
+    assert not dagc['dag'][0]['from']
+    assert not dagc['dag'][0]['to']
+    assert not dagc['dag'][0]['sign']
+    assert dagc['count'][0] == 1
+
+    assert dagc['dag'][1]['from'] == [2]
+    assert dagc['dag'][1]['to'] == [3]
+    assert dagc['dag'][1]['sign'] == [1]
+    assert dagc['count'][1] == 1
+
+    assert dagc['dag'][2]['from'] == [1, 2]
+    assert dagc['dag'][2]['to'] == [2, 3]
+    assert dagc['dag'][2]['sign'] == [1, 1]
+    assert dagc['count'][2] == 1
+
+    assert dagc['dag'][3]['from'] == [0, 1, 2]
+    assert dagc['dag'][3]['to'] == [1, 2, 3]
+    assert dagc['dag'][3]['sign'] == [1, 1, -1]
+    assert dagc['count'][3] == 1
+
+    assert dagc['dag'][4]['from'] == [0, 1, 2]
+    assert dagc['dag'][4]['to'] == [1, 2, 3]
+    assert dagc['dag'][4]['sign'] == [1, 1, 1]
+    assert dagc['count'][4] == 1
+
 
 
 def test_bootstrap_invalid_data():
