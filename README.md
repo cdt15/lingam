@@ -40,3 +40,9 @@ Should you use this package for performing LiNGAM with multiple
 groups, we kindly request you to cite the following three papers:
 * S. Shimizu. Joint estimation of linear non-Gaussian acyclic models. Neurocomputing, 81: 104-107, 2012. [[PDF]](http://dx.doi.org/10.1016/j.neucom.2011.11.005)
 * A. Hyvärinen and S. M. Smith. Pairwise likelihood ratios for estimation of non-Gaussian structural equation models. Journal of Machine Learning Research, 14(Jan): 111--152, 2013. [[PDF]](http://www.jmlr.org/papers/volume14/hyvarinen13a/hyvarinen13a.pdf)
+
+Should you use this package for performing VAR-LiNGAM, we kindly request you to cite the following three papers:
+* A. Hyvärinen, K. Zhang, S. Shimizu, and P. O. Hoyer. Estimation of a structural vector autoregression model using non-Gaussianity. Journal of Machine Learning Research, 11: 1709−1731, 2010. [[PDF]](http://www.jmlr.org/papers/volume11/hyvarinen10a/hyvarinen10a.pdf)
+
+Should you use this package for performing VARMA-LiNGAM, we kindly request you to cite the following three papers:
+* Y. Kawahara, S. Shimizu and T. Washio. Analyzing relationships among ARMA processes based on non-Gaussianity of external influences. Neurocomputing, 74(12-13): 2212-2221, 2011. [[PDF]](http://dx.doi.org/10.1016/j.neucom.2011.02.008)
