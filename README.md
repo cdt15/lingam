@@ -37,7 +37,7 @@ request you to cite the following two papers:
 * A. Hyvärinen and S. M. Smith. Pairwise likelihood ratios for estimation of non-Gaussian structural equation models. Journal of Machine Learning Research, 14(Jan): 111--152, 2013. [[PDF]](http://www.jmlr.org/papers/volume14/hyvarinen13a/hyvarinen13a.pdf)
 
 Should you use this package for performing LiNGAM with multiple
-groups, we kindly request you to cite the following papers:
+groups, we kindly request you to cite the following paper:
 * S. Shimizu. Joint estimation of linear non-Gaussian acyclic models. Neurocomputing, 81: 104-107, 2012. [[PDF]](http://dx.doi.org/10.1016/j.neucom.2011.11.005)
 
 
