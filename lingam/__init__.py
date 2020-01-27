@@ -10,4 +10,4 @@ from .multi_group_direct_lingam import MultiGroupDirectLiNGAM
 
 __all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult', 'MultiGroupDirectLiNGAM']
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
