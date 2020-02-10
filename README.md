@@ -36,7 +36,7 @@ request you to cite the following two papers:
 * S. Shimizu, T. Inazumi, Y. Sogawa, A. Hyvärinen, Y. Kawahara, T. Washio, P. O. Hoyer and K. Bollen. **DirectLiNGAM: A direct method for learning a linear non-Gaussian structural equation model**. *Journal of Machine Learning Research*, 12(Apr): 1225--1248, 2011. [[PDF]](http://www.jmlr.org/papers/volume12/shimizu11a/shimizu11a.pdf)
 * A. Hyvärinen and S. M. Smith. **Pairwise likelihood ratios for estimation of non-Gaussian structural equation models**. *Journal of Machine Learning Research*, 14(Jan): 111--152, 2013. [[PDF]](http://www.jmlr.org/papers/volume14/hyvarinen13a/hyvarinen13a.pdf)
 
-Should you use this package for performing **LiNGAM with multiple
+Should you use this package for performing **LiNGAM for multiple
 groups**, we kindly request you to cite the following paper:
 * S. Shimizu. **Joint estimation of linear non-Gaussian acyclic models**. *Neurocomputing*, 81: 104-107, 2012. [[PDF]](http://dx.doi.org/10.1016/j.neucom.2011.11.005)
 
