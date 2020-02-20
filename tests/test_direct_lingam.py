@@ -30,6 +30,16 @@ def test_fit_success():
     am[3, 1] = 0.0
     assert np.sum(am) < 0.1
 
+    # check estimate_total_effect (_BaseLiNGAM)
+    te = model.estimate_total_effect(X, 0, 3)
+    assert te > 7.5 and te < 8.5
+
+    te = model.estimate_total_effect(X, 1, 3)
+    assert te > 3.5 and te < 4.5
+
+    te = model.estimate_total_effect(X, 0, 2)
+    assert te < 0.1
+
 
 def test_fit_invalid_data():
     # Not array data
