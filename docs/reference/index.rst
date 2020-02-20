@@ -10,4 +10,5 @@ API Reference
     direct_lingam
     multi_group_direct_lingam
     bootstrap
+    causal_effect
     utils
