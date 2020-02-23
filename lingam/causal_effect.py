@@ -42,28 +42,29 @@ class CausalEffect(object):
             self._B = self._causal_model.adjacency_matrix_
             self._causal_order = self._causal_model.causal_order_
             return
-        elif type(self._causal_model) is np.ndarray and type(self._causal_model) is list:
+        elif type(self._causal_model) is np.ndarray or type(self._causal_model) is list:
             B = self._causal_model if type(
                 self._causal_model) is np.ndarray else np.array(self._causal_model)
-            if len(self._causal_model.shape) != 2:
+            if len(B.shape) != 2:
                 raise ValueError("Specified 'causal_model' is not matrix")
-            if self._causal_model.shape[0] != self._causal_model.shape[1]:
+            if B.shape[0] != B.shape[1]:
                 raise ValueError(
                     "Specified 'causal_model' is not square matrix.")
 
             original_index = np.arange(B.shape[0])
             causal_order = []
 
+            B_ = B
             for _ in range(B.shape[0]):
-                zero_rows = np.where(np.sum(np.abs(B), axis=1) < 1e-10)[0]
+                zero_rows = np.where(np.sum(np.abs(B_), axis=1) < 1e-10)[0]
                 if len(zero_rows) == 0:
                     raise ValueError(
                         "Specified 'causal_model' is not lower triangular matrix.")
 
                 causal_order.append(original_index[zero_rows[0]])
                 original_index = np.delete(original_index, zero_rows[0], 0)
-                mask = np.delete(np.arange(len(B)), zero_rows[0], 0)
-                B = B[mask][:, mask]
+                mask = np.delete(np.arange(len(B_)), zero_rows[0], 0)
+                B_ = B_[mask][:, mask]
 
             self._B = B
             self._causal_order = causal_order
@@ -74,13 +75,11 @@ class CausalEffect(object):
 
         return
 
-    def _get_propagated_effects(self, Ex, En, intervention_index, intervention_value):
+    def _get_propagated_effects(self, En, intervention_index, intervention_value):
         """Get propagated effects according to causal order.
 
         Parameters
         ----------
-        Ex : array-like, shpae (n_features)
-            Expectations of each variable before intervention.
         En : array-like, shpae (n_features)
             Expectations of each noise variable.
         intervention_index : int
@@ -143,8 +142,11 @@ class CausalEffect(object):
 
         Returns
         -------
-        intervention_effects : array-like, shape (n_features)
+        intervention_effects : array-like, shape (n_features, 2)
             Estimated values of intervention effect. 
+            The first column of the list is the value of 'E[Y|do(Xi=mean)]-E[Y|do(Xi=mean+std)]',
+            and the second column is the value of 'E[Y|do(Xi=mean)]–E[Y|do(Xi=mean-std)]'.
+            The maximum value in this array is the feature having the greatest intervention effect.
         """
         # Check parameters
         X = check_array(X)
@@ -158,20 +160,18 @@ class CausalEffect(object):
         for i in range(X.shape[1]):
 
             # E[Y|do(Xi=mean)]
-            Ex_do = self._get_propagated_effects(Ex, En, i, Ex[i])
+            Ex_do = self._get_propagated_effects(En, i, Ex[i])
             Ey_do = self._predict(Ex_do[vars_], pred_model)
 
             # E[Y|do(Xi=mean)]-E[Y|do(Xi=mean+std)]
-            Ex_do = self._get_propagated_effects(
-                Ex, En, i, Ex[i]+X[:, i].std())
+            Ex_do = self._get_propagated_effects(En, i, Ex[i]+X[:, i].std())
             Ey1 = Ey_do - self._predict(Ex_do[vars_], pred_model)
 
             # E[Y|do(Xi=mean)]–E[Y|do(Xi=mean-std)]
-            Ex_do = self._get_propagated_effects(
-                Ex, En, i, Ex[i]-X[:, i].std())
+            Ex_do = self._get_propagated_effects(En, i, Ex[i]-X[:, i].std())
             Ey2 = Ey_do - self._predict(Ex_do[vars_], pred_model)
 
-            effects.append(np.max([np.abs(Ey1), np.abs(Ey2)]))
+            effects.append([np.abs(Ey1), np.abs(Ey2)])
 
         return np.array(effects)
 
