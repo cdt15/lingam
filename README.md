@@ -13,6 +13,7 @@ LiNGAM is a new method for estimating structural equation models or linear Bayes
 * scipy
 * scikit-learn
 * graphviz
+* statsmodels
 
 ## Installation
 To install lingam package, use `pip` as follows:
