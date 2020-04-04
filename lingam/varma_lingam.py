@@ -14,7 +14,7 @@ from .bootstrap import BootstrapResult
 
 
 class VARMALiNGAM:
-    """Implementation of VARMALiNGAM Algorithm [1]_
+    """Implementation of VARMA-LiNGAM Algorithm [1]_
 
     References
     ----------
