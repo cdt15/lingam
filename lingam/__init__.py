@@ -8,7 +8,9 @@ from .direct_lingam import DirectLiNGAM
 from .bootstrap import BootstrapResult
 from .multi_group_direct_lingam import MultiGroupDirectLiNGAM
 from .causal_effect import CausalEffect
+from .var_lingam import VARLiNGAM
+from .varma_lingam import VARMALiNGAM
 
-__all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult', 'MultiGroupDirectLiNGAM', 'CausalEffect']
+__all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult', 'MultiGroupDirectLiNGAM', 'CausalEffect', 'VARLiNGAM', 'VARMALiNGAM']
 
 __version__ = '1.2.0'

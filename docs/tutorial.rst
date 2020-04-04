@@ -477,3 +477,124 @@ For details, see also https://github.com/cdt15/lingam/blob/master/examples/Causa
 https://github.com/cdt15/lingam/blob/master/examples/CausalEffect(LassoCV).ipynb
 https://github.com/cdt15/lingam/blob/master/examples/CausalEffect(LogisticRegression).ipynb
 https://github.com/cdt15/lingam/blob/master/examples/CausalEffect(LightGBM).ipynb
+
+Time Series
+-----------
+
+VAR-LiNGAM
+^^^^^^^^^
+
+First, we use lingam package:
+
+.. code-block:: python
+
+    import lingam
+
+Then, if we want to run VARLiNGAM algorithm, we create a :class:`~lingam.VARLiNGAM` object and call the :func:`~lingam.VARLiNGAM.fit` method:
+
+.. code-block:: python
+
+    model = lingam.VARLiNGAM()
+    model.fit(X)
+
+Using the :attr:`~lingam.VARLiNGAM.causal_order_` property, we can see the causal ordering as a result of the causal discovery.
+
+.. code-block:: python
+
+    print(model.causal_order_)
+
+The output of the :attr:`~lingam.VARLiNGAM.causal_order_` property is as follows:
+
+.. code-block:: python
+
+    [1, 0, 3, 2, 4]
+
+Also, using the :attr:`~lingam.VARLiNGAM.adjacency_matrices_` property, we can see the adjacency matrix as a result of the causal discovery.
+
+.. code-block:: python
+
+    print(model.adjacency_matrices_)
+
+The output of the :attr:`~lingam.VARLiNGAM.adjacency_matrices_` property is as follows:
+
+.. code-block:: python
+
+ [[ 0.   , -0.189,  0.   ,  0.   ,  0.   ],
+  [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+  [-0.286,  0.164,  0.   ,  0.   , -0.126],
+  [ 0.168, -0.13 , -0.204,  0.   , -0.074],
+  [ 0.166, -0.031,  0.   ,  0.   ,  0.   ]],
+
+ [[-0.37 , -0.027,  0.066,  0.282,  0.044],
+  [-0.083, -0.349, -0.168, -0.327,  0.43 ],
+  [ 0.115,  0.013,  0.445,  0.083,  0.42 ],
+  [-0.309, -0.084, -0.18 , -0.003, -0.088],
+  [ 0.002, -0.002, -0.025,  0.035,  0.003]]
+
+For example, we can draw a causal graph by using graphviz as follows:
+
+.. image:: image/dag_var.png
+
+For details, see also https://github.com/cdt15/lingam/blob/master/examples/VARLiNGAM.ipynb
+
+VARMA-LiNGAM
+^^^^^^^^^^^
+
+First, we use lingam package:
+
+.. code-block:: python
+
+    import lingam
+
+Then, if we want to run VARMALiNGAM algorithm, we create a :class:`~lingam.VARMALiNGAM` object and call the :func:`~lingam.VARMALiNGAM.fit` method:
+
+.. code-block:: python
+
+    model = lingam.VARMALiNGAM()
+    model.fit(X)
+
+Using the :attr:`~lingam.VARMALiNGAM.causal_order_` property, we can see the causal ordering as a result of the causal discovery.
+
+.. code-block:: python
+
+    print(model.causal_order_)
+
+The output of the :attr:`~lingam.VARMALiNGAM.causal_order_` property is as follows:
+
+.. code-block:: python
+
+    [2, 0, 1, 3, 4]
+
+Also, using the :attr:`~lingam.VARMALiNGAM.adjacency_matrices_` property, we can see the adjacency matrix as a result of the causal discovery.
+
+.. code-block:: python
+
+    print(model.adjacency_matrices_)
+
+The output of the :attr:`~lingam.VARMALiNGAM.adjacency_matrices_` property is as follows:
+
+.. code-block:: python
+
+([[[ 0.   ,  0.13 , -0.152,  0.   ,  0.   ],
+   [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+   [ 0.   , -0.253,  0.   ,  0.   ,  0.   ],
+   [-0.355, -0.393, -0.608,  0.   ,  0.   ],
+   [-0.112,  0.168, -0.078,  0.248,  0.   ]],
+  [[-0.08 , -0.33 , -0.441, -0.003,  0.542],
+   [-0.335,  0.192,  0.185,  0.253,  0.218],
+   [-0.334,  0.239,  0.036,  0.198,  0.317],
+   [-0.128,  0.568, -0.116,  0.347, -0.136],
+   [-0.506, -0.114, -0.334,  0.04 ,  0.445]]],
+
+ [[[ 0.223, -0.091, -0.121, -0.091, -0.005],
+   [ 0.252,  0.194, -0.066, -0.058,  0.491],
+   [-0.043, -0.575, -0.002, -0.316, -0.122],
+   [ 0.017, -0.047,  0.19 , -0.016, -0.004],
+   [ 0.264,  0.265,  0.346,  0.185, -0.357]]])
+
+For example, we can draw a causal graph by using graphviz as follows:
+
+.. image:: image/dag_varma.png
+
+For details, see also https://github.com/cdt15/lingam/blob/master/examples/VARMALiNGAM.ipynb
+

@@ -129,7 +129,7 @@ def remove_effect(X, remove_features):
 def make_dot(adjacency_matrix, labels=None, lower_limit=0.01,
              prediction_feature_indices=None, prediction_target_label='Y(pred)',
              prediction_line_color='red',
-             prediction_coefs=None, prediction_feature_importance=None):
+             prediction_coefs=None, prediction_feature_importance=None, ignore_shape=False):
     """Directed graph source code in the DOT language with specified adjacency matrix.
 
     Parameters
@@ -151,6 +151,8 @@ def make_dot(adjacency_matrix, labels=None, lower_limit=0.01,
         Coefficients to use for prediction's graph.
     prediction_feature_importance : array-like, optional (default=None)
         Feature importance to use for prediction's graph.
+    ignore_shape : boolean
+        Ignore checking the shape of adjaceny_matrix or not.
 
     Returns
     -------
@@ -159,10 +161,10 @@ def make_dot(adjacency_matrix, labels=None, lower_limit=0.01,
     """
     # Check parameters
     B = check_array(adjacency_matrix)
-    if B.shape[0] != B.shape[1]:
+    if not ignore_shape and B.shape[0] != B.shape[1]:
         raise ValueError("'adjacency_matrix' is not square matrix.")
     if labels is not None:
-        if B.shape[0] != len(labels):
+        if B.shape[1] != len(labels):
             raise ValueError(
                 "Length of 'labels' does not match length of 'adjacency_matrix'")
     if prediction_feature_indices is not None:
