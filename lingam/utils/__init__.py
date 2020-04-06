@@ -5,9 +5,10 @@ The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 import numpy as np
 from sklearn import linear_model
 from sklearn.utils import check_array
+import graphviz
 
 __all__ = ['print_causal_directions', 'print_dagc',
-           'make_prior_knowledge', 'remove_effect']
+           'make_prior_knowledge', 'remove_effect', 'make_dot']
 
 
 def print_causal_directions(cdc, n_sampling, labels=None):
@@ -123,3 +124,100 @@ def remove_effect(X, remove_features):
         reg.fit(X[:, remove_features], X[:, feature])
         X[:, feature] = X[:, feature] - reg.predict(X[:, remove_features])
     return X
+
+
+def make_dot(adjacency_matrix, labels=None, lower_limit=0.01,
+             prediction_feature_indices=None, prediction_target_label='Y(pred)',
+             prediction_line_color='red',
+             prediction_coefs=None, prediction_feature_importance=None, ignore_shape=False):
+    """Directed graph source code in the DOT language with specified adjacency matrix.
+
+    Parameters
+    ----------
+    adjacency_matrix : array-like with shape (n_features, n_features)
+        Adjacency matrix to make graph, where ``n_features`` is the number of features.
+    labels : array-like, optional (default=None)
+        Label to use for graph features.
+    lower_limit : float, optional (default=0.01)
+        Threshold for drawing direction.
+        If float, then directions with absolute values of coefficients less than ``lower_limit`` are excluded.
+    prediction_feature_indices : array-like, optional (default=None)
+        Indices to use as prediction features.
+    prediction_target_label : string, optional (default='Y(pred)'))
+        Label to use for target variable of prediction.
+    prediction_line_color : string, optional (default='red')
+        Line color to use for prediction's graph.
+    prediction_coefs : array-like, optional (default=None)
+        Coefficients to use for prediction's graph.
+    prediction_feature_importance : array-like, optional (default=None)
+        Feature importance to use for prediction's graph.
+    ignore_shape : boolean
+        Ignore checking the shape of adjaceny_matrix or not.
+
+    Returns
+    -------
+    graph : graphviz.Digraph
+        Directed graph source code in the DOT language.
+    """
+    # Check parameters
+    B = check_array(adjacency_matrix)
+    if not ignore_shape and B.shape[0] != B.shape[1]:
+        raise ValueError("'adjacency_matrix' is not square matrix.")
+    if labels is not None:
+        if B.shape[1] != len(labels):
+            raise ValueError(
+                "Length of 'labels' does not match length of 'adjacency_matrix'")
+    if prediction_feature_indices is not None:
+        if prediction_coefs is not None and (len(prediction_feature_indices) != len(prediction_coefs)):
+            raise ValueError(
+                "Length of 'prediction_coefs' does not match length of 'prediction_feature_indices'")
+        if prediction_feature_importance is not None and (len(prediction_feature_indices) != len(prediction_feature_importance)):
+            raise ValueError(
+                "Length of 'prediction_feature_importance' does not match length of 'prediction_feature_indices'")
+
+    d = graphviz.Digraph(engine='dot')
+
+    # nodes
+    names = labels if labels else [f'x{i}' for i in range(len(B))]
+    for name in names:
+        d.node(name)
+
+    # edges
+    idx = np.abs(B) > lower_limit
+    dirs = np.where(idx)
+    for to, from_, coef in zip(dirs[0], dirs[1], B[idx]):
+        d.edge(names[from_], names[to], label=f'{coef:.2f}')
+
+    # integrate of prediction model
+    if prediction_feature_indices is not None:
+        d.node(prediction_target_label,
+               color=prediction_line_color,
+               fontcolor=prediction_line_color)
+
+        if prediction_coefs is not None:
+            for from_, coef in zip(prediction_feature_indices, prediction_coefs):
+                if np.abs(coef) > lower_limit:
+                    d.edge(names[from_],
+                           prediction_target_label,
+                           label=f'{coef:.2f}',
+                           color=prediction_line_color,
+                           fontcolor=prediction_line_color,
+                           style='dashed')
+
+        elif prediction_feature_importance is not None:
+            for from_, imp in zip(prediction_feature_indices, prediction_feature_importance):
+                d.edge(names[from_],
+                       prediction_target_label,
+                       label=f'({imp})',
+                       color=prediction_line_color,
+                       fontcolor=prediction_line_color,
+                       style='dashed')
+
+        else:
+            for from_ in prediction_feature_indices:
+                d.edge(names[from_],
+                       prediction_target_label,
+                       color=prediction_line_color,
+                       style='dashed')
+
+    return d

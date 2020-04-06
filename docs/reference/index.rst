@@ -9,5 +9,8 @@ API Reference
     ica_lingam
     direct_lingam
     multi_group_direct_lingam
+    var_lingam
+    varma_lingam
     bootstrap
+    causal_effect
     utils
