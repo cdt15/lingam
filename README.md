@@ -43,7 +43,7 @@ groups**, we kindly request you to cite the following paper:
 * S. Shimizu. **Joint estimation of linear non-Gaussian acyclic models**. *Neurocomputing*, 81: 104-107, 2012. [[PDF]](http://dx.doi.org/10.1016/j.neucom.2011.11.005)
 
 Should you use this package for performing **VAR-LiNGAM**, we kindly request you to cite the following paper:
-* A. Hyvärinen, K. Zhang, S. Shimizu, and P. O. Hoyer. **Estimation of a structural vector autoregression model using non-Gaussianity**. *Journal of Machine Learning Research*, 11: 1709−1731, 2010. [[PDF]](http://www.jmlr.org/papers/volume11/hyvarinen10a/hyvarinen10a.pdf)
+* A. Hyvärinen, K. Zhang, S. Shimizu, and P. O. Hoyer. **Estimation of a structural vector autoregression model using non-Gaussianity**. *Journal of Machine Learning Research*, 11: 1709-1731, 2010. [[PDF]](http://www.jmlr.org/papers/volume11/hyvarinen10a/hyvarinen10a.pdf)
 
 Should you use this package for performing **VARMA-LiNGAM**, we kindly request you to cite the following paper:
 * Y. Kawahara, S. Shimizu and T. Washio. **Analyzing relationships among ARMA processes based on non-Gaussianity of external influences**. *Neurocomputing*, 74(12-13): 2212-2221, 2011. [[PDF]](http://dx.doi.org/10.1016/j.neucom.2011.02.008)
