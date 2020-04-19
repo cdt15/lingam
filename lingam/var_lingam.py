@@ -122,6 +122,9 @@ class VARLiNGAM:
         n_features = X.shape[1]
         lags = self._lags
 
+        criterion = self._criterion
+        self._criterion = None
+
         self.fit(X)
 
         residuals = self._residuals
@@ -150,6 +153,8 @@ class VARLiNGAM:
         for matrix in adjacency_matrices:
             m = np.concatenate([*matrix], axis=1)
             cated_adj_matrix.append(m)
+
+        self._criterion = criterion
 
         return BootstrapResult(cated_adj_matrix)
 

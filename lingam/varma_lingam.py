@@ -138,6 +138,9 @@ class VARMALiNGAM:
         n_features = X.shape[1]
         (p, q) = self._order
 
+        criterion = self._criterion
+        self._criterion = None
+
         self.fit(X)
 
         residuals = self._residuals
@@ -173,6 +176,8 @@ class VARMALiNGAM:
 
             m = np.concatenate([*psi], axis=1)
             cated_adj_matrix.append(m)
+
+        self._criterion = criterion
 
         return BootstrapResult(cated_adj_matrix)
 
