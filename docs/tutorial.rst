@@ -273,6 +273,27 @@ By setting the value of `split_by_causal_effect_sign` argument to True, causal d
         x5 <--- x0 (b>0)
         x5 <--- x0 (b<0)
 
+Probability
+^^^^^^^^^^^
+
+Also, using the :func:`~lingam.BootstrapResult.get_probabilities` method, we can get the probability of bootstrapping.
+
+.. code-block:: python
+
+    prob = result.get_probabilities(min_causal_effect=0.01)
+    print(prob)
+
+For example, we can check the result as follows:
+
+.. code-block:: python
+
+    [[0.   0.   0.15 1.   0.   0.  ]
+     [1.   0.   1.   0.04 0.   0.  ]
+     [0.   0.   0.   1.   0.   0.  ]
+     [0.   0.   0.   0.   0.   0.  ]
+     [1.   0.   1.   0.   0.   0.04]
+     [1.   0.   0.   0.   0.02 0.  ]]
+
 For details, see also https://github.com/cdt15/lingam/blob/master/examples/Bootstrap.ipynb
 
 

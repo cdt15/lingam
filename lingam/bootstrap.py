@@ -211,3 +211,36 @@ class BootstrapResult(object):
             'dag': dags,
             'count': counts.tolist()
         }
+
+    def get_probabilities(self, min_causal_effect=None):
+        """Get bootstrap probability.
+
+        Parameters
+        ----------
+        min_causal_effect : float, optional (default=None)
+            Threshold for detecting causal direction. 
+            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+
+        Returns
+        -------
+        probabilities : array-like
+            List of bootstrap probability matrix. 
+        """
+        # check parameters
+        if min_causal_effect is None:
+            min_causal_effect = 0.0
+        else:
+            if not 0.0 < min_causal_effect:
+                raise ValueError('min_causal_effect must be an value greater than 0.')
+
+        shape = self._adjacency_matrices[0].shape
+        bp = np.zeros(shape)
+        for B in self._adjacency_matrices:
+            bp += np.where(np.abs(B) > min_causal_effect, 1, 0)
+        bp = bp/len(self._adjacency_matrices)
+
+        if int(shape[1]/shape[0]) == 1:
+            return bp
+        else:
+            return np.hsplit(bp, int(shape[1]/shape[0]))
+
