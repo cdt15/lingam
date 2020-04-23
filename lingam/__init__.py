@@ -13,4 +13,4 @@ from .varma_lingam import VARMALiNGAM
 
 __all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult', 'MultiGroupDirectLiNGAM', 'CausalEffect', 'VARLiNGAM', 'VARMALiNGAM']
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
