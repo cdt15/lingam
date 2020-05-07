@@ -328,6 +328,12 @@ First, we create a prior knowledge matrix:
      [-1  0  1 -1  0 -1]
      [-1  0 -1 -1 -1  0]]
 
+The values of the prior knowledge matrix elements are represented as follows:
+
+* ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
+* ``1`` : :math:`x_i` has a directed path to :math:`x_j`
+* ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
+
 Then, if we use a prior knowledge, we set prior knowledge matrix to :class:`~lingam.DirectLiNGAM` object:
 
 .. code-block:: python

@@ -29,6 +29,12 @@ class DirectLiNGAM(_BaseLiNGAM):
             ``random_state`` is the seed used by the random number generator.
         prior_knowledge : array-like, shape (n_features, n_features), optional (default=None)
             Prior knowledge used for causal discovery, where ``n_features`` is the number of features.
+
+            The elements of prior knowledge matrix are defined as follows [1]_:
+
+            * ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
+            * ``1`` : :math:`x_i` has a directed path to :math:`x_j`
+            * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
         """
         super().__init__(random_state)
         self._prior_knowledge = prior_knowledge
