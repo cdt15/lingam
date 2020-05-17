@@ -84,7 +84,7 @@ Then, we call :func:`~lingam.DirectLiNGAM.bootstrap` method instead of :func:`~l
 Causal Directions
 ^^^^^^^^^^^^^^^^^
 
-Since :class:`~lingam.BootstrapResult` object is returned, we can get the ranking of the causal directions extracted by :func:`~lingam.BootstrapResult.get_causal_direction_counts` method. 
+Since :class:`~lingam.BootstrapResult` object is returned, we can get the ranking of the causal directions extracted by :func:`~lingam.BootstrapResult.get_causal_direction_counts` method.
 
 .. code-block:: python
 
@@ -305,7 +305,7 @@ we use lingam package and :func:`~lingam.utils.make_prior_knowledge`:
 .. code-block:: python
 
     import lingam
-    form lingam.utils import make_prior_knowledge
+    from lingam.utils import make_prior_knowledge
 
 First, we create a prior knowledge matrix:
 
@@ -400,7 +400,7 @@ Using the :attr:`~lingam.MultiGroupDirectLiNGAM.causal_order_` property, we can 
 
     print(model.causal_order_)
 
-Also, using the :attr:`~lingam.MultiGroupDirectLiNGAM.adjacency_matrices_` property, we can see the adjacency matrix as a result of the causal discovery. 
+Also, using the :attr:`~lingam.MultiGroupDirectLiNGAM.adjacency_matrices_` property, we can see the adjacency matrix as a result of the causal discovery.
 Since :attr:`~lingam.MultiGroupDirectLiNGAM.adjacency_matrices_` property returns a list, we can access the first matrix by indexing as follows:
 
 .. code-block:: python
@@ -607,7 +607,7 @@ The output of the :attr:`~lingam.VARMALiNGAM.adjacency_matrices_` property is as
        [-0.392,  0.   ,  0.182,  0.   ,  0.   ],
        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
        [ 0.523, -0.149,  0.   ,  0.   ,  0.   ],
-       [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ]], 
+       [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ]],
       [[-0.145, -0.288, -0.418,  0.041,  0.592],
        [-0.324,  0.027,  0.024,  0.231,  0.379],
        [-0.249,  0.191, -0.01 ,  0.136,  0.261],
@@ -625,4 +625,3 @@ For example, we can draw a causal graph by using graphviz as follows:
 .. image:: image/dag_varma.png
 
 For details, see also https://github.com/cdt15/lingam/blob/master/examples/VARMALiNGAM.ipynb
-
