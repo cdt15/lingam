@@ -37,7 +37,7 @@ class DirectLiNGAM(_BaseLiNGAM):
             * ``1`` : :math:`x_i` has a directed path to :math:`x_j`
             * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
         measure : {'pwling', 'kernel'}, default='pwling'
-            Measure to evaluate independence: 'pwling' [2]_, 'kernel' [1]_.
+            Measure to evaluate independence: 'pwling' [2]_ or 'kernel' [1]_.
         """
         super().__init__(random_state)
         self._prior_knowledge = prior_knowledge
@@ -159,12 +159,9 @@ class DirectLiNGAM(_BaseLiNGAM):
                 if i != j:
                     xi_std = (X[:, i] - np.mean(X[:, i])) / np.std(X[:, i])
                     xj_std = (X[:, j] - np.mean(X[:, j])) / np.std(X[:, j])
-                    ri_j = xi_std if i in Vj and j in Uc else self._residual(
-                        xi_std, xj_std)
-                    rj_i = xj_std if j in Vj and i in Uc else self._residual(
-                        xj_std, xi_std)
-                    M += np.min([0, self._diff_mutual_info(xi_std,
-                                                           xj_std, ri_j, rj_i)])**2
+                    ri_j = xi_std if i in Vj and j in Uc else self._residual(xi_std, xj_std)
+                    rj_i = xj_std if j in Vj and i in Uc else self._residual(xj_std, xi_std)
+                    M += np.min([0, self._diff_mutual_info(xi_std, xj_std, ri_j, rj_i)])**2
             M_list.append(-1.0 * M)
         return Uc[np.argmax(M_list)]
 
