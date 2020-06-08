@@ -19,7 +19,7 @@ class LongitudinalLiNGAM():
     .. [1] K. Kadowaki, S. Shimizu, and T. Washio. Estimation of causal structures in longitudinal data using non-Gaussianity. In Proc. 23rd IEEE International Workshop on Machine Learning for Signal Processing (MLSP2013), pp. 1--6, Southampton, United Kingdom, 2013.
     """
 
-    def __init__(self, random_state=None, n_lags=1):
+    def __init__(self, random_state=None, n_lags=1, measure='pwling'):
         """Construct a model.
 
         Parameters
@@ -28,9 +28,12 @@ class LongitudinalLiNGAM():
             ``random_state`` is the seed used by the random number generator.
         n_lags : int, optional (default=1)
             Number of lags.
+        measure : {'pwling', 'kernel'}, default='pwling'
+            Measure to evaluate independence : 'pwling' or 'kernel'.
         """
         self._random_state = random_state
         self._n_lags = n_lags
+        self._measure = measure
         self._causal_orders = None
         self._adjacency_matrices = None
 
@@ -41,7 +44,7 @@ class LongitudinalLiNGAM():
         ----------
         X_list : list, shape [X, ...]
             Longitudinal multiple datasets for training, where ``X`` is an dataset.
-            The shape of ''X'' is (n_samples, n_features), 
+            The shape of ``X`` is (n_samples, n_features), 
             where ``n_samples`` is the number of samples and ``n_features`` is the number of features.
 
         Returns
@@ -163,9 +166,9 @@ class LongitudinalLiNGAM():
     def _estimate_instantaneous_effects(self, N_t):
         """Estimate instantaneous effects B(t,t) by applying LiNGAM"""
         causal_orders = []
-        B_t = np.empty((self._T, self._p, self._p))
-        for t in range(self._T):
-            model = DirectLiNGAM()
+        B_t = np.zeros((self._T, self._p, self._p))
+        for t in range(1, self._T):
+            model = DirectLiNGAM(measure=self._measure)
             model.fit(N_t[t].T)
             causal_orders.append(model.causal_order_)
             B_t[t] = model.adjacency_matrix_
@@ -185,9 +188,10 @@ class LongitudinalLiNGAM():
 
         Returns
         -------
-        causal_order_ : array-like, shape (n_features)
-            The causal order of fitted model, where 
-            n_features is the number of features.
+        causal_order_ : array-like, shape (causal_order, ...)
+            The causal order of fitted models for B(t,t).
+            The shape of causal_order is (n_features), 
+            where ``n_features`` is the number of features.
         """
         return self._causal_orders
 
@@ -197,9 +201,9 @@ class LongitudinalLiNGAM():
 
         Returns
         -------
-        adjacency_matrices_ : array-like, shape (B, ...)
-            The list of adjacency matrix B for multiple datasets.
-            The shape of B is (n_features, n_features), where 
-            n_features is the number of features.
+        adjacency_matrices_ : array-like, shape ((B(t,t), B(t,t-1), ..., B(t,t-τ)), ...)
+            The list of adjacency matrix B(t,t) and B(t,t-τ) for longitudinal datasets.
+            The shape of B(t,t) and B(t,t-τ) is (n_features, n_features), where 
+            ``n_features`` is the number of features.
         """
         return self._adjacency_matrices
