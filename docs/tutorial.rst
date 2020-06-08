@@ -501,6 +501,23 @@ In the following example, we estimate the intervention value at variable index 1
 
     Optimal intervention: 7.871
 
+Use a known causal model
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+When using a known causal model, we can specify the adjacency matrix when we create :class:`~lingam.CausalEffect` object.
+
+.. code-block:: python
+
+    m = np.array([[0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
+                  [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 6.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [8.0, 0.0,-1.0, 0.0, 0.0, 0.0],
+                  [4.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
+    
+    ce = lingam.CausalEffect(causal_model=m)
+    effects = ce.estimate_effects_on_prediction(X, target, reg)
+
 For details, see also https://github.com/cdt15/lingam/blob/master/examples/CausalEffect.ipynb
 https://github.com/cdt15/lingam/blob/master/examples/CausalEffect(LassoCV).ipynb
 https://github.com/cdt15/lingam/blob/master/examples/CausalEffect(LogisticRegression).ipynb
@@ -625,3 +642,44 @@ For example, we can draw a causal graph by using graphviz as follows:
 .. image:: image/dag_varma.png
 
 For details, see also https://github.com/cdt15/lingam/blob/master/examples/VARMALiNGAM.ipynb
+
+LongitudinalLiNGAM
+------------------
+
+We use lingam package:
+
+.. code-block:: python
+
+    import lingam
+
+First, if we use datasets from several time-points, we create a list like this:
+
+.. code-block:: python
+
+    X_list = [X1, X2, X3]
+
+Then, if we want to run Longitudinal-LiNGAM algorithm, we create a :class:`~lingam.LongitudinalLiNGAM` object and call the :func:`~lingam.LongitudinalLiNGAM.fit` method:
+
+.. code-block:: python
+
+    model = lingam.LongitudinalLiNGAM()
+    model.fit(X_list)
+
+Using the :attr:`~lingam.LongitudinalLiNGAM.causal_orders_` property, we can see the causal ordering in time-points as a result of the causal discovery.
+
+.. code-block:: python
+
+    print(model.causal_orders_)
+
+Also, using the :attr:`~lingam.LongitudinalLiNGAM.adjacency_matrices_` property, we can see the adjacency matrix as a result of the causal discovery.
+
+.. code-block:: python
+
+    t = 1
+    print('B(1,1):\n', model.adjacency_matrices_[t, 0])
+    print('B(1,0):\n', model.adjacency_matrices_[t, 1])
+
+    t = 2
+    print('B(2,2):\n', model.adjacency_matrices_[t, 0])
+    print('B(2,1):\n', model.adjacency_matrices_[t, 1])
+
