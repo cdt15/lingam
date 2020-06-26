@@ -19,21 +19,21 @@ class LongitudinalLiNGAM():
     .. [1] K. Kadowaki, S. Shimizu, and T. Washio. Estimation of causal structures in longitudinal data using non-Gaussianity. In Proc. 23rd IEEE International Workshop on Machine Learning for Signal Processing (MLSP2013), pp. 1--6, Southampton, United Kingdom, 2013.
     """
 
-    def __init__(self, random_state=None, n_lags=1, measure='pwling'):
+    def __init__(self, n_lags=1, measure='pwling', random_state=None):
         """Construct a model.
 
         Parameters
         ----------
-        random_state : int, optional (default=None)
-            ``random_state`` is the seed used by the random number generator.
         n_lags : int, optional (default=1)
             Number of lags.
         measure : {'pwling', 'kernel'}, default='pwling'
             Measure to evaluate independence : 'pwling' or 'kernel'.
+        random_state : int, optional (default=None)
+            ``random_state`` is the seed used by the random number generator.
         """
-        self._random_state = random_state
         self._n_lags = n_lags
         self._measure = measure
+        self._random_state = random_state
         self._causal_orders = None
         self._adjacency_matrices = None
 
@@ -77,10 +77,13 @@ class LongitudinalLiNGAM():
         B_tau = self._estimate_lagged_effects(B_t, M_tau)
 
         # output B(t,t), B(t,t-τ)
-        self._adjacency_matrices = np.zeros((self._T, 1+self._n_lags, self._p, self._p))
-        for t in range(self._T):
+        self._adjacency_matrices = np.empty((self._T, 1+self._n_lags, self._p, self._p))
+        self._adjacency_matrices[:, :] = np.nan
+        for t in range(1, self._T):
             self._adjacency_matrices[t, 0] = B_t[t]
             for l in range(self._n_lags):
+                if t-l == 0:
+                    continue
                 self._adjacency_matrices[t, l+1] = B_tau[t, l]
         self._causal_orders = causal_orders
         return self
@@ -176,7 +179,7 @@ class LongitudinalLiNGAM():
 
     def _estimate_lagged_effects(self, B_t, M_tau):
         """Estimate lagged effects B(t,t-τ)"""
-        B_tau = np.empty((self._T, self._n_lags, self._p, self._p))
+        B_tau = np.zeros((self._T, self._n_lags, self._p, self._p))
         for t in range(self._T):
             for tau in range(self._n_lags):
                 B_tau[t, tau] = np.dot(np.eye(self._p) - B_t[t], M_tau[t, tau])
