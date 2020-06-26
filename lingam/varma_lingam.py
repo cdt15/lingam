@@ -7,10 +7,9 @@ from sklearn.linear_model import LassoLarsIC, LinearRegression
 from sklearn.utils import check_array, resample
 from statsmodels.tsa.statespace.varmax import VARMAX
 
-from lingam import DirectLiNGAM
-
 from .base import _BaseLiNGAM
 from .bootstrap import BootstrapResult
+from .direct_lingam import DirectLiNGAM
 
 
 class VARMALiNGAM:
@@ -42,8 +41,8 @@ class VARMALiNGAM:
         ma_coefs : array-like, optional (default=None)
             Coefficients of MA of ARMA. Estimating ARMA model is skipped if specified ``ar_coefs`` and `ma_coefs`.
             Shape must be (``order[1]``, n_features, n_features).
-        lingam_model : constructor
-            Constructor of a LiNGAM algorithm which inherits _BaseLiNGAM.
+        lingam_model : lingam object inherits 'lingam._BaseLiNGAM', optional (default=None)
+            LiNGAM model for causal discovery. If None, DirectLiNGAM algorithm is selected.
         random_state : int, optional (default=None)
             ``random_state`` is the seed used by the random number generator.
         """
@@ -79,7 +78,7 @@ class VARMALiNGAM:
 
         lingam_model = self._lingam_model
         if lingam_model is None:
-            lingam_model = DirectLiNGAM
+            lingam_model = DirectLiNGAM()
         elif not issubclass(lingam_model, _BaseLiNGAM):
             raise ValueError('lingam_model must be a subclass of _BaseLiNGAM')
 
@@ -95,7 +94,7 @@ class VARMALiNGAM:
             residuals = self._calc_residuals(
                 X, phis, thetas, p, q)
 
-        model = DirectLiNGAM()
+        model = lingam_model
         model.fit(residuals)
 
         psis, omegas = self._calc_psi_and_omega(

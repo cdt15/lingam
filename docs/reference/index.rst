@@ -11,6 +11,8 @@ API Reference
     multi_group_direct_lingam
     var_lingam
     varma_lingam
+    longitudinal_lingam
     bootstrap
+    longitudinal_bootstrap
     causal_effect
     utils

@@ -8,10 +8,9 @@ from sklearn.utils import check_array, resample
 from sklearn.linear_model import LassoLarsIC, LinearRegression
 from statsmodels.tsa.vector_ar.var_model import VAR
 
-from lingam import DirectLiNGAM
-
 from .base import _BaseLiNGAM
 from .bootstrap import BootstrapResult
+from .direct_lingam import DirectLiNGAM
 
 
 class VARLiNGAM:
@@ -38,8 +37,8 @@ class VARLiNGAM:
         ar_coefs : array-like, optional (default=None)
             Coefficients of AR model. Estimating AR model is skipped if specified ``ar_coefs``.
             Shape must be (``lags``, n_features, n_features).
-        lingam_model : constructor
-            Constructor of a LiNGAM algorithm which inherits _BaseLiNGAM.
+        lingam_model : lingam object inherits 'lingam._BaseLiNGAM', optional (default=None)
+            LiNGAM model for causal discovery. If None, DirectLiNGAM algorithm is selected.
         random_state : int, optional (default=None)
             ``random_state`` is the seed used by the random number generator.
         """
@@ -71,7 +70,7 @@ class VARLiNGAM:
 
         lingam_model = self._lingam_model
         if lingam_model is None:
-            lingam_model = DirectLiNGAM
+            lingam_model = DirectLiNGAM()
         elif not issubclass(lingam_model, _BaseLiNGAM):
             raise ValueError('lingam_model must be a subclass of _BaseLiNGAM')
 
@@ -83,7 +82,7 @@ class VARLiNGAM:
             lags = M_taus.shape[0]
             residuals = self._calc_residuals(X, M_taus, lags)
 
-        model = DirectLiNGAM()
+        model = lingam_model
         model.fit(residuals)
 
         B_taus = self._calc_b(X, model.adjacency_matrix_, M_taus)
@@ -160,8 +159,22 @@ class VARLiNGAM:
 
     def _estimate_var_coefs(self, X):
         """Estimate coefficients of VAR"""
-        var = VAR(X)
-        result = var.fit(maxlags=self._lags, ic=self._criterion, trend='nc')
+        # XXX: VAR.fit() is not searching lags correctly
+        if self._criterion not in ['aic', 'fpe', 'hqic', 'bic']:
+            var = VAR(X)
+            result = var.fit(maxlags=self._lags, trend='nc')
+        else:
+            min_value = float('Inf')
+            result = None
+
+            for lag in range(1, self._lags + 1):
+                var = VAR(X)
+                fitted = var.fit(maxlags=lag, ic=None, trend='nc')
+
+                value = getattr(fitted, self._criterion)
+                if value < min_value:
+                    min_value = value
+                    result = fitted
 
         return result.coefs, result.k_ar, result.resid
 

@@ -5,6 +5,7 @@ The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 
 import numpy as np
 from sklearn.utils import check_array
+from sklearn.preprocessing import scale
 
 from .base import _BaseLiNGAM
 
@@ -20,7 +21,7 @@ class DirectLiNGAM(_BaseLiNGAM):
        Journal of Machine Learning Research 14:111-152, 2013. 
     """
 
-    def __init__(self, random_state=None, prior_knowledge=None):
+    def __init__(self, random_state=None, prior_knowledge=None, measure='pwling'):
         """Construct a DirectLiNGAM model.
 
         Parameters
@@ -29,9 +30,18 @@ class DirectLiNGAM(_BaseLiNGAM):
             ``random_state`` is the seed used by the random number generator.
         prior_knowledge : array-like, shape (n_features, n_features), optional (default=None)
             Prior knowledge used for causal discovery, where ``n_features`` is the number of features.
+
+            The elements of prior knowledge matrix are defined as follows [1]_:
+
+            * ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
+            * ``1`` : :math:`x_i` has a directed path to :math:`x_j`
+            * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
+        measure : {'pwling', 'kernel'}, default='pwling'
+            Measure to evaluate independence: 'pwling' [2]_ or 'kernel' [1]_.
         """
         super().__init__(random_state)
         self._prior_knowledge = prior_knowledge
+        self._measure = measure
 
     def fit(self, X):
         """Fit the model to X.
@@ -55,7 +65,8 @@ class DirectLiNGAM(_BaseLiNGAM):
             self._Aknw = check_array(self._prior_knowledge)
             self._Aknw = np.where(self._Aknw < 0, np.nan, self._Aknw)
             if (n_features, n_features) != self._Aknw.shape:
-                raise ValueError('The shape of prior knowledge must be (n_features, n_features)')
+                raise ValueError(
+                    'The shape of prior knowledge must be (n_features, n_features)')
         else:
             self._Aknw = None
 
@@ -63,8 +74,14 @@ class DirectLiNGAM(_BaseLiNGAM):
         U = np.arange(n_features)
         K = []
         X_ = np.copy(X)
+        if self._measure == 'kernel':
+            X_ = scale(X_)
+
         for _ in range(n_features):
-            m = self._search_causal_order(X_, U)
+            if self._measure == 'kernel':
+                m = self._search_causal_order_kernel(X_, U)
+            else:
+                m = self._search_causal_order(X_, U)
             for i in U:
                 if i != m:
                     X_[:, i] = self._residual(X_[:, i], X_[:, m])
@@ -147,3 +164,47 @@ class DirectLiNGAM(_BaseLiNGAM):
                     M += np.min([0, self._diff_mutual_info(xi_std, xj_std, ri_j, rj_i)])**2
             M_list.append(-1.0 * M)
         return Uc[np.argmax(M_list)]
+
+    def _mutual_information(self, x1, x2, param):
+        """Calculate the mutual informations."""
+        kappa, sigma = param
+        n = len(x1)
+        X1 = np.tile(x1, (n, 1))
+        K1 = np.exp(-1/(2*sigma**2) * (X1**2 + X1.T**2 - 2*X1*X1.T))
+        X2 = np.tile(x2, (n, 1))
+        K2 = np.exp(-1/(2*sigma**2) * (X2**2 + X2.T**2 - 2*X2*X2.T))
+
+        tmp1 = K1 + n*kappa*np.identity(n)/2
+        tmp2 = K2 + n*kappa*np.identity(n)/2
+        K_kappa = np.r_[np.c_[tmp1 @ tmp1, K1 @ K2],
+                        np.c_[K2 @ K1, tmp2 @ tmp2]]
+        D_kappa = np.r_[np.c_[tmp1 @ tmp1, np.zeros([n, n])],
+                        np.c_[np.zeros([n, n]), tmp2 @ tmp2]]
+
+        sigma_K = np.linalg.svd(K_kappa, compute_uv=False)
+        sigma_D = np.linalg.svd(D_kappa, compute_uv=False)
+
+        return (-1/2)*(np.sum(np.log(sigma_K)) - np.sum(np.log(sigma_D)))
+
+    def _search_causal_order_kernel(self, X, U):
+        """Search the causal ordering by kernel method."""
+        Uc, Vj = self._search_candidate(U)
+        if len(Uc) == 1:
+            return Uc[0]
+
+        if X.shape[0] > 1000:
+            param = [2e-3, 0.5]
+        else:
+            param = [2e-2, 1.0]
+
+        Tkernels = []
+        for j in Uc:
+            Tkernel = 0
+            for i in U:
+                if i != j:
+                    ri_j = X[:, i] if j in Vj and i in Uc else self._residual(
+                        X[:, i], X[:, j])
+                    Tkernel += self._mutual_information(X[:, j], ri_j, param)
+            Tkernels.append(Tkernel)
+
+        return Uc[np.argmin(Tkernels)]
