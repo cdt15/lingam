@@ -16,4 +16,4 @@ from .bootstrap import LongitudinalBootstrapResult
 __all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult', 'MultiGroupDirectLiNGAM',
            'CausalEffect', 'VARLiNGAM', 'VARMALiNGAM', 'LongitudinalLiNGAM', 'LongitudinalBootstrapResult']
 
-__version__ = '1.3'
+__version__ = '1.3.1'
