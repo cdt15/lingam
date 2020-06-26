@@ -129,10 +129,10 @@ def generate_data(n=5, T=800, initial_data=None):
     expon = 0.1
     ext = np.empty((n, T))
     for i in range(n):
-        ext[i, :] = np.random.normal(size=(1, T));
-        ext[i, :] = np.multiply(np.sign(ext[i, :]), abs(ext[i, :]) ** expon);
-        ext[i, :] = ext[i, :] - np.mean(ext[i, :]);
-        ext[i, :] = ext[i, :] / np.std(ext[i, :]);
+        ext[i, :] = np.random.normal(size=(1, T))
+        ext[i, :] = np.multiply(np.sign(ext[i, :]), abs(ext[i, :]) ** expon)
+        ext[i, :] = ext[i, :] - np.mean(ext[i, :])
+        ext[i, :] = ext[i, :] / np.std(ext[i, :])
 
     # observed signals y
     y = np.zeros((n, T))

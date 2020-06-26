@@ -101,7 +101,7 @@ def test_fit_success():
     assert np.sum(b0) < 0.1
 
     b1 = model.adjacency_matrices_[1]
-    assert b1[0, 0] < -0.3 and b1[0, 1] < -0.3 and b1[0, 2] < -0.3 \
+    assert b1[0, 0] < -0.3 and b1[0, 1] < -0.3 and b1[0, 2] < -0.25 \
        and b1[1, 2] > 0.05 and b1[2, 1] < -0.1 and b1[2, 2] < -0.3
 
     b1[0, 0] = 0.0
