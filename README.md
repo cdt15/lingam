@@ -50,3 +50,6 @@ Should you use this package for performing **VARMA-LiNGAM**, we kindly request y
 
 Should you use this package for performing **estimation of intervension effects on prediction**, we kindly request you to cite the following paper:
 * P. Blöbaum and S. Shimizu. **Estimation of interventional effects of features on prediction**. In Proc. 2017 IEEE International Workshop on Machine Learning for Signal Processing (MLSP2017), pp. 1--6, Tokyo, Japan, 2017. [[PDF]](https://arxiv.org/abs/1709.00776)
+
+Should you use this package for performing **LiNGAM for longitudinal data**, we kindly request you to cite the following paper:
+* K. Kadowaki, S. Shimizu, and T. Washio. **Estimation of causal structures in longitudinal data using non-Gaussianity**. In Proc. 23rd IEEE International Workshop on Machine Learning for Signal Processing (MLSP2013), pp. 1--6, Southampton, United Kingdom, 2013. [[PDF]](https://sites.google.com/site/sshimizu06/Kadowaki13MLSP.pdf?attredirects=0)
