@@ -39,7 +39,7 @@ def test_fit_success():
 
     # check causal ordering
     cos = model.causal_orders_
-    for co in cos:
+    for co in cos[1:]:
         assert co.index(0) < co.index(1) < co.index(3)
 
     # check B(t,t)
