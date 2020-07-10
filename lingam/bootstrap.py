@@ -457,7 +457,7 @@ class LongitudinalBootstrapResult(object):
                 raise ValueError(
                     'min_causal_effect must be an value greater than 0.')
 
-        prob = np.zeros(self._adjacency_matrices.shape)
+        prob = np.zeros(self._adjacency_matrices[0].shape)
         for adj_mat in self._adjacency_matrices:
             prob += np.where(np.abs(adj_mat) > min_causal_effect, 1, 0)
         prob = prob/len(self._adjacency_matrices)
