@@ -59,18 +59,15 @@ class LongitudinalLiNGAM():
         if len(X_list) < 2:
             raise ValueError('X_list must be a list containing at least two items')
 
-        n_samples = check_array(X_list[0]).shape[0]
-        n_features = check_array(X_list[0]).shape[1]
+        self._T = len(X_list)
+        self._n = check_array(X_list[0]).shape[0]
+        self._p = check_array(X_list[0]).shape[1]
         X_t = []
         for X in X_list:
             X = check_array(X)
-            if X.shape != (n_samples, n_features):
+            if X.shape != (self._n, self._p):
                 raise ValueError('X_list must be a list with the same shape')
             X_t.append(X.T)
-
-        self._T = len(X_t)  # Number of time points
-        self._n = n_samples  # Number of samples
-        self._p = n_features  # Number of features
 
         M_tau, N_t = self._compute_residuals(X_t)
         B_t, causal_orders = self._estimate_instantaneous_effects(N_t)
@@ -112,23 +109,19 @@ class LongitudinalLiNGAM():
         if len(X_list) < 2:
             raise ValueError('X_list must be a list containing at least two items')
 
-        n_samples = check_array(X_list[0]).shape[0]
-        n_features = check_array(X_list[0]).shape[1]
+        self._T = len(X_list)
+        self._n = check_array(X_list[0]).shape[0]
+        self._p = check_array(X_list[0]).shape[1]
         X_t = []
         for X in X_list:
             X = check_array(X)
-            if X.shape != (n_samples, n_features):
+            if X.shape != (self._n, self._p):
                 raise ValueError('X_list must be a list with the same shape')
             X_t.append(X)
-
-        self._T = len(X_t)  # Number of time points
-        self._n = n_samples  # Number of samples
-        self._p = n_features  # Number of features
 
         adjacency_matrices = np.zeros(
             (n_sampling, self._T, 1+self._n_lags, self._p, self._p))
         for i in range(n_sampling):
-            print('sampling:', i)
             resampled_X_t = np.empty((self._T, self._n, self._p))
             indices = np.random.randint(0, self._n, size=(self._n,))
             for t in range(self._T):
@@ -168,7 +161,7 @@ class LongitudinalLiNGAM():
 
     def _estimate_instantaneous_effects(self, N_t):
         """Estimate instantaneous effects B(t,t) by applying LiNGAM"""
-        causal_orders = []
+        causal_orders = [[np.nan]*self._p]
         B_t = np.zeros((self._T, self._p, self._p))
         for t in range(1, self._T):
             model = DirectLiNGAM(measure=self._measure)
