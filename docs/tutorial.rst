@@ -666,20 +666,86 @@ Then, if we want to run Longitudinal-LiNGAM algorithm, we create a :class:`~ling
     model.fit(X_list)
 
 Using the :attr:`~lingam.LongitudinalLiNGAM.causal_orders_` property, we can see the causal ordering in time-points as a result of the causal discovery.
+All elements are nan because the causal order of B(t,t) at t=0 is not calculated.
+So access to the time points above t=1.
 
 .. code-block:: python
 
-    print(model.causal_orders_)
+    print(model.causal_orders_[0])
+    print(model.causal_orders_[1])
+    print(model.causal_orders_[2])
+
+.. code-block:: python
+
+    [nan, nan, nan, nan, nan]
+    [3, 1, 2, 4, 0]
+    [0, 4, 2, 3, 1]
 
 Also, using the :attr:`~lingam.LongitudinalLiNGAM.adjacency_matrices_` property, we can see the adjacency matrix as a result of the causal discovery.
 
 .. code-block:: python
 
+    t = 0
+    print('B(0,0):')
+    print(model.adjacency_matrices_[t, 0])
+    print('B(0,-1):')
+    print(model.adjacency_matrices_[t, 1])
+
     t = 1
-    print('B(1,1):\n', model.adjacency_matrices_[t, 0])
-    print('B(1,0):\n', model.adjacency_matrices_[t, 1])
+    print('B(1,1):')
+    print(model.adjacency_matrices_[t, 0])
+    print('B(1,0):')
+    print(model.adjacency_matrices_[t, 1])
 
     t = 2
-    print('B(2,2):\n', model.adjacency_matrices_[t, 0])
-    print('B(2,1):\n', model.adjacency_matrices_[t, 1])
+    print('B(2,2):')
+    print(model.adjacency_matrices_[t, 0])
+    print('B(2,1):')
+    print(model.adjacency_matrices_[t, 1])
 
+As with the causal order, all elements are nan because the B(t,t) and B(t,t-τ) at t=0 is not calculated. 
+So access to the time points above t=1.
+Also, if we run causal discovery with n_lags=2, B(t,t-τ) at t=1 is also not computed, so all the elements are nan.
+
+.. image:: image/nan_reason.png
+
+.. code-block:: python
+
+    B(0,0):
+    [[nan nan nan nan nan]
+     [nan nan nan nan nan]
+     [nan nan nan nan nan]
+     [nan nan nan nan nan]
+     [nan nan nan nan nan]]
+    B(0,-1):
+    [[nan nan nan nan nan]
+     [nan nan nan nan nan]
+     [nan nan nan nan nan]
+     [nan nan nan nan nan]
+     [nan nan nan nan nan]]
+    B(1,1):
+    [[ 0.     0.099  0.     0.    -0.52 ]
+     [ 0.     0.     0.     0.398  0.   ]
+     [ 0.     0.384  0.    -0.162  0.   ]
+     [ 0.     0.     0.     0.     0.   ]
+     [ 0.    -0.249 -0.074  0.     0.   ]]
+    B(1,0):
+    [[ 0.025  0.116 -0.202  0.054 -0.216]
+     [ 0.139 -0.211 -0.43   0.558  0.051]
+     [-0.135  0.178  0.421  0.173  0.031]
+     [ 0.384 -0.083 -0.495 -0.072 -0.323]
+     [-0.206 -0.354 -0.199 -0.293  0.468]]
+    B(2,2):
+    [[ 0.     0.     0.     0.     0.   ]
+     [ 0.     0.    -0.67   0.     0.46 ]
+     [ 0.187  0.     0.     0.     0.   ]
+     [ 0.     0.    -0.341  0.     0.   ]
+     [ 0.25   0.     0.     0.     0.   ]]
+    B(2,1):
+    [[ 0.194  0.2    0.031 -0.473 -0.002]
+     [-0.384 -0.037  0.158  0.255  0.095]
+     [ 0.126  0.275 -0.048  0.502 -0.019]
+     [ 0.238 -0.469  0.475 -0.029 -0.176]
+     [-0.177  0.309 -0.112  0.295 -0.273]]
+
+For details, see also https://github.com/cdt15/lingam/blob/master/examples/LongitudinalLiNGAM.ipynb

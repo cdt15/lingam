@@ -201,5 +201,7 @@ class LongitudinalLiNGAM():
             The list of adjacency matrix B(t,t) and B(t,t-τ) for longitudinal datasets.
             The shape of B(t,t) and B(t,t-τ) is (n_features, n_features), where 
             ``n_features`` is the number of features.
+            **If the previous data required for the calculation are not available, 
+            such as B(t,t) or B(t,t-τ) at t=0, all elements of the matrix are nan**.
         """
         return self._adjacency_matrices
