@@ -6,7 +6,7 @@ Welcome to lingam's documentation!
    :caption: Contents:
 
    installation
-   tutorial
+   tutorial/index
    reference/index
 
 
