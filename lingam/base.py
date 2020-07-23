@@ -6,10 +6,11 @@ The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
-from sklearn.linear_model import LassoLarsIC, LinearRegression
+from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array
 
 from .bootstrap import BootstrapMixin
+from .utils import predict_adaptive_lasso
 
 
 class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
@@ -66,38 +67,15 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         X = check_array(X)
 
         # from_index + parents indices
-        parents = np.where(np.abs(self.adjacency_matrix_[from_index]) > 0)[0].tolist()
+        parents = np.where(np.abs(self.adjacency_matrix_[from_index]) > 0)[0]
         predictors = [from_index]
         predictors.extend(parents)
 
-        # estimate total effect by Adaptive Lasso
-        coef = self._predict_adaptive_lasso(X, predictors, to_index)
-        return coef[0]
-
-    def _predict_adaptive_lasso(self, X, predictors, target, gamma=1.0):
-        """Predict with Adaptive Lasso.
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            Training data, where n_samples is the number of samples
-            and n_features is the number of features.
-        predictors : array-like, shape (n_predictors)
-            Indices of predictor variable.
-        target : int
-            Index of target variable.
-
-        Returns
-        -------
-        coef : array-like, shape (n_features)
-            Coefficients of predictor variable.
-        """
+        # Estimate total effect
         lr = LinearRegression()
-        lr.fit(X[:, predictors], X[:, target])
-        weight = np.power(np.abs(lr.coef_), gamma)
-        reg = LassoLarsIC(criterion='bic')
-        reg.fit(X[:, predictors] * weight, X[:, target])
-        return reg.coef_ * weight
+        lr.fit(X[:, predictors], X[:, to_index])
+
+        return lr.coef_[0]
 
     def _estimate_adjacency_matrix(self, X):
         """Estimate adjacency matrix by causal order.
@@ -115,9 +93,8 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         """
         B = np.zeros([X.shape[1], X.shape[1]], dtype='float64')
         for i in range(1, len(self._causal_order)):
-            coef = self._predict_adaptive_lasso(
+            B[self._causal_order[i], self._causal_order[:i]] = predict_adaptive_lasso(
                 X, self._causal_order[:i], self._causal_order[i])
-            B[self._causal_order[i], self._causal_order[:i]] = coef
 
         self._adjacency_matrix = B
         return self

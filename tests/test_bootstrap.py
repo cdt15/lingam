@@ -9,8 +9,13 @@ from lingam.bootstrap import BootstrapMixin, BootstrapResult
 class DummyBoostrapMixin(BootstrapMixin):
     def __init__(self, random_state=None):
         self._random_state = random_state
-        self._causal_order = None
-        self._adjacency_matrix = None
+        self._causal_order = [0, 1, 2, 3]
+        self._adjacency_matrix = [
+                [0.0, 0.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+        ]
         self._adjacency_matrices = [
             # causal direction: x0 --> x1 --> x2 --> x3
             [
@@ -55,6 +60,15 @@ class DummyBoostrapMixin(BootstrapMixin):
         self._adjacency_matrix = np.array(self._adjacency_matrices.pop(0))
         return self
 
+    def estimate_total_effect(self, X, from_index, to_index):
+        table = np.array([
+            [0.0, 0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [2.0, 1.0, 0.0, 0.0],
+            [3.0, 2.0, 1.0, 0.0],
+        ])
+        return table[to_index, from_index]
+
     @property
     def causal_order_(self):
         return self._causal_order
@@ -67,8 +81,11 @@ class DummyBoostrapMixin(BootstrapMixin):
 class DummyBoostrapMixinNonCausal(BootstrapMixin):
     def __init__(self, random_state=None):
         self._random_state = random_state
-        self._causal_order = None
-        self._adjacency_matrix = None
+        self._causal_order = [0, 1]
+        self._adjacency_matrix = [
+                [0.0, 0.0],
+                [0.0, 0.0],
+        ]
         self._adjacency_matrices = [
             # causal direction: None
             [
@@ -96,6 +113,13 @@ class DummyBoostrapMixinNonCausal(BootstrapMixin):
                 [0.0, 0.0],
             ],
         ]
+
+    def estimate_total_effect(self, X, from_index, to_index):
+        table = np.array([
+            [0.0, 0.0],
+            [0.0, 0.0],
+        ])
+        return table[to_index, from_index]
 
     def fit(self, X):
         self._adjacency_matrix = np.array(self._adjacency_matrices.pop(0))
@@ -300,12 +324,16 @@ def test_bootstrap_invalid_data():
     dagc = result.get_directed_acyclic_graph_counts()
     assert not dagc['dag'][0]['from'] and not dagc['dag'][0]['to'] and dagc['count'][0] == 5
 
-    # Invalid argument: get_causal_direction_counts(n_directions=-1)
     x0 = np.random.uniform(size=1000)
-    x1 = 2.0*x0 + np.random.uniform(size=1000)
-    X = pd.DataFrame(np.array([x0, x1]).T, columns=['x0', 'x1'])
+    x1 = np.random.uniform(size=1000)
+    x2 = np.random.uniform(size=1000)
+    x3 = np.random.uniform(size=1000)
+    X_success = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
+                             columns=['x0', 'x1', 'x2', 'x3'])
+
+    # Invalid argument: get_causal_direction_counts(n_directions=-1)
     model = DummyBoostrapMixin()
-    result = model.bootstrap(X, n_sampling=5)
+    result = model.bootstrap(X_success, n_sampling=5)
     try:
         result.get_causal_direction_counts(n_directions=-1)
     except ValueError:
@@ -314,11 +342,8 @@ def test_bootstrap_invalid_data():
         raise AssertionError
 
     # Invalid argument: get_causal_direction_counts(min_causal_effect=-1.0)
-    x0 = np.random.uniform(size=1000)
-    x1 = 2.0*x0 + np.random.uniform(size=1000)
-    X = pd.DataFrame(np.array([x0, x1]).T, columns=['x0', 'x1'])
     model = DummyBoostrapMixin()
-    result = model.bootstrap(X, n_sampling=5)
+    result = model.bootstrap(X_success, n_sampling=5)
     try:
         result.get_causal_direction_counts(min_causal_effect=-1.0)
     except ValueError:
@@ -327,11 +352,8 @@ def test_bootstrap_invalid_data():
         raise AssertionError
 
     # Invalid argument: get_directed_acyclic_graph_counts(n_dags=-1)
-    x0 = np.random.uniform(size=1000)
-    x1 = 2.0*x0 + np.random.uniform(size=1000)
-    X = pd.DataFrame(np.array([x0, x1]).T, columns=['x0', 'x1'])
     model = DummyBoostrapMixin()
-    result = model.bootstrap(X, n_sampling=5)
+    result = model.bootstrap(X_success, n_sampling=5)
     try:
         result.get_directed_acyclic_graph_counts(n_dags=-1)
     except ValueError:
@@ -340,11 +362,8 @@ def test_bootstrap_invalid_data():
         raise AssertionError
 
     # Invalid argument: get_directed_acyclic_graph_counts(min_causal_effect=-1.0)
-    x0 = np.random.uniform(size=1000)
-    x1 = 2.0*x0 + np.random.uniform(size=1000)
-    X = pd.DataFrame(np.array([x0, x1]).T, columns=['x0', 'x1'])
     model = DummyBoostrapMixin()
-    result = model.bootstrap(X, n_sampling=5)
+    result = model.bootstrap(X_success, n_sampling=5)
     try:
         result.get_directed_acyclic_graph_counts(min_causal_effect=-1.0)
     except ValueError:

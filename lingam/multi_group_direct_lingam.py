@@ -3,11 +3,13 @@ Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
 import numbers
+
 import numpy as np
+from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array, resample
 
-from .direct_lingam import DirectLiNGAM
 from .bootstrap import BootstrapResult
+from .direct_lingam import DirectLiNGAM
 
 
 class MultiGroupDirectLiNGAM(DirectLiNGAM):
@@ -47,39 +49,28 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
             Returns the instance itself.
         """
         # Check parameters
-        if not isinstance(X_list, list):
-            raise ValueError('X_list must be a list.')
-
-        if len(X_list) < 2:
-            raise ValueError('X_list must be a list containing at least two items')
-
-        n_features = check_array(X_list[0]).shape[1]
-        X_list_ = []
-        for X in X_list:
-            X_ = check_array(X)
-            if X_.shape[1] != n_features:
-                raise ValueError('X_list must be a list with the same number of features')
-            X_list_.append(X_)
-        X_list = np.array(X_list_)
+        X_list = self._check_X_list(X_list)
 
         if self._prior_knowledge is not None:
             self._Aknw = check_array(self._prior_knowledge)
             self._Aknw = np.where(self._Aknw < 0, np.nan, self._Aknw)
-            if (n_features, n_features) != self._Aknw.shape:
-                raise ValueError('The shape of prior knowledge must be (n_features, n_features)')
+            if (self._n_features, self._n_features) != self._Aknw.shape:
+                raise ValueError(
+                    'The shape of prior knowledge must be (n_features, n_features)')
         else:
             self._Aknw = None
 
         # Causal discovery
-        U = np.arange(n_features)
+        U = np.arange(self._n_features)
         K = []
         X_list_ = [np.copy(X) for X in X_list]
-        for _ in range(n_features):
+        for _ in range(self._n_features):
             m = self._search_causal_order(X_list_, U)
             for i in U:
                 if i != m:
                     for d in range(len(X_list_)):
-                        X_list_[d][:, i] = self._residual(X_list_[d][:, i], X_list_[d][:, m])
+                        X_list_[d][:, i] = self._residual(
+                            X_list_[d][:, i], X_list_[d][:, m])
             K.append(m)
             U = U[U != m]
 
@@ -108,37 +99,96 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         results : array-like, shape (BootstrapResult, ...)
             Returns the results of bootstrapping for multiple datasets.
         """
-        if len(X_list) < 2:
-            raise ValueError('X_list must be a list containing at least two items')
-
-        n_features = check_array(X_list[0]).shape[1]
-        X_list_ = []
-        for X in X_list:
-            X_ = check_array(X)
-            if X_.shape[1] != n_features:
-                raise ValueError('X_list must be a list with the same number of features')
-            X_list_.append(X_)
-        X_list = np.array(X_list_)
+        # Check parameters
+        X_list = self._check_X_list(X_list)
 
         if isinstance(n_sampling, (numbers.Integral, np.integer)):
             if not 0 < n_sampling:
-                raise ValueError('n_sampling must be an integer greater than 0.')
+                raise ValueError(
+                    'n_sampling must be an integer greater than 0.')
         else:
             raise ValueError('n_sampling must be an integer greater than 0.')
 
         # Bootstrapping
-        adjacency_matrices_list = [[] for _ in range(X_list.shape[0])]
-        for _ in range(n_sampling):
+        adjacency_matrices_list = np.zeros([len(X_list), n_sampling, self._n_features, self._n_features])
+        total_effects_list = np.zeros([len(X_list), n_sampling, self._n_features, self._n_features])
+        for n in range(n_sampling):
             resampled_X_list = [resample(X) for X in X_list]
-            model = self.fit(resampled_X_list)
-            for i, am in enumerate(model.adjacency_matrices_):
-                adjacency_matrices_list[i].append(am)
+            self.fit(resampled_X_list)
+
+            for i, am in enumerate(self._adjacency_matrices):
+                adjacency_matrices_list[i][n] = am
+
+            # Calculate total effects
+            for c, from_ in enumerate(self._causal_order):
+                for to in self._causal_order[c+1:]:
+                    effects = self.estimate_total_effect(resampled_X_list, from_, to)
+                    for i, effect in enumerate(effects):
+                        total_effects_list[i, n, to, from_] = effect
 
         result_list = []
-        for adjacency_matrices in adjacency_matrices_list:
-            result_list.append(BootstrapResult(adjacency_matrices))
+        for am, te in zip(adjacency_matrices_list, total_effects_list):
+            result_list.append(BootstrapResult(am, te))
 
         return result_list
+
+    def estimate_total_effect(self, X_list, from_index, to_index):
+        """Estimate total effect using causal model.
+
+        Parameters
+        ----------
+        X_list : array-like, shape (X, ...)
+            Multiple datasets for training, where ``X`` is an dataset.
+            The shape of ''X'' is (n_samples, n_features), 
+            where ``n_samples`` is the number of samples and ``n_features`` is the number of features.
+        from_index : 
+            Index of source variable to estimate total effect.
+        to_index : 
+            Index of destination variable to estimate total effect.
+
+        Returns
+        -------
+        total_effect : float
+            Estimated total effect.
+        """
+        # Check parameters
+        X_list = self._check_X_list(X_list)
+
+        effects = []
+        for X, am in zip(X_list, self._adjacency_matrices):
+
+            # from_index + parents indices
+            parents = np.where(np.abs(am[from_index]) > 0)[0]
+            predictors = [from_index]
+            predictors.extend(parents)
+
+            # Estimate total effect
+            lr = LinearRegression()
+            lr.fit(X[:, predictors], X[:, to_index])
+
+            effects.append(lr.coef_[0])
+
+        return effects
+
+    def _check_X_list(self, X_list):
+        """Check input X list."""
+        if not isinstance(X_list, list):
+            raise ValueError('X_list must be a list.')
+
+        if len(X_list) < 2:
+            raise ValueError(
+                'X_list must be a list containing at least two items')
+
+        self._n_features = check_array(X_list[0]).shape[1]
+        X_list_ = []
+        for X in X_list:
+            X_ = check_array(X)
+            if X_.shape[1] != self._n_features:
+                raise ValueError(
+                    'X_list must be a list with the same number of features')
+            X_list_.append(X_)
+
+        return np.array(X_list_)
 
     def _search_causal_order(self, X_list, U):
         """Search the causal ordering."""

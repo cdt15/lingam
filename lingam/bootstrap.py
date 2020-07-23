@@ -4,6 +4,7 @@ The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
 
 import numbers
+
 import numpy as np
 from sklearn.utils import check_array, resample
 
@@ -38,25 +39,36 @@ class BootstrapMixin():
             raise ValueError('n_sampling must be an integer greater than 0.')
 
         # Bootstrapping
-        adjacency_matrices = []
-        for _ in range(n_sampling):
-            model = self.fit(resample(X))
-            adjacency_matrices.append(model.adjacency_matrix_)
-        return BootstrapResult(adjacency_matrices)
+        adjacency_matrices = np.zeros([n_sampling, X.shape[1], X.shape[1]])
+        total_effects = np.zeros([n_sampling, X.shape[1], X.shape[1]])
+        for i in range(n_sampling):
+            self.fit(resample(X))
+            adjacency_matrices[i] = self._adjacency_matrix
+
+            # Calculate total effects
+            for c, from_ in enumerate(self._causal_order):
+                for to in self._causal_order[c+1:]:
+                    total_effects[i, to, from_] = self.estimate_total_effect(
+                        X, from_, to)
+
+        return BootstrapResult(adjacency_matrices, total_effects)
 
 
 class BootstrapResult(object):
     """The result of bootstrapping."""
 
-    def __init__(self, adjacency_matrices):
+    def __init__(self, adjacency_matrices, total_effects):
         """Construct a BootstrapResult.
 
         Parameters
         ----------
         adjacency_matrices : array-like, shape (n_sampling)
             The adjacency matrix list by bootstrapping.
+        total_effects : array-like, shape (n_sampling)
+            The total effects list by bootstrapping.
         """
         self._adjacency_matrices = adjacency_matrices
+        self._total_effects = total_effects
 
     @property
     def adjacency_matrices_(self):
@@ -69,6 +81,18 @@ class BootstrapResult(object):
             the number of bootstrap sampling.
         """
         return self._adjacency_matrices
+
+    @property
+    def total_effects_(self):
+        """The total effect list by bootstrapping.
+
+        Returns
+        -------
+        total_effects_ : array-like, shape (n_sampling)
+            The total effect list, where ``n_sampling`` is 
+            the number of bootstrap sampling.
+        """
+        return self._total_effects
 
     def get_causal_direction_counts(self, n_directions=None, min_causal_effect=None, split_by_causal_effect_sign=False):
         """Get causal direction count as a result of bootstrapping.
@@ -248,20 +272,80 @@ class BootstrapResult(object):
         else:
             return np.hsplit(bp, int(shape[1]/shape[0]))
 
+    def get_causal_effects(self, min_causal_effect=None):
+        """Get total effects list.
+
+        Parameters
+        ----------
+        min_causal_effect : float, optional (default=None)
+            Threshold for detecting causal direction. 
+            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+
+        Returns
+        -------
+        causal_effects : dict
+            List of bootstrap causal effect sorted by probability in descending order. 
+            The dictionary has the following format:: 
+
+            {'from': [n_directions], 'to': [n_directions], 'effect': [n_directions], 'probability': [n_directions]}
+
+            where ``n_directions`` is the number of causal directions.
+        """
+        # Check parameters
+        if min_causal_effect is None:
+            min_causal_effect = 0.0
+        else:
+            if not 0.0 < min_causal_effect:
+                raise ValueError(
+                    'min_causal_effect must be an value greater than 0.')
+
+        # Calculate probability
+        probs = np.sum(np.where(np.abs(self._total_effects) >
+                                min_causal_effect, 1, 0), axis=0, keepdims=True)[0]
+        probs = probs/len(self._total_effects)
+
+        # Causal directions
+        dirs = np.array(np.where(np.abs(probs) > 0))
+        probs = probs[dirs[0], dirs[1]]
+
+        # Calculate median effect without zero
+        effects = np.zeros(dirs.shape[1])
+        for i, (to, from_) in enumerate(dirs.T):
+            idx = np.where(np.abs(self._total_effects[:, to, from_]) > 0)
+            effects[i] = np.median(self._total_effects[:, to, from_][idx])
+
+        # Sort by probability
+        order = np.argsort(-probs)
+        dirs = dirs.T[order]
+        effects = effects[order]
+        probs = probs[order]
+
+        ce = {
+            'from': dirs[:, 1].tolist(),
+            'to': dirs[:, 0].tolist(),
+            'effect': effects.tolist(),
+            'probability': probs.tolist()
+        }
+
+        return ce
+
 
 class LongitudinalBootstrapResult(object):
     """The result of bootstrapping for LongitudinalLiNGAM."""
 
-    def __init__(self, adjacency_matrices, n_timepoints):
+    def __init__(self, n_timepoints, adjacency_matrices, total_effects):
         """Construct a BootstrapResult.
 
         Parameters
         ----------
         adjacency_matrices : array-like, shape (n_sampling)
             The adjacency matrix list by bootstrapping.
+        total_effects : array-like, shape (n_sampling)
+            The total effects list by bootstrapping.
         """
-        self._adjacency_matrices = adjacency_matrices
         self._n_timepoints = n_timepoints
+        self._adjacency_matrices = adjacency_matrices
+        self._total_effects = total_effects
 
     @property
     def adjacency_matrices_(self):
@@ -274,6 +358,18 @@ class LongitudinalBootstrapResult(object):
             the number of bootstrap sampling.
         """
         return self._adjacency_matrices
+
+    @property
+    def total_effects_(self):
+        """The total effect list by bootstrapping.
+
+        Returns
+        -------
+        total_effects_ : array-like, shape (n_sampling)
+            The total effect list, where ``n_sampling`` is 
+            the number of bootstrap sampling.
+        """
+        return self._total_effects
 
     def get_causal_direction_counts(self, n_directions=None, min_causal_effect=None, split_by_causal_effect_sign=False):
         """Get causal direction count as a result of bootstrapping.
@@ -463,3 +559,60 @@ class LongitudinalBootstrapResult(object):
         prob = prob/len(self._adjacency_matrices)
 
         return prob
+
+    def get_causal_effects(self, min_causal_effect=None):
+        """Get total effects list.
+
+        Parameters
+        ----------
+        min_causal_effect : float, optional (default=None)
+            Threshold for detecting causal direction. 
+            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+
+        Returns
+        -------
+        causal_effects : dict
+            List of bootstrap causal effect sorted by probability in descending order. 
+            The dictionary has the following format:: 
+
+            {'from': [n_directions], 'to': [n_directions], 'effect': [n_directions], 'probability': [n_directions]}
+
+            where ``n_directions`` is the number of causal directions.
+        """
+        # Check parameters
+        if min_causal_effect is None:
+            min_causal_effect = 0.0
+        else:
+            if not 0.0 < min_causal_effect:
+                raise ValueError(
+                    'min_causal_effect must be an value greater than 0.')
+
+        # probability
+        probs = np.sum(np.where(np.abs(self._total_effects) >
+                                min_causal_effect, 1, 0), axis=0, keepdims=True)[0]
+        probs = probs/len(self._total_effects)
+
+        # causal directions
+        dirs = np.array(np.where(np.abs(probs) > 0))
+        probs = probs[dirs[0], dirs[1]]
+
+        # calculate median effect without zero
+        effects = np.zeros(dirs.shape[1])
+        for i, (to, from_) in enumerate(dirs.T):
+            idx = np.where(np.abs(self._total_effects[:, to, from_]) > 0)
+            effects[i] = np.median(self._total_effects[:, to, from_][idx])
+
+        # sort by effect value
+        order = np.argsort(-probs)
+        dirs = dirs.T[order]
+        effects = effects[order]
+        probs = probs[order]
+
+        ce = {
+            'from': dirs[:, 1].tolist(),
+            'to': dirs[:, 0].tolist(),
+            'effect': effects.tolist(),
+            'probability': probs.tolist()
+        }
+
+        return ce
