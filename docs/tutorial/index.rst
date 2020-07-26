@@ -24,3 +24,4 @@ Contents:
     var
     varma
     longitudinal
+    draw_graph
