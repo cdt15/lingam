@@ -4,8 +4,8 @@ The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
 
 import numpy as np
-from sklearn.utils import check_array, resample
 from sklearn.linear_model import LassoLarsIC, LinearRegression
+from sklearn.utils import check_array, resample
 from statsmodels.tsa.vector_ar.var_model import VAR
 
 from .base import _BaseLiNGAM
@@ -21,7 +21,7 @@ class VARLiNGAM:
     .. [1] Aapo Hyvärinen, Kun Zhang, Shohei Shimizu, Patrik O. Hoyer.
        Estimation of a Structural Vector Autoregression Model Using Non-Gaussianity. Journal of Machine Learning Research, 11: 1709-1731, 2010.
     """
-    
+
     def __init__(self, lags=1, criterion='bic', prune=False, ar_coefs=None, lingam_model=None, random_state=None):
         """Construct a VARLiNGAM model.
 
@@ -98,7 +98,7 @@ class VARLiNGAM:
         self._adjacency_matrices = B_taus
 
         return self
-        
+
     def bootstrap(self, X, n_sampling):
         """Evaluate the statistical reliability of DAG based on the bootstrapping.
 
@@ -128,7 +128,10 @@ class VARLiNGAM:
 
         residuals = self._residuals
         ar_coefs = self._ar_coefs
-        
+
+        total_effects = np.zeros(
+            [n_sampling, n_features, n_features*(1+self._lags)])
+
         adjacency_matrices = []
         for i in range(n_sampling):
             sampled_residuals = resample(residuals, n_samples=n_samples)
@@ -141,21 +144,73 @@ class VARLiNGAM:
 
                 ar = np.zeros((1, n_features))
                 for t, M in enumerate(ar_coefs):
-                    ar += np.dot(M, X[j - t - 1, :].T).T
+                    ar += np.dot(M, resampled_X[j - t - 1, :].T).T
 
                 resampled_X[j, :] = ar + sampled_residuals[j]
-            
-            self.fit(resampled_X)
-            adjacency_matrices.append(self._adjacency_matrices)
 
-        cated_adj_matrix = []
-        for matrix in adjacency_matrices:
-            m = np.concatenate([*matrix], axis=1)
-            cated_adj_matrix.append(m)
+            self.fit(resampled_X)
+            am = np.concatenate([*self._adjacency_matrices], axis=1)
+            adjacency_matrices.append(am)
+
+            # total effects
+            for c, to in enumerate(reversed(self._causal_order)):
+                # time t
+                for from_ in self._causal_order[:n_features-(c+1)]:
+                    total_effects[i, to, from_] = self.estimate_total_effect(
+                        resampled_X, from_, to)
+
+                # time t-tau
+                for lag in range(self._lags):
+                    for from_ in range(n_features):
+                        total_effects[i, to, from_+n_features] = self.estimate_total_effect(
+                            resampled_X, from_, to, lag+1)
 
         self._criterion = criterion
 
-        return BootstrapResult(cated_adj_matrix)
+        return BootstrapResult(adjacency_matrices, total_effects)
+
+    def estimate_total_effect(self, X, from_index, to_index, from_lag=0):
+        """Estimate total effect using causal model.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Original data, where n_samples is the number of samples
+            and n_features is the number of features.
+        from_index : 
+            Index of source variable to estimate total effect.
+        to_index : 
+            Index of destination variable to estimate total effect.
+
+        Returns
+        -------
+        total_effect : float
+            Estimated total effect.
+        """
+        X = check_array(X)
+        n_features = X.shape[1]
+
+        # X + lagged X
+        X_joined = np.zeros((X.shape[0], X.shape[1]*(1+self._lags+from_lag)))
+        for p in range(1+self._lags+from_lag):
+            pos = n_features * p
+            X_joined[:, pos:pos +
+                     n_features] = np.roll(X[:, 0:n_features], p, axis=0)
+
+        # from_index + parents indices
+        am = np.concatenate([*self._adjacency_matrices], axis=1)
+        parents = np.where(np.abs(am[from_index]) > 0)[0]
+        from_index = from_index if from_lag == 0 else from_index + \
+            (n_features*from_lag)
+        parents = parents if from_lag == 0 else parents+(n_features*from_lag)
+        predictors = [from_index]
+        predictors.extend(parents)
+
+        # estimate total effect
+        lr = LinearRegression()
+        lr.fit(X_joined[:, predictors], X_joined[:, to_index])
+
+        return lr.coef_[0]
 
     def _estimate_var_coefs(self, X):
         """Estimate coefficients of VAR"""
@@ -202,9 +257,9 @@ class VARLiNGAM:
     def _calc_b(self, X, B0, M_taus):
         """Calculate B"""
         n_features = X.shape[1]
-        
+
         B_taus = np.array([B0])
-        
+
         for M in M_taus:
             B_t = np.dot((np.eye(n_features) - B0), M)
             B_taus = np.append(B_taus, [B_t], axis=0)
@@ -223,13 +278,13 @@ class VARLiNGAM:
         for i in range(n_features):
             causal_order_no = causal_order.index(i)
             ancestor_indexes = causal_order[:causal_order_no]
-            
+
             obj = np.zeros((len(blocks)))
             exp = np.zeros((len(blocks), causal_order_no + n_features * self._lags))
             for j, block in enumerate(blocks):
                 obj[j] = block[0][i]
-                exp[j :] = np.concatenate([block[0][ancestor_indexes].flatten(), block[1:][:].flatten()], axis=0)
-            
+                exp[j:] = np.concatenate([block[0][ancestor_indexes].flatten(), block[1:][:].flatten()], axis=0)
+
             # adaptive lasso
             gamma = 1.0
             lr = LinearRegression()
@@ -238,7 +293,7 @@ class VARLiNGAM:
             reg = LassoLarsIC(criterion='bic')
             reg.fit(exp * weight, obj)
             coef = reg.coef_ * weight
-            
+
             B_taus[0][i, ancestor_indexes] = coef[:causal_order_no]
             for j in range(len(B_taus[1:])):
                 B_taus[j + 1][i, :] = coef[causal_order_no + n_features * j: causal_order_no + n_features * j + n_features]

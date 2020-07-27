@@ -5,10 +5,12 @@ The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 import numpy as np
 from sklearn import linear_model
 from sklearn.utils import check_array
+from sklearn.linear_model import LassoLarsIC, LinearRegression
 import graphviz
 
 __all__ = ['print_causal_directions', 'print_dagc',
-           'make_prior_knowledge', 'remove_effect', 'make_dot']
+           'make_prior_knowledge', 'remove_effect', 'make_dot',
+           'predict_adaptive_lasso']
 
 
 def print_causal_directions(cdc, n_sampling, labels=None):
@@ -221,3 +223,29 @@ def make_dot(adjacency_matrix, labels=None, lower_limit=0.01,
                        style='dashed')
 
     return d
+
+
+def predict_adaptive_lasso(X, predictors, target, gamma=1.0):
+    """Predict with Adaptive Lasso.
+
+    Parameters
+    ----------
+    X : array-like, shape (n_samples, n_features)
+        Training data, where n_samples is the number of samples
+        and n_features is the number of features.
+    predictors : array-like, shape (n_predictors)
+        Indices of predictor variable.
+    target : int
+        Index of target variable.
+
+    Returns
+    -------
+    coef : array-like, shape (n_features)
+        Coefficients of predictor variable.
+    """
+    lr = LinearRegression()
+    lr.fit(X[:, predictors], X[:, target])
+    weight = np.power(np.abs(lr.coef_), gamma)
+    reg = LassoLarsIC(criterion='bic')
+    reg.fit(X[:, predictors] * weight, X[:, target])
+    return reg.coef_ * weight

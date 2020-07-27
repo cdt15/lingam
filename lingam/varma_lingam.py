@@ -146,6 +146,8 @@ class VARMALiNGAM:
         ar_coefs = self._ar_coefs
         ma_coefs = self._ma_coefs
 
+        total_effects = np.zeros([n_sampling, n_features, n_features*(1+p)])
+
         adjacency_matrices = []
         for i in range(n_sampling):
             sampled_residuals = resample(residuals, n_samples=n_samples)
@@ -158,27 +160,94 @@ class VARMALiNGAM:
 
                 ar = np.zeros((1, n_features))
                 for t, M in enumerate(ar_coefs):
-                    ar += np.dot(M, X[j - t - 1, :].T).T
+                    ar += np.dot(M, resampled_X[j - t - 1, :].T).T
 
                 ma = np.zeros((1, n_features))
                 for t, M in enumerate(ma_coefs):
-                    ma += np.dot(M, X[j - t - 1, :].T).T
+                    ma += np.dot(M, sampled_residuals[j - t - 1, :].T).T
 
                 resampled_X[j, :] = ar + sampled_residuals[j] + ma
 
             self.fit(resampled_X)
-            adjacency_matrices.append(self._adjacency_matrices)
 
-        cated_adj_matrix = []
-        for psi_and_omega in adjacency_matrices:
-            psi = psi_and_omega[0]
-            omega = psi_and_omega[1]
-            m = np.concatenate([*psi, *omega], axis=1)
-            cated_adj_matrix.append(m)
+            psi = self._adjacency_matrices[0]
+            omega = self._adjacency_matrices[1]
+            am = np.concatenate([*psi, *omega], axis=1)
+            adjacency_matrices.append(am)
+
+            ee = np.dot(np.eye(psi[0].shape[0]) - psi[0], sampled_residuals.T).T
+
+            # total effects
+            for c, to in enumerate(reversed(self._causal_order)):
+                # time t
+                for from_ in self._causal_order[:n_features-(c+1)]:
+                    total_effects[i, to, from_] = self.estimate_total_effect(
+                        resampled_X, ee, from_, to)
+
+                # time t-tau
+                for lag in range(p):
+                    for from_ in range(n_features):
+                        total_effects[i, to, from_+n_features] = self.estimate_total_effect(
+                            resampled_X, ee, from_, to, lag + 1)
 
         self._criterion = criterion
 
-        return BootstrapResult(cated_adj_matrix)
+        return BootstrapResult(adjacency_matrices, total_effects)
+
+    def estimate_total_effect(self, X, E, from_index, to_index, from_lag=0):
+        """Estimate total effect using causal model.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Original data, where n_samples is the number of samples
+            and n_features is the number of features.
+        E : array-like, shape (n_samples, n_features)
+            Original error data, where n_samples is the number of samples
+            and n_features is the number of features.
+        from_index : 
+            Index of source variable to estimate total effect.
+        to_index : 
+            Index of destination variable to estimate total effect.
+
+        Returns
+        -------
+        total_effect : float
+            Estimated total effect.
+        """
+        n_features = X.shape[1]
+
+        # X + lagged X
+        X_joined = np.zeros(
+            (X.shape[0], X.shape[1]*(1+from_lag+self._order[0]+self._order[1])))
+
+        for p in range(1+self._order[0]):
+            pos = n_features * p
+            X_joined[:, pos:pos +
+                     n_features] = np.roll(X[:, 0:n_features], p, axis=0)
+
+        for q in range(self._order[1]):
+            pos = n_features * (1+self._order[0]) + n_features * q
+            X_joined[:, pos:pos +
+                     n_features] = np.roll(E[:, 0:n_features], q+1, axis=0)
+
+        # concat psi and omega
+        psi = self._adjacency_matrices[0]
+        omega = self._adjacency_matrices[1]
+        am = np.concatenate([*psi, *omega], axis=1)
+
+        # from_index + parents indices
+        parents = np.where(np.abs(am[from_index]) > 0)[0]
+        from_index = from_index if from_lag == 0 else from_index+n_features
+        parents = parents if from_lag == 0 else parents+n_features
+        predictors = [from_index]
+        predictors.extend(parents)
+
+        # Estimate total effect
+        lr = LinearRegression()
+        lr.fit(X_joined[:, predictors], X_joined[:, to_index])
+
+        return lr.coef_[0]
 
     def _estimate_varma_coefs(self, X):
         if self._criterion not in ['aic', 'bic', 'hqic']:
