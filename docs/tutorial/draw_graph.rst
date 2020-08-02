@@ -9,7 +9,7 @@ In this example, we need to import ``numpy``, ``pandas``, and
 ``graphviz`` in addition to ``lingam``. And to draw the causal graph, we
 need to import ``make_dot`` method from ``lingam.utils``.
 
-.. code:: ipython3
+.. code-block:: python
 
     import numpy as np
     import pandas as pd
@@ -33,7 +33,7 @@ Draw the result of LiNGAM
 
 First, we can draw a simple graph that is the result of LiNGAM.
 
-.. code:: ipython3
+.. code-block:: python
 
     x3 = np.random.uniform(size=10000)
     x0 = 3.0*x3 + np.random.uniform(size=10000)
@@ -56,7 +56,7 @@ First, we can draw a simple graph that is the result of LiNGAM.
 
 If we want to change the variable name, we can use ``labels``.
 
-.. code:: ipython3
+.. code-block:: python
 
     labels = [f'var{i}' for i in range(X.shape[1])]
     make_dot(model.adjacency_matrix_, labels=labels)
@@ -74,7 +74,7 @@ Save graph
 The created dot data can be saved as an image file in addition to being
 displayed in Jupyter Notebook.
 
-.. code:: ipython3
+.. code-block:: python
 
     dot = make_dot(model.adjacency_matrix_, labels=labels)
     
@@ -100,7 +100,7 @@ Draw the result of LiNGAM with prediction model
 For example, we create a linear regression model with x0 as the target
 variable.
 
-.. code:: ipython3
+.. code-block:: python
 
     from sklearn.linear_model import LinearRegression
     
@@ -124,7 +124,7 @@ By specify ``prediction_feature_indices`` and ``prediction_coefs`` that
 can be obtained from the prediction model, we can draw the prediction
 model with the causal structure.
 
-.. code:: ipython3
+.. code-block:: python
 
     make_dot(model.adjacency_matrix_, prediction_feature_indices=features, prediction_coefs=reg.coef_)
 
@@ -140,7 +140,7 @@ Also, we can change the label of the target variable by
 without ``prediction_coefs``, and change the color by
 ``prediction_line_color``.
 
-.. code:: ipython3
+.. code-block:: python
 
     make_dot(model.adjacency_matrix_, prediction_feature_indices=features, prediction_target_label='Target', prediction_line_color='#0000FF')
 
@@ -154,7 +154,7 @@ without ``prediction_coefs``, and change the color by
 In addition to the above, we can use ``prediction_feature_importance``
 to draw the importance of the prediction model as an edge label.
 
-.. code:: ipython3
+.. code-block:: python
 
     import lightgbm as lgb
     
@@ -173,7 +173,7 @@ to draw the importance of the prediction model as an edge label.
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     make_dot(model.adjacency_matrix_, prediction_feature_indices=features, prediction_feature_importance=reg.feature_importances_)
 

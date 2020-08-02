@@ -7,7 +7,7 @@ Import and settings
 
 In this example, we need to import ``numpy``, ``pandas``, and ``graphviz`` in addition to ``lingam``.
 
-.. code:: ipython3
+.. code-block:: python
 
     import numpy as np
     import pandas as pd
@@ -31,7 +31,7 @@ Test data
 
 We create test data consisting of 6 variables.
 
-.. code:: ipython3
+.. code-block:: python
 
     x3 = np.random.uniform(size=1000)
     x0 = 3.0*x3 + np.random.uniform(size=1000)
@@ -149,7 +149,7 @@ We create test data consisting of 6 variables.
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     m = np.array([[0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
                   [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
@@ -172,7 +172,7 @@ Bootstrapping
 
 We call :func:`~lingam.DirectLiNGAM.bootstrap` method instead of :func:`~lingam.DirectLiNGAM.fit`. Here, the second argument specifies the number of bootstrap sampling.
 
-.. code:: ipython3
+.. code-block:: python
 
     model = lingam.DirectLiNGAM()
     result = model.bootstrap(X, n_sampling=100)
@@ -182,13 +182,13 @@ Causal Directions
 
 Since :class:`~lingam.BootstrapResult` object is returned, we can get the ranking of the causal directions extracted by :func:`~lingam.BootstrapResult.get_causal_direction_counts` method. In the following sample code, ``n_directions`` option is limited to the causal directions of the top 8 rankings, and ``min_causal_effect`` option is limited to causal directions with a coefficient of 0.01 or more.
 
-.. code:: ipython3
+.. code-block:: python
 
     cdc = result.get_causal_direction_counts(n_directions=8, min_causal_effect=0.01, split_by_causal_effect_sign=True)
 
 We can check the result by utility function.
 
-.. code:: ipython3
+.. code-block:: python
 
     print_causal_directions(cdc, 100)
 
@@ -214,13 +214,13 @@ get the ranking of the DAGs extracted. In the following sample code,
 ``min_causal_effect`` option is limited to causal directions with a
 coefficient of 0.01 or more.
 
-.. code:: ipython3
+.. code-block:: python
 
     dagc = result.get_directed_acyclic_graph_counts(n_dags=3, min_causal_effect=0.01, split_by_causal_effect_sign=True)
 
 We can check the result by utility function.
 
-.. code:: ipython3
+.. code-block:: python
 
     print_dagc(dagc, 100)
 
@@ -261,7 +261,7 @@ Probability
 Using the :func:`~lingam.BootstrapResult.get_probabilities()` method, we can get the probability of
 bootstrapping.
 
-.. code:: ipython3
+.. code-block:: python
 
     prob = result.get_probabilities(min_causal_effect=0.01)
     print(prob)
@@ -285,7 +285,7 @@ effect. The causal effects we can get are dictionary type variable. We
 can display the list nicely by assigning it to pandas.DataFrame. Also,
 we have replaced the variable index with a label below.
 
-.. code:: ipython3
+.. code-block:: python
 
     causal_effects = result.get_causal_effects(min_causal_effect=0.01)
     
@@ -498,7 +498,7 @@ we have replaced the variable index with a label below.
 
 We can easily perform sorting operations with pandas.DataFrame.
 
-.. code:: ipython3
+.. code-block:: python
 
     df.sort_values('effect', ascending=False).head()
 
@@ -597,7 +597,7 @@ We can easily perform sorting operations with pandas.DataFrame.
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     df.sort_values('probability', ascending=True).head()
 
@@ -699,7 +699,7 @@ We can easily perform sorting operations with pandas.DataFrame.
 And with pandas.DataFrame, we can easily filter by keywords. The
 following code extracts the causal direction towards x1.
 
-.. code:: ipython3
+.. code-block:: python
 
     df[df['to']=='x1'].head()
 
@@ -801,7 +801,7 @@ Because it holds the raw data of the causal effect (the original data
 for calculating the median), it is possible to draw a histogram of the
 values of the causal effect, as shown below.
 
-.. code:: ipython3
+.. code-block:: python
 
     import matplotlib.pyplot as plt
     import seaborn as sns

@@ -7,7 +7,7 @@ Import and settings
 
 In this example, we need to import ``numpy``, ``pandas``, and ``graphviz`` in addition to ``lingam``.
 
-.. code:: ipython3
+.. code-block:: python
 
     import numpy as np
     import pandas as pd
@@ -31,7 +31,7 @@ Test data
 
 We generate two datasets consisting of 6 variables.
 
-.. code:: ipython3
+.. code-block:: python
 
     x3 = np.random.uniform(size=10000)
     x0 = 3.0*x3 + np.random.uniform(size=10000)
@@ -149,7 +149,7 @@ We generate two datasets consisting of 6 variables.
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     m = np.array([[0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
                   [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
@@ -167,7 +167,7 @@ We generate two datasets consisting of 6 variables.
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     x3 = np.random.uniform(size=1000)
     x0 = 3.5*x3 + np.random.uniform(size=1000)
@@ -285,7 +285,7 @@ We generate two datasets consisting of 6 variables.
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     m = np.array([[0.0, 0.0, 0.0, 3.5, 0.0, 0.0],
                   [3.5, 0.0, 2.5, 0.0, 0.0, 0.0],
@@ -305,7 +305,7 @@ We generate two datasets consisting of 6 variables.
 
 We create a list variable that contains two datasets.
 
-.. code:: ipython3
+.. code-block:: python
 
     X_list = [X1, X2]
 
@@ -314,7 +314,7 @@ Causal Discovery
 
 To run causal discovery for multiple datasets, we create a :class:`~lingam.MultiGroupDirectLiNGAM` object and call the :func:`~lingam.MultiGroupDirectLiNGAM.fit` method.
 
-.. code:: ipython3
+.. code-block:: python
 
     model = lingam.MultiGroupDirectLiNGAM()
     model.fit(X_list)
@@ -330,7 +330,7 @@ To run causal discovery for multiple datasets, we create a :class:`~lingam.Multi
 
 Using the :attr:`~lingam.MultiGroupDirectLiNGAM.causal_order_` properties, we can see the causal ordering as a result of the causal discovery.
 
-.. code:: ipython3
+.. code-block:: python
 
     model.causal_order_
 
@@ -345,7 +345,7 @@ Using the :attr:`~lingam.MultiGroupDirectLiNGAM.causal_order_` properties, we ca
 
 Also, using the :attr:`~lingam.MultiGroupDirectLiNGAM.adjacency_matrix_` properties, we can see the adjacency matrix as a result of the causal discovery. As you can see from the following, DAG in each dataset is correctly estimated.
 
-.. code:: ipython3
+.. code-block:: python
 
     print(model.adjacency_matrices_[0])
     make_dot(model.adjacency_matrices_[0])
@@ -367,7 +367,7 @@ Also, using the :attr:`~lingam.MultiGroupDirectLiNGAM.adjacency_matrix_` propert
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     print(model.adjacency_matrices_[1])
     make_dot(model.adjacency_matrices_[1])
@@ -392,7 +392,7 @@ Also, using the :attr:`~lingam.MultiGroupDirectLiNGAM.adjacency_matrix_` propert
 To compare, we run DirectLiNGAM with single dataset concatenating two
 datasets.
 
-.. code:: ipython3
+.. code-block:: python
 
     X_all = pd.concat([X1, X2])
     print(X_all.shape)
@@ -403,7 +403,7 @@ datasets.
     (11000, 6)
     
 
-.. code:: ipython3
+.. code-block:: python
 
     model_all = lingam.DirectLiNGAM()
     model_all.fit(X_all)
@@ -422,7 +422,7 @@ datasets.
 You can see that the causal structure cannot be estimated correctly for
 a single dataset.
 
-.. code:: ipython3
+.. code-block:: python
 
     make_dot(model_all.adjacency_matrix_)
 
@@ -438,7 +438,7 @@ Bootstrapping
 
 In :class:`~lingam.MultiGroupDirectLiNGAM`, bootstrap can be executed in the same way as normal :class:`~lingam.DirectLiNGAM`.
 
-.. code:: ipython3
+.. code-block:: python
 
     results = model.bootstrap(X_list, n_sampling=100)
 
@@ -448,7 +448,7 @@ Causal Directions
 
 The :func:`~lingam.MultiGroupDirectLiNGAM.bootstrap` method returns a list of multiple :class:`~lingam.BootstrapResult`, so we can get the result of bootstrapping from the list. We can get the same number of results as the number of datasets, so we specify an index when we access the results. We can get the ranking of the causal directions extracted by :func:`~lingam.BootstrapResult.get_causal_direction_counts`.
 
-.. code:: ipython3
+.. code-block:: python
 
     cdc = results[0].get_causal_direction_counts(n_directions=8, min_causal_effect=0.01)
     print_causal_directions(cdc, 100)
@@ -466,7 +466,7 @@ The :func:`~lingam.MultiGroupDirectLiNGAM.bootstrap` method returns a list of mu
     x0 <--- x2  (14.0%)
     
 
-.. code:: ipython3
+.. code-block:: python
 
     cdc = results[1].get_causal_direction_counts(n_directions=8, min_causal_effect=0.01)
     print_causal_directions(cdc, 100)
@@ -489,7 +489,7 @@ Directed Acyclic Graphs
 
 Also, using the :func:`~lingam.BootstrapResult.get_directed_acyclic_graph_counts` method, we can get the ranking of the DAGs extracted. In the following sample code, ``n_dags`` option is limited to the dags of the top 3 rankings, and ``min_causal_effect`` option is limited to causal directions with a coefficient of 0.01 or more.
 
-.. code:: ipython3
+.. code-block:: python
 
     dagc = results[0].get_directed_acyclic_graph_counts(n_dags=3, min_causal_effect=0.01)
     print_dagc(dagc, 100)
@@ -525,7 +525,7 @@ Also, using the :func:`~lingam.BootstrapResult.get_directed_acyclic_graph_counts
     	x5 <--- x0 
     
 
-.. code:: ipython3
+.. code-block:: python
 
     dagc = results[1].get_directed_acyclic_graph_counts(n_dags=3, min_causal_effect=0.01)
     print_dagc(dagc, 100)
@@ -567,7 +567,7 @@ Probability
 
 Using the :func:`~lingam.BootstrapResult.get_probabilities` method, we can get the probability of bootstrapping.
 
-.. code:: ipython3
+.. code-block:: python
 
     prob = results[0].get_probabilities(min_causal_effect=0.01)
     print(prob)
@@ -591,7 +591,7 @@ effect. The causal effects we can get are dictionary type variable. We
 can display the list nicely by assigning it to pandas.DataFrame. Also,
 we have replaced the variable index with a label below.
 
-.. code:: ipython3
+.. code-block:: python
 
     causal_effects = results[0].get_causal_effects(min_causal_effect=0.01)
     df = pd.DataFrame(causal_effects)
@@ -803,7 +803,7 @@ we have replaced the variable index with a label below.
 
 We can easily perform sorting operations with pandas.DataFrame.
 
-.. code:: ipython3
+.. code-block:: python
 
     df.sort_values('effect', ascending=False).head()
 
@@ -905,7 +905,7 @@ We can easily perform sorting operations with pandas.DataFrame.
 And with pandas.DataFrame, we can easily filter by keywords. The
 following code extracts the causal direction towards x1.
 
-.. code:: ipython3
+.. code-block:: python
 
     df[df['to']=='x1'].head()
 
@@ -1008,7 +1008,7 @@ Because it holds the raw data of the causal effect (the original data
 for calculating the median), it is possible to draw a histogram of the
 values of the causal effect, as shown below.
 
-.. code:: ipython3
+.. code-block:: python
 
     import matplotlib.pyplot as plt
     import seaborn as sns
