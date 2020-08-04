@@ -3,6 +3,7 @@ Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
 
+import warnings
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
@@ -66,8 +67,16 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         # Check parameters
         X = check_array(X)
 
+        # Check from/to causal order
+        from_order = self._causal_order.index(from_index)
+        to_order = self._causal_order.index(to_index)
+        if from_order > to_order:
+            warnings.warn(f'The estimated causal effect may be incorrect because ' 
+                          f'the causal order of the destination variable (to_index={to_index}) '
+                          f'is earlier than the source variable (from_index={from_index}).')
+
         # from_index + parents indices
-        parents = np.where(np.abs(self.adjacency_matrix_[from_index]) > 0)[0]
+        parents = np.where(np.abs(self._adjacency_matrix[from_index]) > 0)[0]
         predictors = [from_index]
         predictors.extend(parents)
 

@@ -3,6 +3,7 @@ Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
 import numbers
+import warnings
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -153,6 +154,14 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         """
         # Check parameters
         X_list = self._check_X_list(X_list)
+
+        # Check from/to causal order
+        from_order = self._causal_order.index(from_index)
+        to_order = self._causal_order.index(to_index)
+        if from_order > to_order:
+            warnings.warn(f'The estimated causal effect may be incorrect because ' 
+                          f'the causal order of the destination variable (to_index={to_index}) '
+                          f'is earlier than the source variable (from_index={from_index}).')
 
         effects = []
         for X, am in zip(X_list, self._adjacency_matrices):
