@@ -24,7 +24,7 @@ class BottomUpParceLiNGAM():
        ParceLiNGAM: a causal ordering method robust against latent confounders.
        Neural computation, 26.1: 57-83, 2014.
     """
-    def __init__(self, random_state=None, alpha=0.05):
+    def __init__(self, random_state=None, alpha=0.1):
         """Construct a BottomUpParceLiNGAM model.
 
         Parameters
@@ -32,7 +32,7 @@ class BottomUpParceLiNGAM():
         random_state : int, optional (default=None)
             ``random_state`` is the seed used by the random number generator.
 
-        alpha : float, optional (default=0.05)
+        alpha : float, optional (default=0.1)
             Significant level of statistical test.
         """
         self._random_state = random_state
