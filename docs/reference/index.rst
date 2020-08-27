@@ -14,5 +14,6 @@ API Reference
     longitudinal_lingam
     bootstrap
     longitudinal_bootstrap
+    bottom_up_parce_lingam
     causal_effect
     utils

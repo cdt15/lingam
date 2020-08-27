@@ -19,7 +19,7 @@ def print_causal_directions(cdc, n_sampling, labels=None):
     Parameters
     ----------
     cdc : dict
-        List of causal directions sorted by count in descending order. 
+        List of causal directions sorted by count in descending order.
         This can be set the value returned by ``BootstrapResult.get_causal_direction_counts()`` method.
     n_sampling : int
         Number of bootstrapping samples.
@@ -42,7 +42,7 @@ def print_dagc(dagc, n_sampling, labels=None):
     Parameters
     ----------
     dagc : dict
-        List of directed acyclic graphs sorted by count in descending order. 
+        List of directed acyclic graphs sorted by count in descending order.
         This can be set the value returned by ``BootstrapResult.get_directed_acyclic_graph_counts()`` method.
     n_sampling : int
         Number of bootstrapping samples.
@@ -160,9 +160,10 @@ def make_dot(adjacency_matrix, labels=None, lower_limit=0.01,
     -------
     graph : graphviz.Digraph
         Directed graph source code in the DOT language.
+        If order is unknown, draw a double-headed arrow.
     """
     # Check parameters
-    B = check_array(adjacency_matrix)
+    B = check_array(np.nan_to_num(adjacency_matrix))
     if not ignore_shape and B.shape[0] != B.shape[1]:
         raise ValueError("'adjacency_matrix' is not square matrix.")
     if labels is not None:
@@ -221,6 +222,16 @@ def make_dot(adjacency_matrix, labels=None, lower_limit=0.01,
                        prediction_target_label,
                        color=prediction_line_color,
                        style='dashed')
+
+    # If the value is nan, draw a double-headed arrow
+    unk_order = np.where(np.isnan(np.tril(adjacency_matrix)))
+    unk_order_set = set([val for item in unk_order for val in item])
+    with d.subgraph() as s:
+        s.attr(rank='same')
+        for node in unk_order_set:
+            s.node(names[node])
+    for to, from_ in zip(unk_order[0], unk_order[1]):
+        d.edge(names[from_], names[to], dir="both")
 
     return d
 
