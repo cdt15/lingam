@@ -12,8 +12,10 @@ from .var_lingam import VARLiNGAM
 from .varma_lingam import VARMALiNGAM
 from .longitudinal_lingam import LongitudinalLiNGAM
 from .bootstrap import LongitudinalBootstrapResult
+from .bottom_up_parce_lingam import BottomUpParceLiNGAM
 
 __all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult', 'MultiGroupDirectLiNGAM',
-           'CausalEffect', 'VARLiNGAM', 'VARMALiNGAM', 'LongitudinalLiNGAM', 'LongitudinalBootstrapResult']
+           'CausalEffect', 'VARLiNGAM', 'VARMALiNGAM', 'LongitudinalLiNGAM', 'LongitudinalBootstrapResult',
+           'BottomUpParceLiNGAM']
 
-__version__ = '1.3.1'
+__version__ = '1.4.0'

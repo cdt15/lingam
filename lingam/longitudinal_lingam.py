@@ -3,6 +3,7 @@ Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
 import numbers
+import warnings
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -140,16 +141,16 @@ class LongitudinalLiNGAM():
                     to_t = from_t
                     for to in self._causal_orders[from_t][c+1:]:
                         total_effects[i, to_t * self._p + to, from_t * self._p +
-                                      from_] = self.estimate_total_effect(X_t, to_t, to, from_t, from_)
+                                      from_] = self.estimate_total_effect(X_t, from_t, from_, to_t, to)
 
                     for to_t in range(from_t+1, self._T):
                         for to in self._causal_orders[to_t]:
                             total_effects[i, to_t * self._p + to, from_t * self._p +
-                                          from_] = self.estimate_total_effect(X_t, to_t, to, from_t, from_)
+                                          from_] = self.estimate_total_effect(X_t, from_t, from_, to_t, to)
 
         return LongitudinalBootstrapResult(self._T, adjacency_matrices, total_effects)
 
-    def estimate_total_effect(self, X_t, to_t, to_index, from_t, from_index):
+    def estimate_total_effect(self, X_t, from_t, from_index, to_t, to_index):
         """Estimate total effect using causal model.
 
         Parameters
@@ -157,20 +158,33 @@ class LongitudinalLiNGAM():
         X_t : array-like, shape (n_samples, n_features)
             Original data, where n_samples is the number of samples
             and n_features is the number of features.
-        to_t : 
-            The timepoint of destination variable.
-        to_index : 
-            Index of destination variable to estimate total effect.
         from _t : 
             The timepoint of source variable.
         from_index : 
             Index of source variable to estimate total effect.
+        to_t : 
+            The timepoint of destination variable.
+        to_index : 
+            Index of destination variable to estimate total effect.
 
         Returns
         -------
         total_effect : float
             Estimated total effect.
         """
+        # Check from/to causal order
+        if to_t == from_t:
+            from_order = self._causal_orders[to_t].index(from_index)
+            to_order = self._causal_orders[from_t].index(to_index)
+            if from_order > to_order:
+                warnings.warn(f'The estimated causal effect may be incorrect because ' 
+                              f'the causal order of the destination variable (to_t={to_t}, to_index={to_index}) '
+                              f'is earlier than the source variable (from_t={from_t}, from_index={from_index}).')
+        elif to_t < from_t:
+            warnings.warn(f'The estimated causal effect may be incorrect because ' 
+                          f'the causal order of the destination variable (to_t={to_t}) '
+                          f'is earlier than the source variable (from_t={from_t}).')
+
         # X + lagged X
         # n_features * (to + from + n_lags)
         X_joined = np.zeros((self._n, self._p*(2+self._n_lags)))

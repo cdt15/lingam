@@ -2,6 +2,7 @@
 Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
+import warnings
 
 import numpy as np
 from sklearn.linear_model import LassoLarsIC, LinearRegression
@@ -189,6 +190,15 @@ class VARLiNGAM:
         """
         X = check_array(X)
         n_features = X.shape[1]
+
+        # Check from/to causal order
+        if from_lag == 0:
+            from_order = self._causal_order.index(from_index)
+            to_order = self._causal_order.index(to_index)
+            if from_order > to_order:
+                warnings.warn(f'The estimated causal effect may be incorrect because ' 
+                              f'the causal order of the destination variable (to_index={to_index}) '
+                              f'is earlier than the source variable (from_index={from_index}).')
 
         # X + lagged X
         X_joined = np.zeros((X.shape[0], X.shape[1]*(1+self._lags+from_lag)))
