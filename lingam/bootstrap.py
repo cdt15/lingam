@@ -77,7 +77,7 @@ class BootstrapResult(object):
         Returns
         -------
         adjacency_matrices_ : array-like, shape (n_sampling)
-            The adjacency matrix list, where ``n_sampling`` is 
+            The adjacency matrix list, where ``n_sampling`` is
             the number of bootstrap sampling.
         """
         return self._adjacency_matrices
@@ -89,7 +89,7 @@ class BootstrapResult(object):
         Returns
         -------
         total_effects_ : array-like, shape (n_sampling)
-            The total effect list, where ``n_sampling`` is 
+            The total effect list, where ``n_sampling`` is
             the number of bootstrap sampling.
         """
         return self._total_effects
@@ -102,7 +102,7 @@ class BootstrapResult(object):
         n_directions : int, optional (default=None)
             If int, then The top ``n_directions`` items are included in the result
         min_causal_effect : float, optional (default=None)
-            Threshold for detecting causal direction. 
+            Threshold for detecting causal direction.
             If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
         split_by_causal_effect_sign : boolean, optional (default=False)
             If True, then causal directions are split depending on the sign of the causal effect.
@@ -110,8 +110,8 @@ class BootstrapResult(object):
         Returns
         -------
         causal_direction_counts : dict
-            List of causal directions sorted by count in descending order. 
-            The dictionary has the following format:: 
+            List of causal directions sorted by count in descending order.
+            The dictionary has the following format::
 
             {'from': [n_directions], 'to': [n_directions], 'count': [n_directions]}
 
@@ -136,7 +136,7 @@ class BootstrapResult(object):
 
         # Count causal directions
         directions = []
-        for am in self._adjacency_matrices:
+        for am in np.nan_to_num(self._adjacency_matrices):
             direction = np.array(np.where(np.abs(am) > min_causal_effect))
             if split_by_causal_effect_sign:
                 signs = np.array([np.sign(am[i][j])
@@ -175,7 +175,7 @@ class BootstrapResult(object):
         n_dags : int, optional (default=None)
             If int, then The top ``n_dags`` items are included in the result
         min_causal_effect : float, optional (default=None)
-            Threshold for detecting causal direction. 
+            Threshold for detecting causal direction.
             If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
         split_by_causal_effect_sign : boolean, optional (default=False)
             If True, then causal directions are split depending on the sign of the causal effect.
@@ -183,8 +183,8 @@ class BootstrapResult(object):
         Returns
         -------
         directed_acyclic_graph_counts : dict
-            List of directed acyclic graphs sorted by count in descending order. 
-            The dictionary has the following format:: 
+            List of directed acyclic graphs sorted by count in descending order.
+            The dictionary has the following format::
 
             {'dag': [n_dags], 'count': [n_dags]}.
 
@@ -208,7 +208,7 @@ class BootstrapResult(object):
 
         # Count directed acyclic graphs
         dags = []
-        for am in self._adjacency_matrices:
+        for am in np.nan_to_num(self._adjacency_matrices):
             dag = np.abs(am) > min_causal_effect
             if split_by_causal_effect_sign:
                 direction = np.array(np.where(dag))
@@ -245,13 +245,13 @@ class BootstrapResult(object):
         Parameters
         ----------
         min_causal_effect : float, optional (default=None)
-            Threshold for detecting causal direction. 
+            Threshold for detecting causal direction.
             If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
 
         Returns
         -------
         probabilities : array-like
-            List of bootstrap probability matrix. 
+            List of bootstrap probability matrix.
         """
         # check parameters
         if min_causal_effect is None:
@@ -261,11 +261,12 @@ class BootstrapResult(object):
                 raise ValueError(
                     'min_causal_effect must be an value greater than 0.')
 
-        shape = self._adjacency_matrices[0].shape
+        adjacency_matrices = np.nan_to_num(self._adjacency_matrices)
+        shape = adjacency_matrices[0].shape
         bp = np.zeros(shape)
-        for B in self._adjacency_matrices:
+        for B in adjacency_matrices:
             bp += np.where(np.abs(B) > min_causal_effect, 1, 0)
-        bp = bp/len(self._adjacency_matrices)
+        bp = bp/len(adjacency_matrices)
 
         if int(shape[1]/shape[0]) == 1:
             return bp
@@ -278,14 +279,14 @@ class BootstrapResult(object):
         Parameters
         ----------
         min_causal_effect : float, optional (default=None)
-            Threshold for detecting causal direction. 
+            Threshold for detecting causal direction.
             If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
 
         Returns
         -------
         causal_effects : dict
-            List of bootstrap causal effect sorted by probability in descending order. 
-            The dictionary has the following format:: 
+            List of bootstrap causal effect sorted by probability in descending order.
+            The dictionary has the following format::
 
             {'from': [n_directions], 'to': [n_directions], 'effect': [n_directions], 'probability': [n_directions]}
 
@@ -354,7 +355,7 @@ class LongitudinalBootstrapResult(object):
         Returns
         -------
         adjacency_matrices_ : array-like, shape (n_sampling)
-            The adjacency matrix list, where ``n_sampling`` is 
+            The adjacency matrix list, where ``n_sampling`` is
             the number of bootstrap sampling.
         """
         return self._adjacency_matrices
@@ -366,7 +367,7 @@ class LongitudinalBootstrapResult(object):
         Returns
         -------
         total_effects_ : array-like, shape (n_sampling)
-            The total effect list, where ``n_sampling`` is 
+            The total effect list, where ``n_sampling`` is
             the number of bootstrap sampling.
         """
         return self._total_effects
@@ -379,7 +380,7 @@ class LongitudinalBootstrapResult(object):
         n_directions : int, optional (default=None)
             If int, then The top ``n_directions`` items are included in the result
         min_causal_effect : float, optional (default=None)
-            Threshold for detecting causal direction. 
+            Threshold for detecting causal direction.
             If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
         split_by_causal_effect_sign : boolean, optional (default=False)
             If True, then causal directions are split depending on the sign of the causal effect.
@@ -387,8 +388,8 @@ class LongitudinalBootstrapResult(object):
         Returns
         -------
         causal_direction_counts : dict
-            List of causal directions sorted by count in descending order. 
-            The dictionary has the following format:: 
+            List of causal directions sorted by count in descending order.
+            The dictionary has the following format::
 
             {'from': [n_directions], 'to': [n_directions], 'count': [n_directions]}
 
@@ -460,7 +461,7 @@ class LongitudinalBootstrapResult(object):
         n_dags : int, optional (default=None)
             If int, then The top ``n_dags`` items are included in the result
         min_causal_effect : float, optional (default=None)
-            Threshold for detecting causal direction. 
+            Threshold for detecting causal direction.
             If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
         split_by_causal_effect_sign : boolean, optional (default=False)
             If True, then causal directions are split depending on the sign of the causal effect.
@@ -468,8 +469,8 @@ class LongitudinalBootstrapResult(object):
         Returns
         -------
         directed_acyclic_graph_counts : dict
-            List of directed acyclic graphs sorted by count in descending order. 
-            The dictionary has the following format:: 
+            List of directed acyclic graphs sorted by count in descending order.
+            The dictionary has the following format::
 
             {'dag': [n_dags], 'count': [n_dags]}.
 
@@ -537,13 +538,13 @@ class LongitudinalBootstrapResult(object):
         Parameters
         ----------
         min_causal_effect : float, optional (default=None)
-            Threshold for detecting causal direction. 
+            Threshold for detecting causal direction.
             If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
 
         Returns
         -------
         probabilities : array-like
-            List of bootstrap probability matrix. 
+            List of bootstrap probability matrix.
         """
         # check parameters
         if min_causal_effect is None:
@@ -566,14 +567,14 @@ class LongitudinalBootstrapResult(object):
         Parameters
         ----------
         min_causal_effect : float, optional (default=None)
-            Threshold for detecting causal direction. 
+            Threshold for detecting causal direction.
             If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
 
         Returns
         -------
         causal_effects : dict
-            List of bootstrap causal effect sorted by probability in descending order. 
-            The dictionary has the following format:: 
+            List of bootstrap causal effect sorted by probability in descending order.
+            The dictionary has the following format::
 
             {'from': [n_directions], 'to': [n_directions], 'effect': [n_directions], 'probability': [n_directions]}
 
