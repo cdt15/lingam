@@ -54,5 +54,5 @@ Should you use this package for performing **estimation of intervension effects 
 Should you use this package for performing **LiNGAM for longitudinal data**, we kindly request you to cite the following paper:
 * K. Kadowaki, S. Shimizu, and T. Washio. **Estimation of causal structures in longitudinal data using non-Gaussianity**. In Proc. 23rd IEEE International Workshop on Machine Learning for Signal Processing (MLSP2013), pp. 1--6, Southampton, United Kingdom, 2013. [[PDF]](https://sites.google.com/site/sshimizu06/Kadowaki13MLSP.pdf?attredirects=0)
 
-Should you use this package for performing **BottomUpParceLiNGAM**, we kindly request you to cite the following paper:
-* T. Tashiro, S. Shimizu, and A. Hyvärinen. **ParceLiNGAM: a causal ordering method robust against latent confounders**. Neural computation, 26.1: 57-83, 2014. [[PDF]](http://www.ar.sanken.osaka-u.ac.jp/~sshimizu/papers/Tashiro13NECO.pdf)
+Should you use this package for performing **BottomUpParceLiNGAM** with Algorithm 1 of the paper below except Step 2 for estimating causal orders, we kindly request you to cite the following paper:
+* T. Tashiro, S. Shimizu, and A. Hyvärinen. **ParceLiNGAM: a causal ordering method robust against latent confounders**. Neural computation, 26.1: 57-83, 2014. [[PDF]](https://sites.google.com/site/sshimizu06/Tashiro13NECO.pdf?attredirects=0)
