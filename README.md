@@ -5,7 +5,7 @@
 
 LiNGAM is a new method for estimating structural equation models or linear Bayesian networks. It is based on using the non-Gaussianity of the data.
 
-* [The LiNGAM Project](https://sites.google.com/site/sshimizu06/lingam)
+* [The LiNGAM Project](https://sites.google.com/view/sshimizu06/lingam)
 
 ## Requirements
 * Python3
