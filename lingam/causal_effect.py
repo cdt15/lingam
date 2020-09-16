@@ -108,17 +108,17 @@ class CausalEffect(object):
         ----------
         X : array-like, shpae (n_predictors)
             Predictors, where ``n_predictors`` is the number of variables.
-        pred_model : model object implementing 'predict' or 'predict_log_proba'
+        pred_model : model object implementing 'predict' or 'predict_proba'
             Model to predict the expectation. For linear regression or non-linear reggression, model object must have ``predict`` method.
-            For logistic regression, model object must have ``predict_log_proba`` method.
+            For logistic regression, model object must have ``predict_proba`` method.
 
         Returns
         -------
         pred : float
             Predicted value.
         """
-        if hasattr(pred_model, 'predict_log_proba'):
-            p0, p1 = pred_model.predict_log_proba(X.reshape(1, -1))[0]
+        if hasattr(pred_model, 'predict_proba'):
+            p0, p1 = pred_model.predict_proba(X.reshape(1, -1))[0]
             pred = p0 - p1
         elif hasattr(pred_model, 'predict'):
             pred = pred_model.predict(X.reshape(1, -1))[0]
@@ -136,9 +136,9 @@ class CausalEffect(object):
             and ``n_features`` is the number of features.
         target_index : int
             Index of target variable.
-        pred_model : model object implementing 'predict' or 'predict_log_proba'
+        pred_model : model object implementing 'predict' or 'predict_proba'
             Model to predict the expectation. For linear regression or non-linear reggression, model object must have ``predict`` method.
-            For logistic regression, model object must have ``predict_log_proba`` method.
+            For logistic regression, model object must have ``predict_proba`` method.
 
         Returns
         -------
