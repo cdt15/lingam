@@ -9,7 +9,7 @@ VERSION = lingam.__version__
 setuptools.setup(
     name='lingam',
     version=VERSION,
-    author='T.Ikeuchi, G.Haraoka, W.Kurebayashi, S.Shimizu',
+    author='T.Ikeuchi, G.Haraoka, M.Ide, W.Kurebayashi, S.Shimizu',
     description='LiNGAM Python Package',
     long_description=README,
     long_description_content_type='text/markdown',

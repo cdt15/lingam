@@ -389,3 +389,14 @@ class VARMALiNGAM:
             n_features is the number of features.
         """
         return self._adjacency_matrices
+
+    @property
+    def residuals_(self):
+        """Residuals of regression.
+
+        Returns
+        -------
+        residuals_ : array-like, shape (n_samples)
+            Residuals of regression, where n_samples is the number of samples.
+        """
+        return self._residuals
