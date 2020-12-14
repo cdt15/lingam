@@ -25,4 +25,5 @@ Contents:
     varma
     longitudinal
     bottom_up_parce
+    rcd
     draw_graph

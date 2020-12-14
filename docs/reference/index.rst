@@ -15,5 +15,6 @@ API Reference
     bootstrap
     longitudinal_bootstrap
     bottom_up_parce_lingam
+    rcd
     causal_effect
     utils

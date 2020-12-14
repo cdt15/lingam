@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('../'))
 # -- Project information -----------------------------------------------------
 
 project = 'LiNGAM'
-author = 'T.Ikeuchi, G.Haraoka, W.Kurebayashi, S.Shimizu'
+author = 'T.Ikeuchi, G.Haraoka, M.Ide, W.Kurebayashi, S.Shimizu'
 copyright = '{}, {}'.format(datetime.datetime.now().year, author)
 
 import lingam

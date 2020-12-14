@@ -13,9 +13,10 @@ from .varma_lingam import VARMALiNGAM
 from .longitudinal_lingam import LongitudinalLiNGAM
 from .bootstrap import LongitudinalBootstrapResult
 from .bottom_up_parce_lingam import BottomUpParceLiNGAM
+from .rcd import RCD
 
 __all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult', 'MultiGroupDirectLiNGAM',
            'CausalEffect', 'VARLiNGAM', 'VARMALiNGAM', 'LongitudinalLiNGAM', 'LongitudinalBootstrapResult',
-           'BottomUpParceLiNGAM']
+           'BottomUpParceLiNGAM', 'RCD']
 
 __version__ = '1.5.0'

@@ -12,6 +12,7 @@ from sklearn.linear_model import LinearRegression
 from scipy.stats import gamma
 from scipy.stats.distributions import chi2
 from .utils import predict_adaptive_lasso
+from .hsic import hsic_test_gamma
 
 from .bootstrap import BootstrapResult
 
@@ -36,7 +37,7 @@ class BottomUpParceLiNGAM():
         alpha : float, optional (default=0.1)
             Significant level of statistical test. If alpha=0.0, rejection does not occur in statistical tests.
         regressor : regressor object implementing 'fit' and 'predict' function (default=None)
-            Regressor to compute residuals. 
+            Regressor to compute residuals.
             This regressor object must have ``fit``method and ``predict`` function like scikit-learn's model.
         """
         # Check parameters
@@ -95,79 +96,6 @@ class BottomUpParceLiNGAM():
         self._causal_order = K
         self._p_list = p_bttm
         return self._estimate_adjacency_matrix(X)
-
-    def _set_kernel_size(self, X):
-        """Set kernel size to median distance between points.
-        Use at most 100 points (since median is only a heuristic, and 100 points is sufficient for a robust estimate)."""
-        n_samples = X.shape[0]
-        if n_samples > 100:
-            X_med = X[:100, :]
-            n_samples = 100
-        else:
-            X_med = X
-
-        G = np.sum(X_med * X_med, 1).reshape(n_samples, 1)
-        Q = np.tile(G, (1, n_samples))
-        R = np.tile(G.T, (n_samples, 1))
-
-        dists = Q + R - 2 * np.dot(X_med, X_med.T)
-        dists = dists - np.tril(dists)
-        dists = dists.reshape(n_samples ** 2, 1)
-
-        return np.sqrt(0.5 * np.median(dists[dists > 0]))
-
-    def _rbf_dot(self, X, Y, kernel_size):
-        """Compute the inner product of radial basis functions."""
-        n_samples_X = X.shape[0]
-        n_samples_Y = Y.shape[0]
-
-        G = np.sum(X * X, 1).reshape(n_samples_X, 1)
-        H = np.sum(Y * Y, 1).reshape(n_samples_Y, 1)
-        Q = np.tile(G, (1, n_samples_Y))
-        R = np.tile(H.T, (n_samples_X, 1))
-        H = Q + R - 2 * np.dot(X, Y.T)
-
-        return np.exp(-H / 2 / (kernel_size ** 2))
-
-    def _hsic_test_gamma(self, X, Y):
-        """Perform an HSIC test using gamma approximation."""
-        # Set kernel size to median distance between points
-        sigx = self._set_kernel_size(X)
-        sigy = self._set_kernel_size(Y)
-
-        K = self._rbf_dot(X, X, sigx)
-        L = self._rbf_dot(Y, Y, sigy)
-
-        m = X.shape[0]
-        bone = np.ones((m, 1))
-        H = np.eye(m) - 1 / m * np.ones((m, m))
-
-        # these are slightly biased estimates of centred Gram matrices
-        Kc = np.dot(np.dot(H, K), H)
-        Lc = np.dot(np.dot(H, L), H)
-
-        # test statistic m*HSICb under H1
-        test_stat = 1 / m * np.sum(np.sum(Kc.T * Lc))
-
-        var = (1 / 6 * Kc * Lc) ** 2
-        # second subtracted term is bias correction
-        var = 1 / m / (m - 1) * (np.sum(np.sum(var)) - np.sum(np.diag(var)))
-        # variance under H0
-        var = 72 * (m - 4) * (m - 5) / m / (m - 1) / (m - 2) / (m - 3) * var
-
-        K = K - np.diag(np.diag(K))
-        L = L - np.diag(np.diag(L))
-        mu_X = 1 / m / (m - 1) * np.dot(bone.T, np.dot(K, bone))
-        mu_Y = 1 / m / (m - 1) * np.dot(bone.T, np.dot(L, bone))
-        # mean under H0
-        mean = 1 / m * (1 + mu_X * mu_Y - mu_X - mu_Y)
-
-        alpha = mean ** 2 / var
-        # threshold for hsicArr*m
-        beta = np.dot(var, m) / mean
-        p = 1 - gamma.cdf(test_stat, alpha, scale=beta)[0][0]
-
-        return test_stat, p
 
     def _search_causal_order(self, X, U, thresh_p):
         """Search causal orders one by one from the bottom upward."""
@@ -240,10 +168,10 @@ class BottomUpParceLiNGAM():
         n_features = X.shape[1]
 
         if n_features == 1:
-            fisher_stat, fisher_p = self._hsic_test_gamma(X, R)
+            fisher_stat, fisher_p = hsic_test_gamma(X, R)
         else:
             for i in range(n_features):
-                _, hsic_p = self._hsic_test_gamma(X[:, [i]], R)
+                _, hsic_p = hsic_test_gamma(X[:, [i]], R)
                 fisher_stat += np.inf if hsic_p == 0 else - 2 * np.log(hsic_p)
 
                 if fisher_stat > max_p_stat:
@@ -332,8 +260,14 @@ class BottomUpParceLiNGAM():
                           f'the causal order of the destination variable (to_index={to_index}) '
                           f'is earlier than the source variable (from_index={from_index}).')
 
+        # Check confounders
+        if True in np.isnan(self._adjacency_matrix[from_index]):
+            warnings.warn(f'The estimated causal effect may be incorrect because '
+                          f'the source variable (from_index={from_index}) is influenced by confounders.')
+            return np.nan
+
         # from_index + parents indices
-        parents = np.where(np.abs(np.nan_to_num(self._adjacency_matrix[from_index])) > 0)[0]
+        parents = np.where(np.abs(self._adjacency_matrix[from_index]) > 0)[0]
         predictors = [from_index]
         predictors.extend(parents)
 
