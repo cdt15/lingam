@@ -1,5 +1,5 @@
-BottomUpParceLiNGAM
-===================
+RCD
+===
 
 Import and settings
 -------------------
@@ -29,23 +29,26 @@ Test data
 ---------
 
 First, we generate a causal structure with 7 variables. Then we create a
-dataset with 6 variables from x0 to x5, with x6 being the latent
-variable for x2 and x3.
+dataset with 5 variables from x0 to x4, with x5 and x6 being the latent
+variables.
 
 .. code-block:: python
 
-    np.random.seed(1000)
+    np.random.seed(0)
 
-    x6 = np.random.uniform(size=1000)
-    x3 = 2.0*x6 + np.random.uniform(size=1000)
-    x0 = 0.5*x3 + np.random.uniform(size=1000)
-    x2 = 2.0*x6 + np.random.uniform(size=1000)
-    x1 = 0.5*x0 + 0.5*x2 + np.random.uniform(size=1000)
-    x5 = 0.5*x0 + np.random.uniform(size=1000)
-    x4 = 0.5*x0 - 0.5*x2 + np.random.uniform(size=1000)
+    get_external_effect = lambda n: np.random.normal(0.0, 0.5, n) ** 3
+    n_samples = 300
 
-    # The latent variable x6 is not included.
-    X = pd.DataFrame(np.array([x0, x1, x2, x3, x4, x5]).T, columns=['x0', 'x1', 'x2', 'x3', 'x4', 'x5'])
+    x5 = get_external_effect(n_samples)
+    x6 = get_external_effect(n_samples)
+    x1 = 0.6*x5 + get_external_effect(n_samples)
+    x3 = 0.5*x5 + get_external_effect(n_samples)
+    x0 = 1.0*x1 + 1.0*x3 + get_external_effect(n_samples)
+    x2 = 0.8*x0 - 0.6*x6 + get_external_effect(n_samples)
+    x4 = 1.0*x0 - 0.5*x6 + get_external_effect(n_samples)
+
+    # The latent variables x5 and x6 are not included.
+    X = pd.DataFrame(np.array([x0, x1, x2, x3, x4]).T, columns=['x0', 'x1', 'x2', 'x3', 'x4'])
 
     X.head()
 
@@ -100,54 +103,48 @@ variable for x2 and x3.
           <th>x2</th>
           <th>x3</th>
           <th>x4</th>
-          <th>x5</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <th>0</th>
-          <td>1.505949</td>
-          <td>2.667827</td>
-          <td>2.029420</td>
-          <td>1.463708</td>
-          <td>0.615387</td>
-          <td>1.157907</td>
+          <td>-0.191493</td>
+          <td>-0.054157</td>
+          <td>0.014075</td>
+          <td>-0.047309</td>
+          <td>0.016311</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>1.379130</td>
-          <td>1.721744</td>
-          <td>0.965613</td>
-          <td>0.801952</td>
-          <td>0.919654</td>
-          <td>0.957148</td>
+          <td>-0.967142</td>
+          <td>0.013890</td>
+          <td>-1.115854</td>
+          <td>-0.035899</td>
+          <td>-1.254783</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>1.436825</td>
-          <td>2.845166</td>
-          <td>2.773506</td>
-          <td>2.533417</td>
-          <td>-0.616746</td>
-          <td>0.903326</td>
+          <td>0.527409</td>
+          <td>-0.034960</td>
+          <td>0.426923</td>
+          <td>0.064804</td>
+          <td>0.894242</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>1.562885</td>
-          <td>2.205270</td>
-          <td>1.080121</td>
-          <td>1.192257</td>
-          <td>1.240595</td>
-          <td>1.411295</td>
+          <td>1.583826</td>
+          <td>0.845653</td>
+          <td>1.265038</td>
+          <td>0.704166</td>
+          <td>1.994283</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>1.940721</td>
-          <td>2.974182</td>
-          <td>2.140298</td>
-          <td>1.886342</td>
-          <td>0.451992</td>
-          <td>1.770786</td>
+          <td>0.286276</td>
+          <td>0.141120</td>
+          <td>0.116967</td>
+          <td>0.329866</td>
+          <td>0.257932</td>
         </tr>
       </tbody>
     </table>
@@ -157,15 +154,14 @@ variable for x2 and x3.
 
 .. code-block:: python
 
-    m = np.array([[0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0],
-                  [0.5, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0],
-                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0],
-                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0],
-                  [0.5, 0.0,-0.5, 0.0, 0.0, 0.0, 0.0],
-                  [0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
-
-    dot = make_dot(m)
+    m = np.array([[ 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.6, 0.0],
+                  [ 0.8, 0.0, 0.0, 0.0, 0.0, 0.0,-0.6],
+                  [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0],
+                  [ 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,-0.5],
+                  [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
+    dot = make_dot(m, labels=['x0', 'x1', 'x2', 'x3', 'x4', 'f0(x5)', 'f1(x6)'])
 
     # Save pdf
     dot.render('dag')
@@ -179,19 +175,19 @@ variable for x2 and x3.
 
 
 
-.. image:: ../image/bottom_up_parce.svg
+.. image:: ../image/rcd_dag1.svg
 
 
 
 Causal Discovery
 ----------------
 
-To run causal discovery, we create a ``BottomUpParceLiNGAM`` object and
-call the ``fit`` method.
+To run causal discovery, we create a ``RCD`` object and call the ``fit``
+method.
 
 .. code-block:: python
 
-    model = lingam.BottomUpParceLiNGAM()
+    model = lingam.RCD()
     model.fit(X)
 
 
@@ -199,25 +195,28 @@ call the ``fit`` method.
 
 .. parsed-literal::
 
-    <lingam.bottom_up_parce_lingam.BottomUpParceLiNGAM at 0x55577c0>
+    <lingam.rcd.RCD at 0x1c2baaf0>
 
 
 
-Using the ``causal_order_`` properties, we can see the causal ordering
-as a result of the causal discovery. x2 and x3, which have latent
-confounders as parents, are stored in a list without causal ordering.
+Using the ``ancestors_list_`` properties, we can see the list of
+ancestors sets as a result of the causal discovery.
 
 .. code-block:: python
 
-    model.causal_order_
+    ancestors_list = model.ancestors_list_
 
-
+    for i, ancestors in enumerate(ancestors_list):
+        print(f'M{i}={ancestors}')
 
 
 .. parsed-literal::
 
-    [[2, 3], 0, 5, 1, 4]
-
+    M0=set()
+    M1=set()
+    M2={0, 1, 3}
+    M3=set()
+    M4={0, 1, 3}
 
 
 Also, using the ``adjacency_matrix_`` properties, we can see the
@@ -233,16 +232,13 @@ between variables with latent confounders are np.nan.
 
 .. parsed-literal::
 
-    array([[ 0.   ,  0.   ,  0.   ,  0.506,  0.   ,  0.   ],
-           [ 0.499,  0.   ,  0.495,  0.007,  0.   ,  0.   ],
-           [ 0.   ,  0.   ,  0.   ,    nan,  0.   ,  0.   ],
-           [ 0.   ,  0.   ,    nan,  0.   ,  0.   ,  0.   ],
-           [ 0.448,  0.   , -0.451,  0.   ,  0.   ,  0.   ],
-           [ 0.48 ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
+    array([[0.   ,   nan, 0.   ,   nan, 0.   ],
+           [  nan, 0.   , 0.   ,   nan, 0.   ],
+           [0.751, 0.   , 0.   , 0.   ,   nan],
+           [  nan,   nan, 0.   , 0.   , 0.   ],
+           [1.016, 0.   ,   nan, 0.   , 0.   ]])
 
 
-
-We can draw a causal graph by utility funciton.
 
 .. code-block:: python
 
@@ -251,7 +247,7 @@ We can draw a causal graph by utility funciton.
 
 
 
-.. image:: ../image/bottom_up_parce2.svg
+.. image:: ../image/rcd_dag2.svg
 
 
 
@@ -266,7 +262,7 @@ argument specifies the number of bootstrap sampling.
     import warnings
     warnings.filterwarnings('ignore', category=UserWarning)
 
-    model = lingam.BottomUpParceLiNGAM()
+    model = lingam.RCD()
     result = model.bootstrap(X, n_sampling=100)
 
 Causal Directions
@@ -292,14 +288,14 @@ We can check the result by utility function.
 
 .. parsed-literal::
 
-    x4 <--- x0 (b>0) (45.0%)
-    x4 <--- x2 (b<0) (45.0%)
-    x1 <--- x0 (b>0) (41.0%)
-    x1 <--- x2 (b>0) (41.0%)
-    x5 <--- x0 (b>0) (26.0%)
-    x1 <--- x3 (b>0) (21.0%)
-    x0 <--- x3 (b>0) (12.0%)
-    x5 <--- x2 (b>0) (7.0%)
+    x4 <--- x0 (b>0) (98.0%)
+    x2 <--- x0 (b>0) (44.0%)
+    x2 <--- x4 (b>0) (36.0%)
+    x0 <--- x1 (b>0) (25.0%)
+    x0 <--- x3 (b>0) (22.0%)
+    x4 <--- x3 (b<0) (19.0%)
+    x2 <--- x1 (b>0) (6.0%)
+    x2 <--- x3 (b>0) (6.0%)
 
 
 Directed Acyclic Graphs
@@ -324,13 +320,17 @@ We can check the result by utility function.
 
 .. parsed-literal::
 
-    DAG[0]: 33.0%
-    DAG[1]: 13.0%
+    DAG[0]: 21.0%
+    	x2 <--- x4 (b>0)
     	x4 <--- x0 (b>0)
-    	x4 <--- x2 (b<0)
-    DAG[2]: 7.0%
-    	x1 <--- x0 (b>0)
-    	x1 <--- x2 (b>0)
+    DAG[1]: 19.0%
+    	x0 <--- x1 (b>0)
+    	x0 <--- x3 (b>0)
+    	x2 <--- x0 (b>0)
+    	x4 <--- x0 (b>0)
+    DAG[2]: 18.0%
+    	x2 <--- x0 (b>0)
+    	x4 <--- x0 (b>0)
 
 
 Probability
@@ -347,12 +347,11 @@ bootstrapping.
 
 .. parsed-literal::
 
-    [[0.   0.01 0.   0.12 0.01 0.  ]
-     [0.41 0.   0.41 0.21 0.   0.  ]
-     [0.   0.   0.   0.02 0.   0.  ]
-     [0.   0.   0.   0.   0.   0.  ]
-     [0.45 0.03 0.45 0.02 0.   0.07]
-     [0.26 0.01 0.07 0.02 0.   0.  ]]
+    [[0.   0.25 0.   0.22 0.  ]
+     [0.   0.   0.   0.   0.  ]
+     [0.44 0.06 0.   0.06 0.36]
+     [0.   0.   0.   0.   0.  ]
+     [0.98 0.03 0.01 0.21 0.  ]]
 
 
 Causal Effects
@@ -429,114 +428,72 @@ we have replaced the variable index with a label below.
       <tbody>
         <tr>
           <th>0</th>
-          <td>x1</td>
           <td>x4</td>
-          <td>0.045256</td>
-          <td>0.14</td>
+          <td>x2</td>
+          <td>0.225102</td>
+          <td>0.51</td>
         </tr>
         <tr>
           <th>1</th>
           <td>x0</td>
-          <td>x5</td>
-          <td>0.517290</td>
-          <td>0.12</td>
+          <td>x2</td>
+          <td>0.814519</td>
+          <td>0.20</td>
         </tr>
         <tr>
           <th>2</th>
           <td>x0</td>
-          <td>x1</td>
-          <td>0.477885</td>
-          <td>0.11</td>
+          <td>x4</td>
+          <td>1.164953</td>
+          <td>0.20</td>
         </tr>
         <tr>
           <th>3</th>
+          <td>x2</td>
           <td>x4</td>
-          <td>x1</td>
-          <td>0.044782</td>
-          <td>0.11</td>
+          <td>0.243174</td>
+          <td>0.04</td>
         </tr>
         <tr>
           <th>4</th>
+          <td>x1</td>
           <td>x0</td>
-          <td>x4</td>
-          <td>0.494946</td>
-          <td>0.11</td>
+          <td>1.140202</td>
+          <td>0.02</td>
         </tr>
         <tr>
           <th>5</th>
-          <td>x5</td>
           <td>x1</td>
-          <td>0.025297</td>
-          <td>0.06</td>
+          <td>x2</td>
+          <td>0.803256</td>
+          <td>0.02</td>
         </tr>
         <tr>
           <th>6</th>
-          <td>x5</td>
+          <td>x1</td>
           <td>x4</td>
-          <td>-0.031346</td>
-          <td>0.06</td>
+          <td>1.115286</td>
+          <td>0.02</td>
         </tr>
         <tr>
           <th>7</th>
-          <td>x2</td>
-          <td>x1</td>
-          <td>0.482657</td>
-          <td>0.02</td>
+          <td>x3</td>
+          <td>x0</td>
+          <td>1.184964</td>
+          <td>0.01</td>
         </tr>
         <tr>
           <th>8</th>
+          <td>x3</td>
           <td>x2</td>
-          <td>x4</td>
-          <td>-0.490889</td>
-          <td>0.02</td>
+          <td>0.872317</td>
+          <td>0.01</td>
         </tr>
         <tr>
           <th>9</th>
           <td>x3</td>
-          <td>x0</td>
-          <td>0.511008</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>10</th>
-          <td>x3</td>
-          <td>x1</td>
-          <td>0.653876</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>11</th>
-          <td>x0</td>
-          <td>x2</td>
-          <td>-0.044259</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>12</th>
-          <td>x3</td>
-          <td>x2</td>
-          <td>0.790837</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>13</th>
-          <td>x5</td>
-          <td>x2</td>
-          <td>0.054423</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>14</th>
-          <td>x3</td>
           <td>x4</td>
-          <td>-0.126227</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>15</th>
-          <td>x3</td>
-          <td>x5</td>
-          <td>0.265528</td>
+          <td>1.084753</td>
           <td>0.01</td>
         </tr>
       </tbody>
@@ -605,39 +562,39 @@ We can easily perform sorting operations with pandas.DataFrame.
       </thead>
       <tbody>
         <tr>
-          <th>12</th>
+          <th>7</th>
           <td>x3</td>
-          <td>x2</td>
-          <td>0.790837</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>10</th>
-          <td>x3</td>
-          <td>x1</td>
-          <td>0.653876</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>1</th>
           <td>x0</td>
-          <td>x5</td>
-          <td>0.517290</td>
-          <td>0.12</td>
+          <td>1.184964</td>
+          <td>0.01</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>x0</td>
+          <td>x4</td>
+          <td>1.164953</td>
+          <td>0.20</td>
+        </tr>
+        <tr>
+          <th>4</th>
+          <td>x1</td>
+          <td>x0</td>
+          <td>1.140202</td>
+          <td>0.02</td>
+        </tr>
+        <tr>
+          <th>6</th>
+          <td>x1</td>
+          <td>x4</td>
+          <td>1.115286</td>
+          <td>0.02</td>
         </tr>
         <tr>
           <th>9</th>
           <td>x3</td>
-          <td>x0</td>
-          <td>0.511008</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>x0</td>
           <td>x4</td>
-          <td>0.494946</td>
-          <td>0.11</td>
+          <td>1.084753</td>
+          <td>0.01</td>
         </tr>
       </tbody>
     </table>
@@ -703,48 +660,45 @@ We can easily perform sorting operations with pandas.DataFrame.
       </thead>
       <tbody>
         <tr>
+          <th>7</th>
+          <td>x3</td>
+          <td>x0</td>
+          <td>1.184964</td>
+          <td>0.01</td>
+        </tr>
+        <tr>
+          <th>8</th>
+          <td>x3</td>
+          <td>x2</td>
+          <td>0.872317</td>
+          <td>0.01</td>
+        </tr>
+        <tr>
           <th>9</th>
           <td>x3</td>
-          <td>x0</td>
-          <td>0.511008</td>
+          <td>x4</td>
+          <td>1.084753</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>10</th>
-          <td>x3</td>
+          <th>4</th>
           <td>x1</td>
-          <td>0.653876</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>11</th>
           <td>x0</td>
-          <td>x2</td>
-          <td>-0.044259</td>
-          <td>0.01</td>
+          <td>1.140202</td>
+          <td>0.02</td>
         </tr>
         <tr>
-          <th>12</th>
-          <td>x3</td>
+          <th>5</th>
+          <td>x1</td>
           <td>x2</td>
-          <td>0.790837</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>13</th>
-          <td>x5</td>
-          <td>x2</td>
-          <td>0.054423</td>
-          <td>0.01</td>
+          <td>0.803256</td>
+          <td>0.02</td>
         </tr>
       </tbody>
     </table>
     </div>
 
 
-
-And with pandas.DataFrame, we can easily filter by keywords. The
-following code extracts the causal direction towards x1.
 
 .. code-block:: python
 
@@ -803,41 +757,6 @@ following code extracts the causal direction towards x1.
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <th>2</th>
-          <td>x0</td>
-          <td>x1</td>
-          <td>0.477885</td>
-          <td>0.11</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>x4</td>
-          <td>x1</td>
-          <td>0.044782</td>
-          <td>0.11</td>
-        </tr>
-        <tr>
-          <th>5</th>
-          <td>x5</td>
-          <td>x1</td>
-          <td>0.025297</td>
-          <td>0.06</td>
-        </tr>
-        <tr>
-          <th>7</th>
-          <td>x2</td>
-          <td>x1</td>
-          <td>0.482657</td>
-          <td>0.02</td>
-        </tr>
-        <tr>
-          <th>10</th>
-          <td>x3</td>
-          <td>x1</td>
-          <td>0.653876</td>
-          <td>0.01</td>
-        </tr>
       </tbody>
     </table>
     </div>
@@ -864,14 +783,14 @@ values of the causal effect, as shown below.
 
 .. parsed-literal::
 
-    (array([88.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.]),
-     array([0.   , 0.051, 0.102, 0.153, 0.204, 0.256, 0.307, 0.358, 0.409,
-            0.46 , 0.511]),
+    (array([78.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.]),
+     array([0.   , 0.118, 0.237, 0.355, 0.474, 0.592, 0.711, 0.829, 0.948,
+            1.066, 1.185]),
      <BarContainer object of 10 artists>)
 
 
 
 
-.. image:: ../image/bottom_up_parce_hist.png
+.. image:: ../image/rcd_hist.png
 
 
