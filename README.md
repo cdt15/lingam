@@ -55,4 +55,4 @@ Should you use this package for performing **BottomUpParceLiNGAM** with Algorith
 * T. Tashiro, S. Shimizu, A. Hyvärinen, T. Washio. **ParceLiNGAM: a causal ordering method robust against latent confounders**. Neural computation, 26(1): 57-83, 2014. [[PDF]](https://sites.google.com/site/sshimizu06/Tashiro13NECO.pdf?attredirects=0)
 
 Should you use this package for performing **RCD algorithm**, we kindly request you to cite the following paper:
-* T.N.Maeda and S.Shimizu. **RCD: Repetitive causal discovery of linear non-Gaussian acyclic models with latent confounders.** In Proc. 23rd International Conference on Artificial Intelligence and Statistics (AISTATS2020), Palermo, Sicily, Italy. PMLR  108:735-745, 2020.
+* T. N. Maeda and S. Shimizu. **RCD: Repetitive causal discovery of linear non-Gaussian acyclic models with latent confounders.** In Proc. 23rd International Conference on Artificial Intelligence and Statistics (AISTATS2020), Palermo, Sicily, Italy. PMLR  108:735-745, 2020. [[PDF]](http://proceedings.mlr.press/v108/maeda20a.html)
