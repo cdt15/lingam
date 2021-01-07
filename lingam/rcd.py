@@ -8,13 +8,15 @@ import numbers
 import warnings
 
 import numpy as np
-from sklearn.utils import check_array, resample
-from sklearn.linear_model import LinearRegression
-from scipy.stats import pearsonr, shapiro
 from scipy.optimize import fmin_l_bfgs_b
-from .hsic import get_kernel_width, get_gram_matrix, hsic_teststat, hsic_test_gamma
+from scipy.stats import pearsonr, shapiro
+from sklearn.linear_model import LinearRegression
+from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
+from .hsic import (get_gram_matrix, get_kernel_width, hsic_test_gamma,
+                   hsic_teststat)
+from .utils import predict_adaptive_lasso
 
 
 class RCD():
@@ -40,9 +42,9 @@ class RCD():
             shapiro_alpha : float, optional (default=0.01)
                 Alpha level for Shapiro-Wilk test.
             MLHSICR : bool, optional (default=False)
-            	If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
+                If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
             bw_method : str, optional (default=``mdbs``)
-	            The method used to calculate the bandwidth of the HSIC.
+                    The method used to calculate the bandwidth of the HSIC.
 
                 * ``mdbs`` : Median distance between samples.
                 * ``scott`` : Scott's Rule of Thumb.
@@ -62,7 +64,8 @@ class RCD():
             raise ValueError('shapiro_alpha must be >= 0.')
 
         if bw_method not in ('mdbs', 'scott', 'silverman'):
-            raise ValueError("bw_method must be 'mdbs', 'scott' or 'silverman'.")
+            raise ValueError(
+                "bw_method must be 'mdbs', 'scott' or 'silverman'.")
 
         self._max_explanatory_num = max_explanatory_num
         self._cor_alpha = cor_alpha
@@ -181,7 +184,8 @@ class RCD():
             return objective
 
         # Estimate coefficients by minimizing the sum of HSICs using the L-BFGS method.
-        coefs, _, _ = fmin_l_bfgs_b(func=sum_empirical_hsic, x0=initial_coef, approx_grad=True)
+        coefs, _, _ = fmin_l_bfgs_b(
+            func=sum_empirical_hsic, x0=initial_coef, approx_grad=True)
 
         resid = Y[:, xi]
         for j, xj in enumerate(xj_list):
@@ -390,10 +394,44 @@ class RCD():
         predictors.extend(parents)
 
         # Estimate total effect
-        lr = LinearRegression()
-        lr.fit(X[:, predictors], X[:, to_index])
+        coefs = predict_adaptive_lasso(X, predictors, to_index)
 
-        return lr.coef_[0]
+        return coefs[0]
+
+    def get_error_independence_p_values(self, X):
+        """Calculate the p-value matrix of independence between error variables.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Original data, where n_samples is the number of samples
+            and n_features is the number of features.
+
+        Returns
+        -------
+        independence_p_values : array-like, shape (n_features, n_features)
+            p-value matrix of independence between error variables.
+        """
+        # Check parameters
+        X = check_array(X)
+        n_samples = X.shape[0]
+        n_features = X.shape[1]
+
+        E = X - np.dot(self._adjacency_matrix, X.T).T
+        nan_cols = list(
+            set(np.argwhere(np.isnan(self._adjacency_matrix)).ravel()))
+        p_values = np.zeros([n_features, n_features])
+        for i, j in itertools.combinations(range(n_features), 2):
+            if i in nan_cols or j in nan_cols:
+                p_values[i, j] = np.nan
+                p_values[j, i] = np.nan
+            else:
+                _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
+                                             np.reshape(E[:, j], [n_samples, 1]))
+                p_values[i, j] = p_value
+                p_values[j, i] = p_value
+
+        return p_values
 
     @property
     def ancestors_list_(self):
@@ -450,7 +488,8 @@ class RCD():
         adjacency_matrices = np.zeros([n_sampling, X.shape[1], X.shape[1]])
         total_effects = np.zeros([n_sampling, X.shape[1], X.shape[1]])
         for i in range(n_sampling):
-            self.fit(resample(X, replace=False, n_samples=X.shape[0] - n_sampling))
+            self.fit(resample(X, replace=False,
+                              n_samples=X.shape[0] - n_sampling))
             adjacency_matrices[i] = self._adjacency_matrix
 
             # Calculate total effects

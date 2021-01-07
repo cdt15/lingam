@@ -2,6 +2,7 @@
 Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
+import itertools
 import numbers
 import warnings
 
@@ -11,6 +12,8 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .direct_lingam import DirectLiNGAM
+from .hsic import hsic_test_gamma
+from .utils import predict_adaptive_lasso
 
 
 class MultiGroupDirectLiNGAM(DirectLiNGAM):
@@ -111,8 +114,10 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
             raise ValueError('n_sampling must be an integer greater than 0.')
 
         # Bootstrapping
-        adjacency_matrices_list = np.zeros([len(X_list), n_sampling, self._n_features, self._n_features])
-        total_effects_list = np.zeros([len(X_list), n_sampling, self._n_features, self._n_features])
+        adjacency_matrices_list = np.zeros(
+            [len(X_list), n_sampling, self._n_features, self._n_features])
+        total_effects_list = np.zeros(
+            [len(X_list), n_sampling, self._n_features, self._n_features])
         for n in range(n_sampling):
             resampled_X_list = [resample(X) for X in X_list]
             self.fit(resampled_X_list)
@@ -123,7 +128,8 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
             # Calculate total effects
             for c, from_ in enumerate(self._causal_order):
                 for to in self._causal_order[c+1:]:
-                    effects = self.estimate_total_effect(resampled_X_list, from_, to)
+                    effects = self.estimate_total_effect(
+                        resampled_X_list, from_, to)
                     for i, effect in enumerate(effects):
                         total_effects_list[i, n, to, from_] = effect
 
@@ -159,7 +165,7 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         from_order = self._causal_order.index(from_index)
         to_order = self._causal_order.index(to_index)
         if from_order > to_order:
-            warnings.warn(f'The estimated causal effect may be incorrect because ' 
+            warnings.warn(f'The estimated causal effect may be incorrect because '
                           f'the causal order of the destination variable (to_index={to_index}) '
                           f'is earlier than the source variable (from_index={from_index}).')
 
@@ -172,12 +178,41 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
             predictors.extend(parents)
 
             # Estimate total effect
-            lr = LinearRegression()
-            lr.fit(X[:, predictors], X[:, to_index])
+            coefs = predict_adaptive_lasso(X, predictors, to_index)
 
-            effects.append(lr.coef_[0])
+            effects.append(coefs[0])
 
         return effects
+
+    def get_error_independence_p_values(self, X_list):
+        """Calculate the p-value matrix of independence between error variables.
+
+        Parameters
+        ----------
+        X_list : array-like, shape (X, ...)
+            Multiple datasets for training, where ``X`` is an dataset.
+            The shape of ''X'' is (n_samples, n_features), 
+            where ``n_samples`` is the number of samples and ``n_features`` is the number of features.
+
+        Returns
+        -------
+        independence_p_values : array-like, shape (n_datasets, n_features, n_features)
+            p-value matrix of independence between error variables.
+        """
+        # Check parameters
+        X_list = self._check_X_list(X_list)
+
+        p_values = np.zeros([len(X_list), self._n_features, self._n_features])
+        for d, (X, am) in enumerate(zip(X_list, self._adjacency_matrices)):
+            n_samples = X.shape[0]
+            E = X - np.dot(am, X.T).T
+            for i, j in itertools.combinations(range(self._n_features), 2):
+                _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
+                                             np.reshape(E[:, j], [n_samples, 1]))
+                p_values[d, i, j] = p_value
+                p_values[d, j, i] = p_value
+
+        return p_values
 
     def _check_X_list(self, X_list):
         """Check input X list."""
@@ -218,9 +253,12 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
                     if i != j:
                         xi_std = (X[:, i] - np.mean(X[:, i])) / np.std(X[:, i])
                         xj_std = (X[:, j] - np.mean(X[:, j])) / np.std(X[:, j])
-                        ri_j = xi_std if i in Vj and j in Uc else self._residual(xi_std, xj_std)
-                        rj_i = xj_std if j in Vj and i in Uc else self._residual(xj_std, xi_std)
-                        M += np.min([0, self._diff_mutual_info(xi_std, xj_std, ri_j, rj_i)])**2
+                        ri_j = xi_std if i in Vj and j in Uc else self._residual(
+                            xi_std, xj_std)
+                        rj_i = xj_std if j in Vj and i in Uc else self._residual(
+                            xj_std, xi_std)
+                        M += np.min([0, self._diff_mutual_info(xi_std,
+                                                               xj_std, ri_j, rj_i)])**2
                 MG += M * (len(X) / total_size)
             MG_list.append(-1.0 * MG)
         return Uc[np.argmax(MG_list)]

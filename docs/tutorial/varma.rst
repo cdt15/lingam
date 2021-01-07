@@ -5,7 +5,8 @@ VARMALiNGAM
 Import and settings
 -------------------
 
-In this example, we need to import ``numpy``, ``pandas``, and ``graphviz`` in addition to ``lingam``.
+In this example, we need to import ``numpy``, ``pandas``, and
+``graphviz`` in addition to ``lingam``.
 
 .. code-block:: python
 
@@ -26,7 +27,7 @@ In this example, we need to import ``numpy``, ``pandas``, and ``graphviz`` in ad
 
 .. parsed-literal::
 
-    ['1.16.2', '0.24.2', '0.11.1', '1.3.1']
+    ['1.16.2', '0.24.2', '0.11.1', '1.5.1']
     
 
 Test data
@@ -77,7 +78,7 @@ To run causal discovery, we create a :class:`~lingam.VARMALiNGAM` object and cal
 
 .. parsed-literal::
 
-    <lingam.varma_lingam.VARMALiNGAM at 0x1d32b5759e8>
+    <lingam.varma_lingam.VARMALiNGAM at 0x1acfc3fa6d8>
 
 
 
@@ -152,6 +153,28 @@ Also, using the :attr:`~lingam.VARMALiNGAM.adjacency_matrices_` properties, we c
 
 
 
+Using ``DirectLiNGAM`` for the ``residuals_`` properties, we can
+calculate psi0 matrix.
+
+.. code-block:: python
+
+    dlingam = lingam.DirectLiNGAM()
+    dlingam.fit(model.residuals_)
+    dlingam.adjacency_matrix_
+
+
+
+
+.. parsed-literal::
+
+    array([[ 0.   ,  0.   , -0.238,  0.   ,  0.   ],
+           [-0.392,  0.   ,  0.182,  0.   ,  0.   ],
+           [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+           [ 0.523, -0.149,  0.   ,  0.   ,  0.   ],
+           [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
+
+
+
 We can draw a causal graph by utility funciton
 
 .. code-block:: python
@@ -165,6 +188,28 @@ We can draw a causal graph by utility funciton
 .. image:: ../image/varma_dag.svg
 
 
+Independence between error variables
+------------------------------------
+
+To check if the LiNGAM assumption is broken, we can get p-values of
+independence between error variables. The value in the i-th row and j-th
+column of the obtained matrix shows the p-value of the independence of
+the error variables :math:`e_i` and :math:`e_j`.
+
+.. code-block:: python
+
+    p_values = model.get_error_independence_p_values()
+    print(p_values)
+
+
+.. parsed-literal::
+
+    [[0.    0.517 0.793 0.004 0.001]
+     [0.517 0.    0.09  0.312 0.071]
+     [0.793 0.09  0.    0.058 0.075]
+     [0.004 0.312 0.058 0.    0.011]
+     [0.001 0.071 0.075 0.011 0.   ]]
+    
 
 Bootstrap
 ---------
@@ -386,262 +431,262 @@ Using the :func:`~lingam.BootstrapResult.get_causal_effects` method, we can get 
       <tbody>
         <tr>
           <th>0</th>
+          <td>y4(t-1)</td>
           <td>y2(t)</td>
-          <td>y0(t)</td>
-          <td>-0.239746</td>
+          <td>0.377029</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>y2(t-1)</td>
-          <td>y4(t)</td>
-          <td>-0.400593</td>
+          <td>y2(t)</td>
+          <td>y3(t)</td>
+          <td>-0.238642</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>y1(t-1)</td>
-          <td>y4(t)</td>
-          <td>0.260280</td>
+          <td>y1(t)</td>
+          <td>y3(t)</td>
+          <td>-0.213468</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>y0(t-1)</td>
-          <td>y4(t)</td>
-          <td>-0.562191</td>
+          <td>y0(t)</td>
+          <td>y3(t)</td>
+          <td>0.563522</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>y0(t)</td>
+          <td>y3(t-1)</td>
           <td>y4(t)</td>
-          <td>0.114686</td>
+          <td>0.343541</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>5</th>
-          <td>y4(t-1)</td>
-          <td>y3(t)</td>
-          <td>-0.182899</td>
+          <td>y0(t-1)</td>
+          <td>y2(t)</td>
+          <td>-0.254723</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>6</th>
-          <td>y0(t-1)</td>
-          <td>y3(t)</td>
-          <td>0.251303</td>
+          <td>y4(t-1)</td>
+          <td>y1(t)</td>
+          <td>0.438051</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>7</th>
-          <td>y2(t)</td>
-          <td>y3(t)</td>
-          <td>-0.260720</td>
+          <td>y3(t-1)</td>
+          <td>y1(t)</td>
+          <td>0.266735</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>8</th>
+          <td>y1(t-1)</td>
           <td>y1(t)</td>
-          <td>y3(t)</td>
-          <td>-0.212046</td>
+          <td>0.312631</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>9</th>
-          <td>y0(t)</td>
-          <td>y3(t)</td>
-          <td>0.647221</td>
+          <td>y0(t-1)</td>
+          <td>y4(t)</td>
+          <td>-0.531720</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>10</th>
-          <td>y3(t-1)</td>
+          <td>y1(t-1)</td>
           <td>y4(t)</td>
-          <td>0.333874</td>
+          <td>0.226082</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>11</th>
-          <td>y3(t-1)</td>
           <td>y2(t)</td>
-          <td>0.282825</td>
+          <td>y1(t)</td>
+          <td>0.231064</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>12</th>
-          <td>y1(t-1)</td>
-          <td>y2(t)</td>
-          <td>0.378391</td>
+          <td>y0(t)</td>
+          <td>y1(t)</td>
+          <td>-0.310366</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>13</th>
-          <td>y0(t-1)</td>
-          <td>y2(t)</td>
-          <td>-0.306198</td>
+          <td>y4(t-1)</td>
+          <td>y0(t)</td>
+          <td>0.210816</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>14</th>
-          <td>y4(t-1)</td>
-          <td>y2(t)</td>
-          <td>0.421177</td>
+          <td>y3(t-1)</td>
+          <td>y0(t)</td>
+          <td>0.375119</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>15</th>
-          <td>y3(t-1)</td>
-          <td>y1(t)</td>
-          <td>0.314910</td>
+          <td>y2(t-1)</td>
+          <td>y0(t)</td>
+          <td>-0.377158</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>16</th>
-          <td>y0(t-1)</td>
-          <td>y0(t)</td>
-          <td>-0.227950</td>
+          <td>y2(t-1)</td>
+          <td>y4(t)</td>
+          <td>-0.368007</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>17</th>
-          <td>y2(t-1)</td>
-          <td>y0(t)</td>
-          <td>-0.385377</td>
+          <td>y0(t-1)</td>
+          <td>y1(t)</td>
+          <td>-0.419723</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>18</th>
-          <td>y3(t-1)</td>
-          <td>y0(t)</td>
-          <td>0.441629</td>
-          <td>1.00</td>
+          <td>y1(t-1)</td>
+          <td>y2(t)</td>
+          <td>0.329416</td>
+          <td>0.99</td>
         </tr>
         <tr>
           <th>19</th>
-          <td>y4(t-1)</td>
+          <td>y0(t-1)</td>
           <td>y0(t)</td>
-          <td>0.220811</td>
-          <td>1.00</td>
+          <td>-0.188156</td>
+          <td>0.99</td>
         </tr>
         <tr>
           <th>20</th>
-          <td>y4(t-1)</td>
-          <td>y1(t)</td>
-          <td>0.447219</td>
-          <td>1.00</td>
+          <td>y1(t-1)</td>
+          <td>y3(t)</td>
+          <td>0.120133</td>
+          <td>0.98</td>
         </tr>
         <tr>
           <th>21</th>
-          <td>y0(t)</td>
-          <td>y1(t)</td>
-          <td>-0.392861</td>
-          <td>1.00</td>
+          <td>y0(t-1)</td>
+          <td>y3(t)</td>
+          <td>0.217037</td>
+          <td>0.98</td>
         </tr>
         <tr>
           <th>22</th>
           <td>y4(t-1)</td>
-          <td>y4(t)</td>
-          <td>0.295080</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>23</th>
-          <td>y2(t)</td>
-          <td>y1(t)</td>
-          <td>0.273604</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>24</th>
-          <td>y0(t-1)</td>
-          <td>y1(t)</td>
-          <td>-0.472803</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>25</th>
-          <td>y1(t-1)</td>
-          <td>y1(t)</td>
-          <td>0.371311</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>26</th>
-          <td>y1(t-1)</td>
           <td>y3(t)</td>
-          <td>0.115601</td>
-          <td>0.99</td>
-        </tr>
-        <tr>
-          <th>27</th>
-          <td>y2(t)</td>
-          <td>y4(t)</td>
-          <td>-0.103683</td>
+          <td>-0.186410</td>
           <td>0.97</td>
         </tr>
         <tr>
-          <th>28</th>
+          <th>23</th>
+          <td>y3(t-1)</td>
+          <td>y2(t)</td>
+          <td>0.184045</td>
+          <td>0.97</td>
+        </tr>
+        <tr>
+          <th>24</th>
+          <td>y4(t-1)</td>
+          <td>y4(t)</td>
+          <td>0.287224</td>
+          <td>0.92</td>
+        </tr>
+        <tr>
+          <th>25</th>
+          <td>y2(t)</td>
+          <td>y0(t)</td>
+          <td>-0.147135</td>
+          <td>0.91</td>
+        </tr>
+        <tr>
+          <th>26</th>
+          <td>y3(t)</td>
+          <td>y4(t)</td>
+          <td>0.056672</td>
+          <td>0.73</td>
+        </tr>
+        <tr>
+          <th>27</th>
           <td>y3(t-1)</td>
           <td>y3(t)</td>
-          <td>-0.156020</td>
-          <td>0.95</td>
+          <td>-0.139039</td>
+          <td>0.63</td>
+        </tr>
+        <tr>
+          <th>28</th>
+          <td>y0(t)</td>
+          <td>y4(t)</td>
+          <td>0.086335</td>
+          <td>0.46</td>
         </tr>
         <tr>
           <th>29</th>
           <td>y2(t-1)</td>
-          <td>y3(t)</td>
-          <td>-0.087312</td>
-          <td>0.93</td>
+          <td>y1(t)</td>
+          <td>0.081208</td>
+          <td>0.41</td>
         </tr>
         <tr>
           <th>30</th>
-          <td>y2(t-1)</td>
-          <td>y1(t)</td>
-          <td>0.041698</td>
-          <td>0.88</td>
+          <td>y1(t-1)</td>
+          <td>y0(t)</td>
+          <td>-0.040277</td>
+          <td>0.26</td>
         </tr>
         <tr>
           <th>31</th>
-          <td>y2(t-1)</td>
           <td>y2(t)</td>
-          <td>-0.013958</td>
-          <td>0.87</td>
+          <td>y4(t)</td>
+          <td>-0.088182</td>
+          <td>0.20</td>
         </tr>
         <tr>
           <th>32</th>
-          <td>y1(t)</td>
-          <td>y4(t)</td>
-          <td>-0.047350</td>
-          <td>0.83</td>
+          <td>y2(t-1)</td>
+          <td>y2(t)</td>
+          <td>-0.052064</td>
+          <td>0.19</td>
         </tr>
         <tr>
           <th>33</th>
-          <td>y1(t-1)</td>
-          <td>y0(t)</td>
-          <td>0.026292</td>
-          <td>0.81</td>
+          <td>y1(t)</td>
+          <td>y4(t)</td>
+          <td>-0.056033</td>
+          <td>0.05</td>
         </tr>
         <tr>
           <th>34</th>
-          <td>y3(t)</td>
           <td>y4(t)</td>
-          <td>0.049731</td>
-          <td>0.70</td>
+          <td>y3(t)</td>
+          <td>0.057538</td>
+          <td>0.04</td>
         </tr>
         <tr>
           <th>35</th>
-          <td>y4(t)</td>
+          <td>y2(t-1)</td>
           <td>y3(t)</td>
-          <td>0.006900</td>
-          <td>0.17</td>
+          <td>-0.261473</td>
+          <td>0.02</td>
         </tr>
         <tr>
           <th>36</th>
           <td>y4(t)</td>
           <td>y1(t)</td>
-          <td>0.008282</td>
-          <td>0.06</td>
+          <td>0.013746</td>
+          <td>0.01</td>
         </tr>
       </tbody>
     </table>
@@ -710,38 +755,38 @@ We can easily perform sorting operations with pandas.DataFrame.
       </thead>
       <tbody>
         <tr>
-          <th>9</th>
+          <th>3</th>
           <td>y0(t)</td>
           <td>y3(t)</td>
-          <td>0.647221</td>
+          <td>0.563522</td>
           <td>1.0</td>
         </tr>
         <tr>
-          <th>20</th>
+          <th>6</th>
           <td>y4(t-1)</td>
           <td>y1(t)</td>
-          <td>0.447219</td>
+          <td>0.438051</td>
           <td>1.0</td>
         </tr>
         <tr>
-          <th>18</th>
-          <td>y3(t-1)</td>
-          <td>y0(t)</td>
-          <td>0.441629</td>
+          <th>0</th>
+          <td>y4(t-1)</td>
+          <td>y2(t)</td>
+          <td>0.377029</td>
           <td>1.0</td>
         </tr>
         <tr>
           <th>14</th>
-          <td>y4(t-1)</td>
-          <td>y2(t)</td>
-          <td>0.421177</td>
+          <td>y3(t-1)</td>
+          <td>y0(t)</td>
+          <td>0.375119</td>
           <td>1.0</td>
         </tr>
         <tr>
-          <th>12</th>
-          <td>y1(t-1)</td>
-          <td>y2(t)</td>
-          <td>0.378391</td>
+          <th>4</th>
+          <td>y3(t-1)</td>
+          <td>y4(t)</td>
+          <td>0.343541</td>
           <td>1.0</td>
         </tr>
       </tbody>
@@ -751,7 +796,8 @@ We can easily perform sorting operations with pandas.DataFrame.
 
 
 
-And with pandas.DataFrame, we can easily filter by keywords. The following code extracts the causal direction towards y2(t).
+And with pandas.DataFrame, we can easily filter by keywords. The
+following code extracts the causal direction towards y2(t).
 
 .. code-block:: python
 
@@ -811,39 +857,39 @@ And with pandas.DataFrame, we can easily filter by keywords. The following code 
       </thead>
       <tbody>
         <tr>
-          <th>11</th>
-          <td>y3(t-1)</td>
-          <td>y2(t)</td>
-          <td>0.282825</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>12</th>
-          <td>y1(t-1)</td>
-          <td>y2(t)</td>
-          <td>0.378391</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>13</th>
-          <td>y0(t-1)</td>
-          <td>y2(t)</td>
-          <td>-0.306198</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>14</th>
+          <th>0</th>
           <td>y4(t-1)</td>
           <td>y2(t)</td>
-          <td>0.421177</td>
+          <td>0.377029</td>
           <td>1.00</td>
         </tr>
         <tr>
-          <th>31</th>
+          <th>5</th>
+          <td>y0(t-1)</td>
+          <td>y2(t)</td>
+          <td>-0.254723</td>
+          <td>1.00</td>
+        </tr>
+        <tr>
+          <th>18</th>
+          <td>y1(t-1)</td>
+          <td>y2(t)</td>
+          <td>0.329416</td>
+          <td>0.99</td>
+        </tr>
+        <tr>
+          <th>23</th>
+          <td>y3(t-1)</td>
+          <td>y2(t)</td>
+          <td>0.184045</td>
+          <td>0.97</td>
+        </tr>
+        <tr>
+          <th>32</th>
           <td>y2(t-1)</td>
           <td>y2(t)</td>
-          <td>-0.013958</td>
-          <td>0.87</td>
+          <td>-0.052064</td>
+          <td>0.19</td>
         </tr>
       </tbody>
     </table>
@@ -852,7 +898,9 @@ And with pandas.DataFrame, we can easily filter by keywords. The following code 
 
 
 
-Because it holds the raw data of the causal effect (the original data for calculating the median), it is possible to draw a histogram of the values of the causal effect, as shown below.
+Because it holds the raw data of the causal effect (the original data
+for calculating the median), it is possible to draw a histogram of the
+values of the causal effect, as shown below.
 
 .. code-block:: python
 
