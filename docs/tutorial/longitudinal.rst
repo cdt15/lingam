@@ -5,7 +5,8 @@ Longitudinal LiNGAM
 Import and settings
 -------------------
 
-In this example, we need to import ``numpy``, ``pandas``, and ``graphviz`` in addition to ``lingam``.
+In this example, we need to import ``numpy``, ``pandas``, and
+``graphviz`` in addition to ``lingam``.
 
 .. code-block:: python
 
@@ -27,13 +28,14 @@ In this example, we need to import ``numpy``, ``pandas``, and ``graphviz`` in ad
 
 .. parsed-literal::
 
-    ['1.16.2', '0.24.2', '0.11.1', '1.3.1']
+    ['1.16.2', '0.24.2', '0.11.1', '1.5.1']
     
 
 Test data
 ---------
 
-We create test data consisting of 5 variables. The causal model at each timepoint is as follows.
+We create test data consisting of 5 variables. The causal model at each
+timepoint is as follows.
 
 .. code-block:: python
 
@@ -255,6 +257,48 @@ Also, using the :attr:`~lingam.LongitudinalLiNGAM.adjacency_matrices_` property,
 
 .. image:: ../image/longitudinal_scatter2.png
 
+
+Independence between error variables
+------------------------------------
+
+To check if the LiNGAM assumption is broken, we can get p-values of
+independence between error variables. The value in the i-th row and j-th
+column of the obtained matrix shows the p-value of the independence of
+the error variables :math:`e_i` and :math:`e_j`.
+
+.. code-block:: python
+
+    p_values_list = model.get_error_independence_p_values()
+
+.. code-block:: python
+
+    t = 1
+    print(p_values_list[t])
+
+
+.. parsed-literal::
+
+    [[0.    0.167 0.107 0.534 0.313]
+     [0.167 0.    0.195 0.821 0.204]
+     [0.107 0.195 0.    0.005 0.105]
+     [0.534 0.821 0.005 0.    0.049]
+     [0.313 0.204 0.105 0.049 0.   ]]
+    
+
+.. code-block:: python
+
+    t = 2
+    print(p_values_list[2])
+
+
+.. parsed-literal::
+
+    [[0.    0.723 0.596 0.579 0.564]
+     [0.723 0.    0.612 0.688 0.412]
+     [0.596 0.612 0.    0.267 0.636]
+     [0.579 0.688 0.267 0.    0.421]
+     [0.564 0.412 0.636 0.421 0.   ]]
+    
 
 Bootstrapping
 -------------
@@ -679,343 +723,273 @@ Using the :func:`~lingam.LongitudinalBootstrapResult.get_causal_effects` method,
           <th>0</th>
           <td>x1(1)</td>
           <td>x0(1)</td>
-          <td>0.338725</td>
+          <td>0.269441</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>x0(1)</td>
-          <td>x2(2)</td>
-          <td>0.222189</td>
+          <td>x0(2)</td>
+          <td>x4(2)</td>
+          <td>0.119620</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>x1(1)</td>
-          <td>x2(2)</td>
-          <td>0.334539</td>
+          <td>x4(1)</td>
+          <td>x4(2)</td>
+          <td>-0.109855</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>3</th>
           <td>x3(1)</td>
-          <td>x2(2)</td>
-          <td>0.627104</td>
+          <td>x4(2)</td>
+          <td>0.260481</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>x4(1)</td>
-          <td>x2(2)</td>
-          <td>-0.192083</td>
+          <td>x1(1)</td>
+          <td>x4(2)</td>
+          <td>0.297682</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>5</th>
-          <td>x0(2)</td>
           <td>x2(2)</td>
-          <td>0.231114</td>
+          <td>x3(2)</td>
+          <td>-0.394208</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>6</th>
-          <td>x0(1)</td>
+          <td>x4(1)</td>
           <td>x3(2)</td>
-          <td>0.148424</td>
+          <td>-0.152984</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>7</th>
-          <td>x1(1)</td>
+          <td>x3(1)</td>
           <td>x3(2)</td>
-          <td>-0.288648</td>
+          <td>-0.284373</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>8</th>
           <td>x2(1)</td>
           <td>x3(2)</td>
-          <td>0.464517</td>
+          <td>0.425542</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>9</th>
-          <td>x2(2)</td>
-          <td>x1(2)</td>
-          <td>-0.684859</td>
+          <td>x1(1)</td>
+          <td>x3(2)</td>
+          <td>-0.263069</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>10</th>
-          <td>x3(1)</td>
-          <td>x3(2)</td>
-          <td>-0.335765</td>
+          <td>x0(2)</td>
+          <td>x2(2)</td>
+          <td>0.177046</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>11</th>
-          <td>x0(2)</td>
-          <td>x3(2)</td>
-          <td>-0.126437</td>
+          <td>x4(1)</td>
+          <td>x2(2)</td>
+          <td>-0.110188</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>12</th>
+          <td>x3(1)</td>
           <td>x2(2)</td>
-          <td>x3(2)</td>
-          <td>-0.401410</td>
+          <td>0.524608</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>13</th>
-          <td>x0(1)</td>
-          <td>x4(2)</td>
-          <td>-0.110202</td>
+          <td>x1(1)</td>
+          <td>x2(2)</td>
+          <td>0.329232</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>14</th>
-          <td>x1(1)</td>
           <td>x4(2)</td>
-          <td>0.419646</td>
+          <td>x1(2)</td>
+          <td>0.113916</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>15</th>
-          <td>x2(1)</td>
-          <td>x4(2)</td>
-          <td>-0.075903</td>
+          <td>x2(2)</td>
+          <td>x1(2)</td>
+          <td>-0.429614</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>16</th>
-          <td>x3(1)</td>
-          <td>x4(2)</td>
-          <td>0.316278</td>
+          <td>x0(1)</td>
+          <td>x2(2)</td>
+          <td>0.202225</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>17</th>
-          <td>x4(1)</td>
-          <td>x4(2)</td>
-          <td>-0.210909</td>
+          <td>x1(1)</td>
+          <td>x0(2)</td>
+          <td>0.154852</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>18</th>
-          <td>x0(2)</td>
-          <td>x4(2)</td>
-          <td>0.250131</td>
+          <td>x1(1)</td>
+          <td>x1(2)</td>
+          <td>-0.145485</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>19</th>
-          <td>x4(1)</td>
-          <td>x3(2)</td>
-          <td>-0.315993</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>20</th>
-          <td>x0(2)</td>
-          <td>x1(2)</td>
-          <td>-0.014613</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>21</th>
-          <td>x4(2)</td>
-          <td>x1(2)</td>
-          <td>0.457002</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>22</th>
-          <td>x3(1)</td>
-          <td>x1(2)</td>
-          <td>-0.107434</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>23</th>
           <td>x3(1)</td>
           <td>x0(1)</td>
           <td>0.116298</td>
           <td>1.00</td>
         </tr>
         <tr>
-          <th>24</th>
+          <th>20</th>
+          <td>x0(1)</td>
+          <td>x1(2)</td>
+          <td>-0.462228</td>
+          <td>1.00</td>
+        </tr>
+        <tr>
+          <th>21</th>
           <td>x4(1)</td>
           <td>x0(1)</td>
-          <td>-0.562715</td>
+          <td>-0.562721</td>
+          <td>1.00</td>
+        </tr>
+        <tr>
+          <th>22</th>
+          <td>x3(1)</td>
+          <td>x0(2)</td>
+          <td>-0.238794</td>
+          <td>1.00</td>
+        </tr>
+        <tr>
+          <th>23</th>
+          <td>x3(1)</td>
+          <td>x1(1)</td>
+          <td>0.317693</td>
+          <td>1.00</td>
+        </tr>
+        <tr>
+          <th>24</th>
+          <td>x4(1)</td>
+          <td>x1(2)</td>
+          <td>0.222208</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>25</th>
-          <td>x3(1)</td>
           <td>x1(1)</td>
-          <td>0.397728</td>
+          <td>x2(1)</td>
+          <td>0.187445</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>26</th>
           <td>x1(1)</td>
-          <td>x2(1)</td>
-          <td>0.384131</td>
+          <td>x4(1)</td>
+          <td>-0.280015</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>27</th>
-          <td>x1(1)</td>
-          <td>x4(1)</td>
-          <td>-0.379965</td>
-          <td>1.00</td>
+          <td>x4(2)</td>
+          <td>x3(2)</td>
+          <td>-0.059277</td>
+          <td>0.92</td>
         </tr>
         <tr>
           <th>28</th>
           <td>x4(1)</td>
-          <td>x1(2)</td>
-          <td>0.276994</td>
-          <td>1.00</td>
+          <td>x0(2)</td>
+          <td>-0.139972</td>
+          <td>0.91</td>
         </tr>
         <tr>
           <th>29</th>
-          <td>x0(1)</td>
-          <td>x0(2)</td>
-          <td>0.195237</td>
-          <td>1.00</td>
+          <td>x4(2)</td>
+          <td>x2(2)</td>
+          <td>0.033740</td>
+          <td>0.69</td>
         </tr>
         <tr>
           <th>30</th>
-          <td>x1(1)</td>
-          <td>x0(2)</td>
-          <td>0.289916</td>
-          <td>1.00</td>
+          <td>x4(1)</td>
+          <td>x2(1)</td>
+          <td>-0.050954</td>
+          <td>0.54</td>
         </tr>
         <tr>
           <th>31</th>
           <td>x2(1)</td>
-          <td>x0(2)</td>
-          <td>0.035207</td>
-          <td>1.00</td>
+          <td>x4(1)</td>
+          <td>-0.102010</td>
+          <td>0.46</td>
         </tr>
         <tr>
           <th>32</th>
-          <td>x3(1)</td>
-          <td>x4(1)</td>
-          <td>-0.028890</td>
-          <td>1.00</td>
+          <td>x2(1)</td>
+          <td>x0(2)</td>
+          <td>0.034217</td>
+          <td>0.35</td>
         </tr>
         <tr>
           <th>33</th>
-          <td>x3(1)</td>
-          <td>x0(2)</td>
-          <td>-0.318041</td>
-          <td>1.00</td>
+          <td>x2(1)</td>
+          <td>x1(2)</td>
+          <td>0.161172</td>
+          <td>0.34</td>
         </tr>
         <tr>
           <th>34</th>
-          <td>x4(1)</td>
-          <td>x0(2)</td>
-          <td>-0.257058</td>
-          <td>1.00</td>
+          <td>x2(2)</td>
+          <td>x4(2)</td>
+          <td>0.029630</td>
+          <td>0.31</td>
         </tr>
         <tr>
           <th>35</th>
           <td>x0(1)</td>
-          <td>x1(2)</td>
-          <td>-0.575730</td>
-          <td>1.00</td>
+          <td>x3(2)</td>
+          <td>0.106614</td>
+          <td>0.19</td>
         </tr>
         <tr>
           <th>36</th>
-          <td>x1(1)</td>
-          <td>x1(2)</td>
-          <td>-0.153895</td>
-          <td>1.00</td>
+          <td>x0(1)</td>
+          <td>x0(2)</td>
+          <td>0.136141</td>
+          <td>0.15</td>
         </tr>
         <tr>
           <th>37</th>
           <td>x2(1)</td>
-          <td>x1(2)</td>
-          <td>0.196489</td>
-          <td>1.00</td>
+          <td>x2(2)</td>
+          <td>-0.089162</td>
+          <td>0.12</td>
         </tr>
         <tr>
           <th>38</th>
-          <td>x2(1)</td>
-          <td>x2(2)</td>
-          <td>-0.062109</td>
-          <td>0.99</td>
-        </tr>
-        <tr>
-          <th>39</th>
-          <td>x4(2)</td>
-          <td>x3(2)</td>
-          <td>-0.070714</td>
-          <td>0.92</td>
-        </tr>
-        <tr>
-          <th>40</th>
-          <td>x4(2)</td>
-          <td>x2(2)</td>
-          <td>0.033930</td>
-          <td>0.69</td>
-        </tr>
-        <tr>
-          <th>41</th>
-          <td>x3(2)</td>
-          <td>x1(2)</td>
-          <td>-0.063276</td>
-          <td>0.63</td>
-        </tr>
-        <tr>
-          <th>42</th>
-          <td>x2(1)</td>
-          <td>x0(1)</td>
-          <td>-0.011222</td>
-          <td>0.58</td>
-        </tr>
-        <tr>
-          <th>43</th>
-          <td>x4(1)</td>
-          <td>x2(1)</td>
-          <td>-0.121987</td>
-          <td>0.54</td>
-        </tr>
-        <tr>
-          <th>44</th>
-          <td>x2(1)</td>
-          <td>x4(1)</td>
-          <td>-0.108512</td>
-          <td>0.46</td>
-        </tr>
-        <tr>
-          <th>45</th>
-          <td>x1(2)</td>
-          <td>x3(2)</td>
-          <td>-0.030521</td>
-          <td>0.37</td>
-        </tr>
-        <tr>
-          <th>46</th>
-          <td>x2(2)</td>
-          <td>x4(2)</td>
-          <td>0.035184</td>
-          <td>0.31</td>
-        </tr>
-        <tr>
-          <th>47</th>
-          <td>x0(1)</td>
-          <td>x2(1)</td>
-          <td>-0.071555</td>
-          <td>0.10</td>
-        </tr>
-        <tr>
-          <th>48</th>
           <td>x3(2)</td>
           <td>x4(2)</td>
-          <td>-0.066850</td>
+          <td>-0.081235</td>
           <td>0.08</td>
         </tr>
       </tbody>
@@ -1085,38 +1059,38 @@ We can easily perform sorting operations with pandas.DataFrame.
       </thead>
       <tbody>
         <tr>
-          <th>3</th>
+          <th>12</th>
           <td>x3(1)</td>
           <td>x2(2)</td>
-          <td>0.627104</td>
+          <td>0.524608</td>
           <td>1.0</td>
         </tr>
         <tr>
           <th>8</th>
           <td>x2(1)</td>
           <td>x3(2)</td>
-          <td>0.464517</td>
+          <td>0.425542</td>
           <td>1.0</td>
         </tr>
         <tr>
-          <th>21</th>
-          <td>x4(2)</td>
-          <td>x1(2)</td>
-          <td>0.457002</td>
-          <td>1.0</td>
-        </tr>
-        <tr>
-          <th>14</th>
+          <th>13</th>
           <td>x1(1)</td>
-          <td>x4(2)</td>
-          <td>0.419646</td>
+          <td>x2(2)</td>
+          <td>0.329232</td>
           <td>1.0</td>
         </tr>
         <tr>
-          <th>25</th>
+          <th>23</th>
           <td>x3(1)</td>
           <td>x1(1)</td>
-          <td>0.397728</td>
+          <td>0.317693</td>
+          <td>1.0</td>
+        </tr>
+        <tr>
+          <th>4</th>
+          <td>x1(1)</td>
+          <td>x4(2)</td>
+          <td>0.297682</td>
           <td>1.0</td>
         </tr>
       </tbody>
@@ -1126,7 +1100,8 @@ We can easily perform sorting operations with pandas.DataFrame.
 
 
 
-And with pandas.DataFrame, we can easily filter by keywords. The following code extracts the causal direction towards x0(2).
+And with pandas.DataFrame, we can easily filter by keywords. The
+following code extracts the causal direction towards x0(2).
 
 .. code-block:: python
 
@@ -1186,48 +1161,49 @@ And with pandas.DataFrame, we can easily filter by keywords. The following code 
       </thead>
       <tbody>
         <tr>
-          <th>29</th>
-          <td>x0(1)</td>
-          <td>x0(2)</td>
-          <td>0.195237</td>
-          <td>1.0</td>
-        </tr>
-        <tr>
-          <th>30</th>
+          <th>17</th>
           <td>x1(1)</td>
           <td>x0(2)</td>
-          <td>0.289916</td>
-          <td>1.0</td>
+          <td>0.154852</td>
+          <td>1.00</td>
         </tr>
         <tr>
-          <th>31</th>
-          <td>x2(1)</td>
-          <td>x0(2)</td>
-          <td>0.035207</td>
-          <td>1.0</td>
-        </tr>
-        <tr>
-          <th>33</th>
+          <th>22</th>
           <td>x3(1)</td>
           <td>x0(2)</td>
-          <td>-0.318041</td>
-          <td>1.0</td>
+          <td>-0.238794</td>
+          <td>1.00</td>
         </tr>
         <tr>
-          <th>34</th>
+          <th>28</th>
           <td>x4(1)</td>
           <td>x0(2)</td>
-          <td>-0.257058</td>
-          <td>1.0</td>
+          <td>-0.139972</td>
+          <td>0.91</td>
+        </tr>
+        <tr>
+          <th>32</th>
+          <td>x2(1)</td>
+          <td>x0(2)</td>
+          <td>0.034217</td>
+          <td>0.35</td>
+        </tr>
+        <tr>
+          <th>36</th>
+          <td>x0(1)</td>
+          <td>x0(2)</td>
+          <td>0.136141</td>
+          <td>0.15</td>
         </tr>
       </tbody>
     </table>
     </div>
-    <br>
 
 
 
-Because it holds the raw data of the causal effect (the original data for calculating the median), it is possible to draw a histogram of the values of the causal effect, as shown below.
+Because it holds the raw data of the causal effect (the original data
+for calculating the median), it is possible to draw a histogram of the
+values of the causal effect, as shown below.
 
 .. code-block:: python
 

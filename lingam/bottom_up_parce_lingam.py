@@ -3,18 +3,19 @@ Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
 
+import itertools
 import numbers
 import warnings
 
 import numpy as np
-from sklearn.utils import check_array, resample
-from sklearn.linear_model import LinearRegression
 from scipy.stats import gamma
 from scipy.stats.distributions import chi2
-from .utils import predict_adaptive_lasso
-from .hsic import hsic_test_gamma
+from sklearn.linear_model import LinearRegression
+from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
+from .hsic import hsic_test_gamma
+from .utils import predict_adaptive_lasso
 
 
 class BottomUpParceLiNGAM():
@@ -144,14 +145,17 @@ class BottomUpParceLiNGAM():
 
             if self._reg is None:
                 # Compute residuals of least square regressions
-                coef = np.dot(np.linalg.pinv(cov[np.ix_(xi_index, xi_index)]), cov[np.ix_(xj_index, xi_index)].reshape(xi_index.shape[0], 1))
+                coef = np.dot(np.linalg.pinv(cov[np.ix_(xi_index, xi_index)]), cov[np.ix_(
+                    xj_index, xi_index)].reshape(xi_index.shape[0], 1))
                 R = X[:, xj_index] - np.dot(X[:, xi_index], coef)
             else:
                 self._reg.fit(X[:, xi_index], np.ravel(X[:, xj_index]))
-                R = X[:, xj_index] - self._reg.predict(X[:, xi_index]).reshape(-1, 1)
+                R = X[:, xj_index] - \
+                    self._reg.predict(X[:, xi_index]).reshape(-1, 1)
 
             # HSIC test with Fisher's method
-            fisher_p, fisher_stat = self._fisher_hsic_test(X[:, xi_index], R, max_p_stat)
+            fisher_p, fisher_stat = self._fisher_hsic_test(
+                X[:, xi_index], R, max_p_stat)
 
             # Update output
             if fisher_stat < max_p_stat or fisher_p > max_p:
@@ -272,10 +276,44 @@ class BottomUpParceLiNGAM():
         predictors.extend(parents)
 
         # Estimate total effect
-        lr = LinearRegression()
-        lr.fit(X[:, predictors], X[:, to_index])
+        coefs = predict_adaptive_lasso(X, predictors, to_index)
 
-        return lr.coef_[0]
+        return coefs[0]
+
+    def get_error_independence_p_values(self, X):
+        """Calculate the p-value matrix of independence between error variables.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Original data, where n_samples is the number of samples
+            and n_features is the number of features.
+
+        Returns
+        -------
+        independence_p_values : array-like, shape (n_features, n_features)
+            p-value matrix of independence between error variables.
+        """
+        # Check parameters
+        X = check_array(X)
+        n_samples = X.shape[0]
+        n_features = X.shape[1]
+
+        E = X - np.dot(self._adjacency_matrix, X.T).T
+        nan_cols = list(
+            set(np.argwhere(np.isnan(self._adjacency_matrix)).ravel()))
+        p_values = np.zeros([n_features, n_features])
+        for i, j in itertools.combinations(range(n_features), 2):
+            if i in nan_cols or j in nan_cols:
+                p_values[i, j] = np.nan
+                p_values[j, i] = np.nan
+            else:
+                _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
+                                             np.reshape(E[:, j], [n_samples, 1]))
+                p_values[i, j] = p_value
+                p_values[j, i] = p_value
+
+        return p_values
 
     @property
     def causal_order_(self):

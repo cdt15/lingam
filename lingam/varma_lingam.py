@@ -2,6 +2,7 @@
 Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
+import itertools
 import warnings
 
 import numpy as np
@@ -12,6 +13,8 @@ from statsmodels.tsa.statespace.varmax import VARMAX
 from .base import _BaseLiNGAM
 from .bootstrap import BootstrapResult
 from .direct_lingam import DirectLiNGAM
+from .hsic import hsic_test_gamma
+from .utils import predict_adaptive_lasso
 
 
 class VARMALiNGAM:
@@ -177,7 +180,8 @@ class VARMALiNGAM:
             am = np.concatenate([*psi, *omega], axis=1)
             adjacency_matrices.append(am)
 
-            ee = np.dot(np.eye(psi[0].shape[0]) - psi[0], sampled_residuals.T).T
+            ee = np.dot(np.eye(psi[0].shape[0]) -
+                        psi[0], sampled_residuals.T).T
 
             # total effects
             for c, to in enumerate(reversed(self._causal_order)):
@@ -225,7 +229,7 @@ class VARMALiNGAM:
             from_order = self._causal_order.index(from_index)
             to_order = self._causal_order.index(to_index)
             if from_order > to_order:
-                warnings.warn(f'The estimated causal effect may be incorrect because ' 
+                warnings.warn(f'The estimated causal effect may be incorrect because '
                               f'the causal order of the destination variable (to_index={to_index}) '
                               f'is earlier than the source variable (from_index={from_index}).')
 
@@ -256,10 +260,32 @@ class VARMALiNGAM:
         predictors.extend(parents)
 
         # Estimate total effect
-        lr = LinearRegression()
-        lr.fit(X_joined[:, predictors], X_joined[:, to_index])
+        coefs = predict_adaptive_lasso(X_joined, predictors, to_index)
 
-        return lr.coef_[0]
+        return coefs[0]
+
+    def get_error_independence_p_values(self):
+        """Calculate the p-value matrix of independence between error variables.
+
+        Returns
+        -------
+        independence_p_values : array-like, shape (n_features, n_features)
+            p-value matrix of independence between error variables.
+        """
+        eps = self.residuals_
+        psi0 = self._adjacency_matrices[0][0]
+        E = np.dot(np.eye(psi0.shape[0]) - psi0, eps.T).T
+        n_samples = E.shape[0]
+        n_features = E.shape[1]
+
+        p_values = np.zeros([n_features, n_features])
+        for i, j in itertools.combinations(range(n_features), 2):
+            _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
+                                         np.reshape(E[:, j], [n_samples, 1]))
+            p_values[i, j] = p_value
+            p_values[j, i] = p_value
+
+        return p_values
 
     def _estimate_varma_coefs(self, X):
         if self._criterion not in ['aic', 'bic', 'hqic']:
@@ -269,7 +295,8 @@ class VARMALiNGAM:
             min_value = float('Inf')
             result = None
 
-            orders = [(p, q) for p in range(self._order[0] + 1) for q in range(self._order[1] + 1)]
+            orders = [(p, q) for p in range(self._order[0] + 1)
+                      for q in range(self._order[1] + 1)]
             orders.remove((0, 0))
 
             for order in orders:
@@ -318,7 +345,8 @@ class VARMALiNGAM:
 
         omegas = []
         for j in range(order[1]):
-            omega = np.dot(np.eye(psi0.shape[0]) - psi0, thetas[j], np.linalg.inv(np.eye(psi0.shape[0]) - psi0))
+            omega = np.dot(np.eye(
+                psi0.shape[0]) - psi0, thetas[j], np.linalg.inv(np.eye(psi0.shape[0]) - psi0))
             omegas.append(omega)
 
         return np.array(psis), np.array(omegas)
@@ -331,11 +359,13 @@ class VARMALiNGAM:
         X_joined = np.zeros((X.shape[0], X.shape[1]*(1+order[0]+order[1])))
         for p in range(1+order[0]):
             pos = n_features * p
-            X_joined[:, pos:pos + n_features] = np.roll(X[:, 0:n_features], p, axis=0)
+            X_joined[:, pos:pos +
+                     n_features] = np.roll(X[:, 0:n_features], p, axis=0)
 
         for q in range(order[1]):
             pos = n_features * (1+order[0]) + n_features * q
-            X_joined[:, pos:pos + n_features] = np.roll(ee[:, 0:n_features], q+1, axis=0)
+            X_joined[:, pos:pos +
+                     n_features] = np.roll(ee[:, 0:n_features], q+1, axis=0)
 
         # pruned by adaptive lasso
         psi_omega = np.zeros((n_features, n_features*(1+order[0]+order[1])))

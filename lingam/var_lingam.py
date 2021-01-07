@@ -2,6 +2,7 @@
 Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
+import itertools
 import warnings
 
 import numpy as np
@@ -12,6 +13,8 @@ from statsmodels.tsa.vector_ar.var_model import VAR
 from .base import _BaseLiNGAM
 from .bootstrap import BootstrapResult
 from .direct_lingam import DirectLiNGAM
+from .hsic import hsic_test_gamma
+from .utils import predict_adaptive_lasso
 
 
 class VARLiNGAM:
@@ -46,7 +49,8 @@ class VARLiNGAM:
         self._lags = lags
         self._criterion = criterion
         self._prune = prune
-        self._ar_coefs = check_array(ar_coefs, allow_nd=True) if ar_coefs is not None else None
+        self._ar_coefs = check_array(
+            ar_coefs, allow_nd=True) if ar_coefs is not None else None
         self._lingam_model = lingam_model
         self._random_state = random_state
 
@@ -196,7 +200,7 @@ class VARLiNGAM:
             from_order = self._causal_order.index(from_index)
             to_order = self._causal_order.index(to_index)
             if from_order > to_order:
-                warnings.warn(f'The estimated causal effect may be incorrect because ' 
+                warnings.warn(f'The estimated causal effect may be incorrect because '
                               f'the causal order of the destination variable (to_index={to_index}) '
                               f'is earlier than the source variable (from_index={from_index}).')
 
@@ -217,10 +221,32 @@ class VARLiNGAM:
         predictors.extend(parents)
 
         # estimate total effect
-        lr = LinearRegression()
-        lr.fit(X_joined[:, predictors], X_joined[:, to_index])
+        coefs = predict_adaptive_lasso(X_joined, predictors, to_index)
 
-        return lr.coef_[0]
+        return coefs[0]
+
+    def get_error_independence_p_values(self):
+        """Calculate the p-value matrix of independence between error variables.
+
+        Returns
+        -------
+        independence_p_values : array-like, shape (n_features, n_features)
+            p-value matrix of independence between error variables.
+        """
+        nn = self.residuals_
+        B0 = self._adjacency_matrices[0]
+        E = np.dot(np.eye(B0.shape[0]) - B0, nn.T).T
+        n_samples = E.shape[0]
+        n_features = E.shape[1]
+
+        p_values = np.zeros([n_features, n_features])
+        for i, j in itertools.combinations(range(n_features), 2):
+            _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
+                                         np.reshape(E[:, j], [n_samples, 1]))
+            p_values[i, j] = p_value
+            p_values[j, i] = p_value
+
+        return p_values
 
     def _estimate_var_coefs(self, X):
         """Estimate coefficients of VAR"""
@@ -256,7 +282,8 @@ class VARLiNGAM:
 
             estimated = np.zeros((X.shape[0], 1))
             for tau in range(1, lags + 1):
-                estimated += np.dot(M_taus[tau - 1], X[:, t - tau].reshape((-1, 1)))
+                estimated += np.dot(M_taus[tau - 1],
+                                    X[:, t - tau].reshape((-1, 1)))
 
             residuals[:, t] = X[:, t] - estimated.reshape((-1,))
 
@@ -290,10 +317,12 @@ class VARLiNGAM:
             ancestor_indexes = causal_order[:causal_order_no]
 
             obj = np.zeros((len(blocks)))
-            exp = np.zeros((len(blocks), causal_order_no + n_features * self._lags))
+            exp = np.zeros(
+                (len(blocks), causal_order_no + n_features * self._lags))
             for j, block in enumerate(blocks):
                 obj[j] = block[0][i]
-                exp[j:] = np.concatenate([block[0][ancestor_indexes].flatten(), block[1:][:].flatten()], axis=0)
+                exp[j:] = np.concatenate(
+                    [block[0][ancestor_indexes].flatten(), block[1:][:].flatten()], axis=0)
 
             # adaptive lasso
             gamma = 1.0
@@ -306,7 +335,8 @@ class VARLiNGAM:
 
             B_taus[0][i, ancestor_indexes] = coef[:causal_order_no]
             for j in range(len(B_taus[1:])):
-                B_taus[j + 1][i, :] = coef[causal_order_no + n_features * j: causal_order_no + n_features * j + n_features]
+                B_taus[j + 1][i, :] = coef[causal_order_no + n_features *
+                                           j: causal_order_no + n_features * j + n_features]
 
         return B_taus
 

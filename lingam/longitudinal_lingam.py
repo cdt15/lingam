@@ -2,6 +2,7 @@
 Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
+import itertools
 import numbers
 import warnings
 
@@ -11,6 +12,7 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import LongitudinalBootstrapResult
 from .direct_lingam import DirectLiNGAM
+from .hsic import hsic_test_gamma
 from .utils import predict_adaptive_lasso
 
 
@@ -60,7 +62,8 @@ class LongitudinalLiNGAM():
             raise ValueError('X_list must be a array-like.')
 
         if len(X_list) < 2:
-            raise ValueError('X_list must be a list containing at least two items')
+            raise ValueError(
+                'X_list must be a list containing at least two items')
 
         self._T = len(X_list)
         self._n = check_array(X_list[0]).shape[0]
@@ -77,7 +80,8 @@ class LongitudinalLiNGAM():
         B_tau = self._estimate_lagged_effects(B_t, M_tau)
 
         # output B(t,t), B(t,t-τ)
-        self._adjacency_matrices = np.empty((self._T, 1+self._n_lags, self._p, self._p))
+        self._adjacency_matrices = np.empty(
+            (self._T, 1+self._n_lags, self._p, self._p))
         self._adjacency_matrices[:, :] = np.nan
         for t in range(1, self._T):
             self._adjacency_matrices[t, 0] = B_t[t]
@@ -86,6 +90,9 @@ class LongitudinalLiNGAM():
                     continue
                 self._adjacency_matrices[t, l+1] = B_tau[t, l]
 
+        self._residuals = np.zeros((self._T, self._n, self._p))
+        for t in range(self._T):
+            self._residuals[t] = N_t[t].T
         self._causal_orders = causal_orders
         return self
 
@@ -111,7 +118,8 @@ class LongitudinalLiNGAM():
             raise ValueError('X_list must be a array-like.')
 
         if len(X_list) < 2:
-            raise ValueError('X_list must be a list containing at least two items')
+            raise ValueError(
+                'X_list must be a list containing at least two items')
 
         self._T = len(X_list)
         self._n = check_array(X_list[0]).shape[0]
@@ -124,8 +132,10 @@ class LongitudinalLiNGAM():
             X_t.append(X)
 
         # Bootstrapping
-        adjacency_matrices = np.zeros((n_sampling, self._T, 1+self._n_lags, self._p, self._p))
-        total_effects = np.zeros((n_sampling, self._T*self._p, self._T*self._p))
+        adjacency_matrices = np.zeros(
+            (n_sampling, self._T, 1+self._n_lags, self._p, self._p))
+        total_effects = np.zeros(
+            (n_sampling, self._T*self._p, self._T*self._p))
         for i in range(n_sampling):
             resampled_X_t = np.empty((self._T, self._n, self._p))
             indices = np.random.randint(0, self._n, size=(self._n,))
@@ -177,11 +187,11 @@ class LongitudinalLiNGAM():
             from_order = self._causal_orders[to_t].index(from_index)
             to_order = self._causal_orders[from_t].index(to_index)
             if from_order > to_order:
-                warnings.warn(f'The estimated causal effect may be incorrect because ' 
+                warnings.warn(f'The estimated causal effect may be incorrect because '
                               f'the causal order of the destination variable (to_t={to_t}, to_index={to_index}) '
                               f'is earlier than the source variable (from_t={from_t}, from_index={from_index}).')
         elif to_t < from_t:
-            warnings.warn(f'The estimated causal effect may be incorrect because ' 
+            warnings.warn(f'The estimated causal effect may be incorrect because '
                           f'the causal order of the destination variable (to_t={to_t}) '
                           f'is earlier than the source variable (from_t={from_t}).')
 
@@ -201,15 +211,42 @@ class LongitudinalLiNGAM():
         predictors.extend(parents + self._p)
 
         # Estimate total effect
-        lr = LinearRegression()
-        lr.fit(X_joined[:, predictors], X_joined[:, to_index])
+        coefs = predict_adaptive_lasso(X_joined, predictors, to_index)
 
-        return lr.coef_[0]
+        return coefs[0]
+
+    def get_error_independence_p_values(self):
+        """Calculate the p-value matrix of independence between error variables.
+
+        Returns
+        -------
+        independence_p_values : array-like, shape (n_features, n_features)
+            p-value matrix of independence between error variables.
+        """
+        E_list = np.empty((self._T, self._n, self._p))
+        for t, resid in enumerate(self.residuals_):
+            B_t = self._adjacency_matrices[t, 0]
+            E_list[t] = np.dot(np.eye(B_t.shape[0]) - B_t, resid.T).T
+
+        p_values_list = np.zeros([self._T, self._p, self._p])
+        p_values_list[:, :, :] = np.nan
+        for t in range(1, self._T):
+            p_values = np.zeros([self._p, self._p])
+            for i, j in itertools.combinations(range(self._p), 2):
+                _, p_value = hsic_test_gamma(np.reshape(E_list[t][:, i], [self._n, 1]),
+                                             np.reshape(E_list[t][:, j], [self._n, 1]))
+                p_values[i, j] = p_value
+                p_values[j, i] = p_value
+
+            p_values_list[t] = p_values
+
+        return p_values_list
 
     def _compute_residuals(self, X_t):
         """Compute residuals N(t)"""
         M_tau = np.zeros((self._T, self._n_lags, self._p, self._p))
         N_t = np.zeros((self._T, self._p, self._n))
+        N_t[:, :, :] = np.nan
 
         for t in range(1, self._T):
             # predictors
@@ -280,3 +317,17 @@ class LongitudinalLiNGAM():
             such as B(t,t) or B(t,t-τ) at t=0, all elements of the matrix are nan**.
         """
         return self._adjacency_matrices
+
+    @property
+    def residuals_(self):
+        """Residuals of regression.
+
+        Returns
+        -------
+        residuals_ : list, shape [E, ...]
+            Residuals of regression, where ``E`` is an dataset.
+            The shape of ``E`` is (n_samples, n_features), 
+            where ``n_samples`` is the number of samples and ``n_features`` is the number of features.
+
+        """
+        return self._residuals

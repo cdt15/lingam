@@ -22,8 +22,8 @@ In this example, we need to import ``numpy``, ``pandas``, and
 
 .. parsed-literal::
 
-    ['1.19.2', '1.1.2', '0.14.1', '1.5.0']
-
+    ['1.16.2', '0.24.2', '0.11.1', '1.5.1']
+    
 
 Test data
 ---------
@@ -152,6 +152,7 @@ variable for x2 and x3.
       </tbody>
     </table>
     </div>
+    <br>
 
 
 
@@ -199,7 +200,7 @@ call the ``fit`` method.
 
 .. parsed-literal::
 
-    <lingam.bottom_up_parce_lingam.BottomUpParceLiNGAM at 0x55577c0>
+    <lingam.bottom_up_parce_lingam.BottomUpParceLiNGAM at 0x2098ee24860>
 
 
 
@@ -255,6 +256,30 @@ We can draw a causal graph by utility funciton.
 
 
 
+Independence between error variables
+------------------------------------
+
+To check if the LiNGAM assumption is broken, we can get p-values of
+independence between error variables. The value in the i-th row and j-th
+column of the obtained matrix shows the p-value of the independence of
+the error variables :math:`e_i` and :math:`e_j`.
+
+.. code-block:: python
+
+    p_values = model.get_error_independence_p_values(X)
+    print(p_values)
+
+
+.. parsed-literal::
+
+    [[0.    0.491   nan   nan 0.763 0.2  ]
+     [0.491 0.      nan   nan 0.473 0.684]
+     [  nan   nan 0.      nan   nan   nan]
+     [  nan   nan   nan 0.      nan   nan]
+     [0.763 0.473   nan   nan 0.    0.427]
+     [0.2   0.684   nan   nan 0.427 0.   ]]
+    
+
 Bootstrapping
 -------------
 
@@ -265,7 +290,7 @@ argument specifies the number of bootstrap sampling.
 
     import warnings
     warnings.filterwarnings('ignore', category=UserWarning)
-
+    
     model = lingam.BottomUpParceLiNGAM()
     result = model.bootstrap(X, n_sampling=100)
 
@@ -300,7 +325,7 @@ We can check the result by utility function.
     x1 <--- x3 (b>0) (21.0%)
     x0 <--- x3 (b>0) (12.0%)
     x5 <--- x2 (b>0) (7.0%)
-
+    
 
 Directed Acyclic Graphs
 -----------------------
@@ -331,7 +356,7 @@ We can check the result by utility function.
     DAG[2]: 7.0%
     	x1 <--- x0 (b>0)
     	x1 <--- x2 (b>0)
-
+    
 
 Probability
 -----------
@@ -353,7 +378,7 @@ bootstrapping.
      [0.   0.   0.   0.   0.   0.  ]
      [0.45 0.03 0.45 0.02 0.   0.07]
      [0.26 0.01 0.07 0.02 0.   0.  ]]
-
+    
 
 Causal Effects
 --------------
@@ -366,7 +391,7 @@ we have replaced the variable index with a label below.
 .. code-block:: python
 
     causal_effects = result.get_causal_effects(min_causal_effect=0.01)
-
+    
     # Assign to pandas.DataFrame for pretty display
     df = pd.DataFrame(causal_effects)
     labels = [f'x{i}' for i in range(X.shape[1])]
@@ -429,111 +454,69 @@ we have replaced the variable index with a label below.
       <tbody>
         <tr>
           <th>0</th>
-          <td>x1</td>
-          <td>x4</td>
-          <td>0.045256</td>
-          <td>0.14</td>
-        </tr>
-        <tr>
-          <th>1</th>
           <td>x0</td>
           <td>x5</td>
-          <td>0.517290</td>
+          <td>0.515510</td>
           <td>0.12</td>
         </tr>
         <tr>
-          <th>2</th>
+          <th>1</th>
           <td>x0</td>
           <td>x1</td>
           <td>0.477885</td>
           <td>0.11</td>
         </tr>
         <tr>
-          <th>3</th>
-          <td>x4</td>
-          <td>x1</td>
-          <td>0.044782</td>
-          <td>0.11</td>
-        </tr>
-        <tr>
-          <th>4</th>
+          <th>2</th>
           <td>x0</td>
           <td>x4</td>
           <td>0.494946</td>
           <td>0.11</td>
         </tr>
         <tr>
-          <th>5</th>
-          <td>x5</td>
-          <td>x1</td>
-          <td>0.025297</td>
-          <td>0.06</td>
-        </tr>
-        <tr>
-          <th>6</th>
-          <td>x5</td>
-          <td>x4</td>
-          <td>-0.031346</td>
-          <td>0.06</td>
-        </tr>
-        <tr>
-          <th>7</th>
+          <th>3</th>
           <td>x2</td>
           <td>x1</td>
           <td>0.482657</td>
           <td>0.02</td>
         </tr>
         <tr>
-          <th>8</th>
+          <th>4</th>
           <td>x2</td>
           <td>x4</td>
           <td>-0.490889</td>
           <td>0.02</td>
         </tr>
         <tr>
-          <th>9</th>
+          <th>5</th>
           <td>x3</td>
           <td>x0</td>
           <td>0.511008</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>10</th>
+          <th>6</th>
           <td>x3</td>
           <td>x1</td>
           <td>0.653876</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>11</th>
-          <td>x0</td>
-          <td>x2</td>
-          <td>-0.044259</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>12</th>
+          <th>7</th>
           <td>x3</td>
           <td>x2</td>
           <td>0.790837</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>13</th>
-          <td>x5</td>
-          <td>x2</td>
-          <td>0.054423</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>14</th>
+          <th>8</th>
           <td>x3</td>
           <td>x4</td>
           <td>-0.126227</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>15</th>
+          <th>9</th>
           <td>x3</td>
           <td>x5</td>
           <td>0.265528</td>
@@ -542,7 +525,7 @@ we have replaced the variable index with a label below.
       </tbody>
     </table>
     </div>
-
+    <br>
 
 
 We can easily perform sorting operations with pandas.DataFrame.
@@ -605,35 +588,35 @@ We can easily perform sorting operations with pandas.DataFrame.
       </thead>
       <tbody>
         <tr>
-          <th>12</th>
+          <th>7</th>
           <td>x3</td>
           <td>x2</td>
           <td>0.790837</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>10</th>
+          <th>6</th>
           <td>x3</td>
           <td>x1</td>
           <td>0.653876</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>1</th>
+          <th>0</th>
           <td>x0</td>
           <td>x5</td>
-          <td>0.517290</td>
+          <td>0.515510</td>
           <td>0.12</td>
         </tr>
         <tr>
-          <th>9</th>
+          <th>5</th>
           <td>x3</td>
           <td>x0</td>
           <td>0.511008</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>4</th>
+          <th>2</th>
           <td>x0</td>
           <td>x4</td>
           <td>0.494946</td>
@@ -642,7 +625,7 @@ We can easily perform sorting operations with pandas.DataFrame.
       </tbody>
     </table>
     </div>
-
+    <br>
 
 
 .. code-block:: python
@@ -703,44 +686,44 @@ We can easily perform sorting operations with pandas.DataFrame.
       </thead>
       <tbody>
         <tr>
-          <th>9</th>
+          <th>5</th>
           <td>x3</td>
           <td>x0</td>
           <td>0.511008</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>10</th>
+          <th>6</th>
           <td>x3</td>
           <td>x1</td>
           <td>0.653876</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>11</th>
-          <td>x0</td>
-          <td>x2</td>
-          <td>-0.044259</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>12</th>
+          <th>7</th>
           <td>x3</td>
           <td>x2</td>
           <td>0.790837</td>
           <td>0.01</td>
         </tr>
         <tr>
-          <th>13</th>
+          <th>8</th>
+          <td>x3</td>
+          <td>x4</td>
+          <td>-0.126227</td>
+          <td>0.01</td>
+        </tr>
+        <tr>
+          <th>9</th>
+          <td>x3</td>
           <td>x5</td>
-          <td>x2</td>
-          <td>0.054423</td>
+          <td>0.265528</td>
           <td>0.01</td>
         </tr>
       </tbody>
     </table>
     </div>
-
+    <br>
 
 
 And with pandas.DataFrame, we can easily filter by keywords. The
@@ -804,7 +787,7 @@ following code extracts the causal direction towards x1.
       </thead>
       <tbody>
         <tr>
-          <th>2</th>
+          <th>1</th>
           <td>x0</td>
           <td>x1</td>
           <td>0.477885</td>
@@ -812,27 +795,13 @@ following code extracts the causal direction towards x1.
         </tr>
         <tr>
           <th>3</th>
-          <td>x4</td>
-          <td>x1</td>
-          <td>0.044782</td>
-          <td>0.11</td>
-        </tr>
-        <tr>
-          <th>5</th>
-          <td>x5</td>
-          <td>x1</td>
-          <td>0.025297</td>
-          <td>0.06</td>
-        </tr>
-        <tr>
-          <th>7</th>
           <td>x2</td>
           <td>x1</td>
           <td>0.482657</td>
           <td>0.02</td>
         </tr>
         <tr>
-          <th>10</th>
+          <th>6</th>
           <td>x3</td>
           <td>x1</td>
           <td>0.653876</td>
@@ -841,7 +810,7 @@ following code extracts the causal direction towards x1.
       </tbody>
     </table>
     </div>
-
+    <br>
 
 
 Because it holds the raw data of the causal effect (the original data
@@ -854,9 +823,9 @@ values of the causal effect, as shown below.
     import seaborn as sns
     sns.set()
     %matplotlib inline
-
-    from_index = 3 # index of x3
-    to_index = 0 # index of x0
+    
+    from_index = 0 # index of x0
+    to_index = 5 # index of x5
     plt.hist(result.total_effects_[:, to_index, from_index])
 
 
@@ -864,10 +833,10 @@ values of the causal effect, as shown below.
 
 .. parsed-literal::
 
-    (array([88.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.]),
-     array([0.   , 0.051, 0.102, 0.153, 0.204, 0.256, 0.307, 0.358, 0.409,
-            0.46 , 0.511]),
-     <BarContainer object of 10 artists>)
+    (array([74.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0., 12.]),
+     array([0.   , 0.052, 0.103, 0.155, 0.206, 0.258, 0.309, 0.361, 0.412,
+            0.464, 0.516]),
+     <a list of 10 Patch objects>)
 
 
 

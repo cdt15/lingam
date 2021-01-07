@@ -3,6 +3,7 @@ Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
 
+import itertools
 import warnings
 from abc import ABCMeta, abstractmethod
 
@@ -11,6 +12,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array
 
 from .bootstrap import BootstrapMixin
+from .hsic import hsic_test_gamma
 from .utils import predict_adaptive_lasso
 
 
@@ -71,7 +73,7 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         from_order = self._causal_order.index(from_index)
         to_order = self._causal_order.index(to_index)
         if from_order > to_order:
-            warnings.warn(f'The estimated causal effect may be incorrect because ' 
+            warnings.warn(f'The estimated causal effect may be incorrect because '
                           f'the causal order of the destination variable (to_index={to_index}) '
                           f'is earlier than the source variable (from_index={from_index}).')
 
@@ -81,10 +83,38 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         predictors.extend(parents)
 
         # Estimate total effect
-        lr = LinearRegression()
-        lr.fit(X[:, predictors], X[:, to_index])
+        coefs = predict_adaptive_lasso(X, predictors, to_index)
 
-        return lr.coef_[0]
+        return coefs[0]
+
+    def get_error_independence_p_values(self, X):
+        """Calculate the p-value matrix of independence between error variables.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Original data, where n_samples is the number of samples
+            and n_features is the number of features.
+
+        Returns
+        -------
+        independence_p_values : array-like, shape (n_features, n_features)
+            p-value matrix of independence between error variables.
+        """
+        # Check parameters
+        X = check_array(X)
+        n_samples = X.shape[0]
+        n_features = X.shape[1]
+
+        E = X - np.dot(self._adjacency_matrix, X.T).T
+        p_values = np.zeros([n_features, n_features])
+        for i, j in itertools.combinations(range(n_features), 2):
+            _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
+                                         np.reshape(E[:, j], [n_samples, 1]))
+            p_values[i, j] = p_value
+            p_values[j, i] = p_value
+
+        return p_values
 
     def _estimate_adjacency_matrix(self, X):
         """Estimate adjacency matrix by causal order.
