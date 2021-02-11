@@ -28,7 +28,7 @@ In this example, we need to import ``numpy``, ``pandas``, and
 
 .. parsed-literal::
 
-    ['1.16.2', '0.24.2', '0.11.1', '1.5.1']
+    ['1.16.2', '0.24.2', '0.11.1', '1.5.2']
     
 
 Test data
@@ -650,14 +650,18 @@ Using the :func:`~lingam.LongitudinalBootstrapResult.get_probabilities` method, 
      [0.99 1.   0.96 1.   1.  ]]
     
 
-Causal Effects
---------------
+Total Causal Effects
+--------------------
 
-Using the :func:`~lingam.LongitudinalBootstrapResult.get_causal_effects` method, we can get the list of causal effect. The causal effects we can get are dictionary type variable. We can display the list nicely by assigning it to pandas.DataFrame. Also, we have replaced the variable index with a label below.
+Using the ``get_total_causal_effects()`` method, we can get the list of
+total causal effect. The total causal effects we can get are dictionary
+type variable. We can display the list nicely by assigning it to
+pandas.DataFrame. Also, we have replaced the variable index with a label
+below.
 
 .. code-block:: python
 
-    causal_effects = result.get_causal_effects(min_causal_effect=0.01)
+    causal_effects = result.get_total_causal_effects(min_causal_effect=0.01)
     
     df = pd.DataFrame(causal_effects)
     
@@ -1201,9 +1205,9 @@ following code extracts the causal direction towards x0(2).
 
 
 
-Because it holds the raw data of the causal effect (the original data
-for calculating the median), it is possible to draw a histogram of the
-values of the causal effect, as shown below.
+Because it holds the raw data of the total causal effect (the original
+data for calculating the median), it is possible to draw a histogram of
+the values of the causal effect, as shown below.
 
 .. code-block:: python
 
