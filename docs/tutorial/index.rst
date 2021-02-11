@@ -17,7 +17,7 @@ Contents:
 
     lingam
     bootstrap
-    prior_knowledge
+    pk_direct
     multiple_dataset
     total_effect
     causal_effect
@@ -25,5 +25,6 @@ Contents:
     varma
     longitudinal
     bottom_up_parce
+    pk_bottom_up_parce
     rcd
     draw_graph
