@@ -273,7 +273,7 @@ class BootstrapResult(object):
         else:
             return np.hsplit(bp, int(shape[1]/shape[0]))
 
-    def get_causal_effects(self, min_causal_effect=None):
+    def get_total_causal_effects(self, min_causal_effect=None):
         """Get total effects list.
 
         Parameters
@@ -284,8 +284,8 @@ class BootstrapResult(object):
 
         Returns
         -------
-        causal_effects : dict
-            List of bootstrap causal effect sorted by probability in descending order.
+        total_causal_effects : dict
+            List of bootstrap total causal effect sorted by probability in descending order.
             The dictionary has the following format::
 
             {'from': [n_directions], 'to': [n_directions], 'effect': [n_directions], 'probability': [n_directions]}
@@ -561,7 +561,7 @@ class LongitudinalBootstrapResult(object):
 
         return prob
 
-    def get_causal_effects(self, min_causal_effect=None):
+    def get_total_causal_effects(self, min_causal_effect=None):
         """Get total effects list.
 
         Parameters
@@ -572,8 +572,8 @@ class LongitudinalBootstrapResult(object):
 
         Returns
         -------
-        causal_effects : dict
-            List of bootstrap causal effect sorted by probability in descending order.
+        total_causal_effects : dict
+            List of bootstrap total causal effect sorted by probability in descending order.
             The dictionary has the following format::
 
             {'from': [n_directions], 'to': [n_directions], 'effect': [n_directions], 'probability': [n_directions]}
