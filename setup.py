@@ -17,7 +17,8 @@ setuptools.setup(
         'numpy',
         'scipy',
         'scikit-learn',
-        'graphviz'
+        'graphviz',
+        'statsmodels'
     ],
     url='https://github.com/cdt15/lingam',
     packages=setuptools.find_packages(),
