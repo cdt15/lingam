@@ -24,7 +24,7 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
     .. [1] S. Shimizu. Joint estimation of linear non-Gaussian acyclic models. Neurocomputing, 81: 104-107, 2012. 
     """
 
-    def __init__(self, random_state=None, prior_knowledge=None):
+    def __init__(self, random_state=None, prior_knowledge=None, apply_prior_knowledge_softly=False):
         """Construct a model.
 
         Parameters
@@ -33,9 +33,16 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
             ``random_state`` is the seed used by the random number generator.
         prior_knowledge : array-like, shape (n_features, n_features), optional (default=None)
             Prior knowledge used for causal discovery, where ``n_features`` is the number of features.
+
+            The elements of prior knowledge matrix are defined as follows [1]_:
+
+            * ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
+            * ``1`` : :math:`x_i` has a directed path to :math:`x_j`
+            * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
+        apply_prior_knowledge_softly : boolean, optional (default=False)
+            If True, apply prior knowledge softly.
         """
-        super().__init__(random_state)
-        self._prior_knowledge = prior_knowledge
+        super().__init__(random_state, prior_knowledge, apply_prior_knowledge_softly)
 
     def fit(self, X_list):
         """Fit the model to multiple datasets.
@@ -55,14 +62,10 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         # Check parameters
         X_list = self._check_X_list(X_list)
 
-        if self._prior_knowledge is not None:
-            self._Aknw = check_array(self._prior_knowledge)
-            self._Aknw = np.where(self._Aknw < 0, np.nan, self._Aknw)
+        if self._Aknw is not None:
             if (self._n_features, self._n_features) != self._Aknw.shape:
                 raise ValueError(
                     'The shape of prior knowledge must be (n_features, n_features)')
-        else:
-            self._Aknw = None
 
         # Causal discovery
         U = np.arange(self._n_features)
@@ -77,12 +80,14 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
                             X_list_[d][:, i], X_list_[d][:, m])
             K.append(m)
             U = U[U != m]
+            if (self._Aknw is not None) and (not self._apply_prior_knowledge_softly):
+                self._partial_orders = self._partial_orders[self._partial_orders[:, 0] != m]
 
         self._causal_order = K
 
         self._adjacency_matrices = []
         for X in X_list:
-            self._estimate_adjacency_matrix(X)
+            self._estimate_adjacency_matrix(X, sink_variables=self._sink_vars())
             self._adjacency_matrices.append(self._adjacency_matrix)
         return self
 

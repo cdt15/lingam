@@ -116,7 +116,7 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
 
         return p_values
 
-    def _estimate_adjacency_matrix(self, X):
+    def _estimate_adjacency_matrix(self, X, sink_variables=None):
         """Estimate adjacency matrix by causal order.
 
         Parameters
@@ -124,6 +124,9 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         X : array-like, shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
+        sink_variables : array-like, shape (index, ...), optional (default=None)
+            List of sink variables(index).
+            Specified variables are not used as predictor in the regression.
 
         Returns
         -------
@@ -132,8 +135,14 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         """
         B = np.zeros([X.shape[1], X.shape[1]], dtype='float64')
         for i in range(1, len(self._causal_order)):
-            B[self._causal_order[i], self._causal_order[:i]] = predict_adaptive_lasso(
-                X, self._causal_order[:i], self._causal_order[i])
+            target = self._causal_order[i]
+            predictors = self._causal_order[:i]
+
+            # sink variables are not used as predictors
+            if sink_variables is not None:
+                predictors = [v for v in predictors if v not in sink_variables]
+
+            B[target, predictors] = predict_adaptive_lasso(X, predictors, target)
 
         self._adjacency_matrix = B
         return self

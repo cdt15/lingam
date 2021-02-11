@@ -99,7 +99,7 @@ def make_prior_knowledge(n_variables, exogenous_variables=None, sink_variables=N
     if exogenous_variables:
         for var in exogenous_variables:
             prior_knowledge[var, :] = 0
-    np.fill_diagonal(prior_knowledge, 0)
+    np.fill_diagonal(prior_knowledge, -1)
     return prior_knowledge
 
 
@@ -153,7 +153,7 @@ def make_dot(adjacency_matrix, labels=None, lower_limit=0.01,
         Coefficients to use for prediction's graph.
     prediction_feature_importance : array-like, optional (default=None)
         Feature importance to use for prediction's graph.
-    ignore_shape : boolean
+    ignore_shape : boolean, optional (default=False)
         Ignore checking the shape of adjaceny_matrix or not.
 
     Returns

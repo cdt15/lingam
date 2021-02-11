@@ -28,7 +28,7 @@ class BottomUpParceLiNGAM():
        Neural computation, 26.1: 57-83, 2014.
     """
 
-    def __init__(self, random_state=None, alpha=0.1, regressor=None):
+    def __init__(self, random_state=None, alpha=0.1, regressor=None, prior_knowledge=None):
         """Construct a BottomUpParceLiNGAM model.
 
         Parameters
@@ -40,6 +40,14 @@ class BottomUpParceLiNGAM():
         regressor : regressor object implementing 'fit' and 'predict' function (default=None)
             Regressor to compute residuals.
             This regressor object must have ``fit``method and ``predict`` function like scikit-learn's model.
+        prior_knowledge : array-like, shape (n_features, n_features), optional (default=None)
+            Prior knowledge used for causal discovery, where ``n_features`` is the number of features.
+
+            The elements of prior knowledge matrix are defined as follows [1]_:
+
+            * ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
+            * ``1`` : :math:`x_i` has a directed path to :math:`x_j`
+            * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
         """
         # Check parameters
         if regressor is not None:
@@ -54,6 +62,14 @@ class BottomUpParceLiNGAM():
         self._causal_order = None
         self._adjacency_matrix = None
         self._reg = regressor
+        self._Aknw = prior_knowledge
+
+        if self._Aknw is not None:
+            self._Aknw = check_array(self._Aknw)
+            self._Aknw = np.where(self._Aknw < 0, np.nan, self._Aknw)
+
+            # Extract all partial orders in prior knowledge matrix
+            self._partial_orders = self._extract_partial_orders(self._Aknw)
 
     def fit(self, X):
         """Fit the model to X.
@@ -76,17 +92,22 @@ class BottomUpParceLiNGAM():
         X = check_array(X)
         n_features = X.shape[1]
 
+        # Check prior knowledge
+        if self._Aknw is not None:
+            if (n_features, n_features) != self._Aknw.shape:
+                raise ValueError(
+                    'The shape of prior knowledge must be (n_features, n_features)')
+
         # Center variables for each group
         X = X - np.tile(np.mean(X, axis=0), (X.shape[0], 1))
 
-        # Search causal orders one by one from the bottom upward
-        U = np.arange(n_features)
         # bonferroni correction
         thresh_p = self._alpha / (n_features - 1)
 
-        K_bttm, p_bttm = self._search_causal_order(X, U, thresh_p)
+        # Search causal orders one by one from the bottom upward
+        K_bttm, p_bttm = self._search_causal_order(X, thresh_p)
 
-        U_res = list(np.setdiff1d(U, K_bttm))
+        U_res = list(np.setdiff1d(np.arange(n_features), K_bttm))
         K = []
         # Add a list of features whose order is unknown.
         if len(U_res) > 1:
@@ -96,10 +117,57 @@ class BottomUpParceLiNGAM():
 
         self._causal_order = K
         self._p_list = p_bttm
-        return self._estimate_adjacency_matrix(X)
+        return self._estimate_adjacency_matrix(X, sink_variables=self._sink_vars())
 
-    def _search_causal_order(self, X, U, thresh_p):
+    def _extract_partial_orders(self, pk):
+        """ Extract partial orders from prior knowledge."""
+        path_pairs = np.array(np.where(pk == 1)).transpose()
+        no_path_pairs = np.array(np.where(pk == 0)).transpose()
+
+        # Check for inconsistencies in pairs with path
+        check_pairs = np.concatenate([path_pairs, path_pairs[:, [1, 0]]])
+        if len(check_pairs) > 0:
+            pairs, counts = np.unique(check_pairs, axis=0, return_counts=True)
+            if len(pairs[counts > 1]) > 0:
+                raise ValueError(
+                    f'The prior knowledge contains inconsistencies at the following indices: {pairs[counts>1].tolist()}')
+
+        # Check for inconsistencies in pairs without path
+        # If there are duplicate pairs without path, they cancel out and are not ordered.
+        check_pairs = np.concatenate([no_path_pairs, no_path_pairs[:, [1, 0]]])
+        if len(check_pairs) > 0:
+            pairs, counts = np.unique(check_pairs, axis=0, return_counts=True)
+            check_pairs = np.concatenate([no_path_pairs, pairs[counts > 1]])
+            pairs, counts = np.unique(check_pairs, axis=0, return_counts=True)
+            no_path_pairs = pairs[counts < 2]
+
+        check_pairs = np.concatenate([path_pairs, no_path_pairs[:, [1, 0]]])
+        pairs = np.unique(check_pairs, axis=0)
+        return pairs[:, [1, 0]]  # [to, from] -> [from, to]
+
+    def _sink_vars(self):
+        """The sink variables(index) in prior knowledge matrix."""
+        if self._Aknw is None:
+            return None
+        else:
+            pk = self._Aknw.copy()
+            np.fill_diagonal(pk, 0)
+            sink = [i for i in range(pk.shape[1]) if pk[:, i].sum() == 0]
+            return sink
+
+    def _search_candidate(self, U):
+        """ Search for candidate features """
+        # If no prior knowledge is specified, nothing to do.
+        if self._Aknw is None:
+            return U
+
+        # Candidate features that are not to the left of the partial orders
+        Uc = [i for i in U if i not in self._partial_orders[:, 0]]
+        return Uc
+
+    def _search_causal_order(self, X, thresh_p):
         """Search causal orders one by one from the bottom upward."""
+        U = np.arange(X.shape[1])
         K_bttm = []
         p_bttm = []
         is_search_causal_order = True
@@ -110,8 +178,11 @@ class BottomUpParceLiNGAM():
             is_search_causal_order = False
 
         while is_search_causal_order:
+            # Search for candidate features
+            Uc = self._search_candidate(U)
+
             # Find the most sink variable
-            m, exo_vec, fisher_p = self._find_exo_vec(X, U)
+            m, _, fisher_p = self._find_exo_vec(X, Uc)
 
             # Conduct statistical test by the p-value or the statistic
             # If statistical test is not rejected
@@ -119,7 +190,11 @@ class BottomUpParceLiNGAM():
                 # Add index of the exogenous variable to K_bttm
                 K_bttm = np.append(m, K_bttm).astype(np.int64)
                 p_bttm.insert(0, fisher_p)
-                U = exo_vec
+
+                # Update U and partial orders
+                U = U[U != m]
+                if self._Aknw is not None:
+                    self._partial_orders = self._partial_orders[self._partial_orders[:, 1] != m]
 
                 # If there is only one candidate for sink variable, the search ends
                 if len(U) <= 1:
@@ -188,7 +263,7 @@ class BottomUpParceLiNGAM():
         """Return a copy of an array flattened in one dimension."""
         return [val for item in arr for val in (self._flatten(item) if hasattr(item, '__iter__') and not isinstance(item, str) else [item])]
 
-    def _estimate_adjacency_matrix(self, X):
+    def _estimate_adjacency_matrix(self, X, sink_variables=None):
         """Estimate adjacency matrix by causal order.
 
         Parameters
@@ -196,6 +271,9 @@ class BottomUpParceLiNGAM():
         X : array-like, shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
+        sink_variables : array-like, shape (index, ...), optional (default=None)
+            List of sink variables(index).
+            Specified variables are not used as predictor in the regression.
 
         Returns
         -------
@@ -204,10 +282,15 @@ class BottomUpParceLiNGAM():
         """
         B = np.zeros([X.shape[1], X.shape[1]], dtype='float64')
         for i in range(1, len(self._causal_order)):
+            target = self._causal_order[i]
             # Flatten the array into one dimension
             predictors = self._flatten(self._causal_order[:i])
-            coef = predict_adaptive_lasso(X, predictors, self._causal_order[i])
-            B[self._causal_order[i], predictors] = coef
+
+            # sink variables are not used as predictors
+            if sink_variables is not None:
+                predictors = [v for v in predictors if v not in sink_variables]
+
+            B[target, predictors] = predict_adaptive_lasso(X, predictors, target)
 
         # Set np.nan if order is unknown
         for unk_order in self._causal_order:

@@ -18,4 +18,4 @@ __all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult', 'MultiGroupDirectLiNG
            'CausalEffect', 'VARLiNGAM', 'VARMALiNGAM', 'LongitudinalLiNGAM', 'LongitudinalBootstrapResult',
            'BottomUpParceLiNGAM', 'RCD']
 
-__version__ = '1.5.1'
+__version__ = '1.5.2'
