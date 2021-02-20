@@ -15,7 +15,8 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .hsic import hsic_test_gamma
-from .utils import predict_adaptive_lasso
+from .utils import (get_exo_variables, get_sink_variables,
+                    predict_adaptive_lasso)
 
 
 class BottomUpParceLiNGAM():
@@ -117,7 +118,7 @@ class BottomUpParceLiNGAM():
 
         self._causal_order = K
         self._p_list = p_bttm
-        return self._estimate_adjacency_matrix(X, sink_variables=self._sink_vars())
+        return self._estimate_adjacency_matrix(X, prior_knowledge=self._Aknw)
 
     def _extract_partial_orders(self, pk):
         """ Extract partial orders from prior knowledge."""
@@ -145,16 +146,6 @@ class BottomUpParceLiNGAM():
         pairs = np.unique(check_pairs, axis=0)
         return pairs[:, [1, 0]]  # [to, from] -> [from, to]
 
-    def _sink_vars(self):
-        """The sink variables(index) in prior knowledge matrix."""
-        if self._Aknw is None:
-            return None
-        else:
-            pk = self._Aknw.copy()
-            np.fill_diagonal(pk, 0)
-            sink = [i for i in range(pk.shape[1]) if pk[:, i].sum() == 0]
-            return sink
-
     def _search_candidate(self, U):
         """ Search for candidate features """
         # If no prior knowledge is specified, nothing to do.
@@ -181,8 +172,17 @@ class BottomUpParceLiNGAM():
             # Search for candidate features
             Uc = self._search_candidate(U)
 
-            # Find the most sink variable
-            m, _, fisher_p = self._find_exo_vec(X, Uc)
+            if len(Uc) == 1:
+                # If there is only one variable in Uc,
+                # calculate HSIC with the rest of the variables
+                m = np.array([Uc[0]])
+                predictors = np.setdiff1d(U, Uc[0])
+                R = self._compute_residuals(X, predictors, m)
+                fisher_p, _ = self._fisher_hsic_test(
+                    X[:, predictors], R, np.inf)
+            else:
+                # Find the most sink variable
+                m, _, fisher_p = self._find_exo_vec(X, Uc)
 
             # Conduct statistical test by the p-value or the statistic
             # If statistical test is not rejected
@@ -213,20 +213,12 @@ class BottomUpParceLiNGAM():
         max_p_stat = np.inf
 
         exo_vec = []
-        cov = np.cov(X.T)
         for j in range(len(U)):
             xi_index = np.setdiff1d(U, U[j])
             xj_index = np.array([U[j]])
 
-            if self._reg is None:
-                # Compute residuals of least square regressions
-                coef = np.dot(np.linalg.pinv(cov[np.ix_(xi_index, xi_index)]), cov[np.ix_(
-                    xj_index, xi_index)].reshape(xi_index.shape[0], 1))
-                R = X[:, xj_index] - np.dot(X[:, xi_index], coef)
-            else:
-                self._reg.fit(X[:, xi_index], np.ravel(X[:, xj_index]))
-                R = X[:, xj_index] - \
-                    self._reg.predict(X[:, xi_index]).reshape(-1, 1)
+            # Compute residuals
+            R = self._compute_residuals(X, xi_index, xj_index)
 
             # HSIC test with Fisher's method
             fisher_p, fisher_stat = self._fisher_hsic_test(
@@ -240,6 +232,21 @@ class BottomUpParceLiNGAM():
 
         m = np.setdiff1d(U, exo_vec)
         return m, exo_vec, max_p
+
+    def _compute_residuals(self, X, predictors, target):
+        """Compute residuals"""
+        if self._reg is None:
+            # Compute residuals of least square regressions
+            cov = np.cov(X.T)
+            coef = np.dot(np.linalg.pinv(cov[np.ix_(predictors, predictors)]),
+                          cov[np.ix_(target, predictors)].reshape(predictors.shape[0], 1))
+            R = X[:, target] - np.dot(X[:, predictors], coef)
+        else:
+            self._reg.fit(X[:, predictors], np.ravel(X[:, target]))
+            R = X[:, target] - \
+                self._reg.predict(X[:, predictors]).reshape(-1, 1)
+
+        return R
 
     def _fisher_hsic_test(self, X, R, max_p_stat):
         """Conduct statistical test by HSIC and Fisher's method."""
@@ -263,7 +270,7 @@ class BottomUpParceLiNGAM():
         """Return a copy of an array flattened in one dimension."""
         return [val for item in arr for val in (self._flatten(item) if hasattr(item, '__iter__') and not isinstance(item, str) else [item])]
 
-    def _estimate_adjacency_matrix(self, X, sink_variables=None):
+    def _estimate_adjacency_matrix(self, X, prior_knowledge=None):
         """Estimate adjacency matrix by causal order.
 
         Parameters
@@ -271,26 +278,33 @@ class BottomUpParceLiNGAM():
         X : array-like, shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
-        sink_variables : array-like, shape (index, ...), optional (default=None)
-            List of sink variables(index).
-            Specified variables are not used as predictor in the regression.
+        prior_knowledge : array-like, shape (n_variables, n_variables), optional (default=None)
+            Prior knowledge matrix.
 
         Returns
         -------
         self : object
             Returns the instance itself.
         """
+        sink_vars = get_sink_variables(prior_knowledge)
+        exo_vars = get_exo_variables(prior_knowledge)
+
         B = np.zeros([X.shape[1], X.shape[1]], dtype='float64')
         for i in range(1, len(self._causal_order)):
             target = self._causal_order[i]
+
+            # target is not used for prediction if it is included in exogenous variables
+            if target in exo_vars:
+                continue
+
             # Flatten the array into one dimension
             predictors = self._flatten(self._causal_order[:i])
 
             # sink variables are not used as predictors
-            if sink_variables is not None:
-                predictors = [v for v in predictors if v not in sink_variables]
+            predictors = [v for v in predictors if v not in sink_vars]
 
-            B[target, predictors] = predict_adaptive_lasso(X, predictors, target)
+            B[target, predictors] = predict_adaptive_lasso(
+                X, predictors, target)
 
         # Set np.nan if order is unknown
         for unk_order in self._causal_order:

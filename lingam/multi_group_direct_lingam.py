@@ -87,7 +87,7 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
 
         self._adjacency_matrices = []
         for X in X_list:
-            self._estimate_adjacency_matrix(X, sink_variables=self._sink_vars())
+            self._estimate_adjacency_matrix(X, prior_knowledge=self._Aknw)
             self._adjacency_matrices.append(self._adjacency_matrix)
         return self
 

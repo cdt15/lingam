@@ -98,7 +98,7 @@ class DirectLiNGAM(_BaseLiNGAM):
                 self._partial_orders = self._partial_orders[self._partial_orders[:, 0] != m]
 
         self._causal_order = K
-        return self._estimate_adjacency_matrix(X, sink_variables=self._sink_vars())
+        return self._estimate_adjacency_matrix(X, prior_knowledge=self._Aknw)
 
     def _extract_partial_orders(self, pk):
         """ Extract partial orders from prior knowledge."""
@@ -125,16 +125,6 @@ class DirectLiNGAM(_BaseLiNGAM):
         check_pairs = np.concatenate([path_pairs, no_path_pairs[:, [1, 0]]])
         pairs = np.unique(check_pairs, axis=0)
         return pairs[:, [1, 0]]  # [to, from] -> [from, to]
-
-    def _sink_vars(self):
-        """The sink variables(index) in prior knowledge matrix."""
-        if self._Aknw is None:
-            return None
-        else:
-            pk = self._Aknw.copy()
-            np.fill_diagonal(pk, 0)
-            sink = [i for i in range(pk.shape[1]) if pk[:, i].sum() == 0]
-            return sink
 
     def _residual(self, xi, xj):
         """The residual when xi is regressed on xj."""
