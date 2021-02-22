@@ -14,15 +14,15 @@ In this example, we need to import ``numpy``, ``pandas``, and
     import graphviz
     import lingam
     from lingam.utils import print_causal_directions, print_dagc, make_dot
-
+    
     print([np.__version__, pd.__version__, graphviz.__version__, lingam.__version__])
-
+    
     np.set_printoptions(precision=3, suppress=True)
 
 
 .. parsed-literal::
 
-    ['1.16.2', '0.24.2', '0.11.1', '1.5.1']
+    ['1.16.2', '0.24.2', '0.11.1', '1.5.2']
     
 
 Test data
@@ -380,17 +380,18 @@ bootstrapping.
      [0.26 0.01 0.07 0.02 0.   0.  ]]
     
 
-Causal Effects
---------------
+Total Causal Effects
+--------------------
 
-Using the ``get_causal_effects()`` method, we can get the list of causal
-effect. The causal effects we can get are dictionary type variable. We
-can display the list nicely by assigning it to pandas.DataFrame. Also,
-we have replaced the variable index with a label below.
+Using the ``get_total_causal_effects()`` method, we can get the list of
+total causal effect. The total causal effects we can get are dictionary
+type variable. We can display the list nicely by assigning it to
+pandas.DataFrame. Also, we have replaced the variable index with a label
+below.
 
 .. code-block:: python
 
-    causal_effects = result.get_causal_effects(min_causal_effect=0.01)
+    causal_effects = result.get_total_causal_effects(min_causal_effect=0.01)
     
     # Assign to pandas.DataFrame for pretty display
     df = pd.DataFrame(causal_effects)
@@ -813,7 +814,7 @@ following code extracts the causal direction towards x1.
     <br>
 
 
-Because it holds the raw data of the causal effect (the original data
+Because it holds the raw data of the total causal effect (the original data
 for calculating the median), it is possible to draw a histogram of the
 values of the causal effect, as shown below.
 

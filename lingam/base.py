@@ -13,7 +13,8 @@ from sklearn.utils import check_array
 
 from .bootstrap import BootstrapMixin
 from .hsic import hsic_test_gamma
-from .utils import predict_adaptive_lasso
+from .utils import (get_exo_variables, get_sink_variables,
+                    predict_adaptive_lasso)
 
 
 class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
@@ -116,7 +117,7 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
 
         return p_values
 
-    def _estimate_adjacency_matrix(self, X):
+    def _estimate_adjacency_matrix(self, X, prior_knowledge=None):
         """Estimate adjacency matrix by causal order.
 
         Parameters
@@ -124,16 +125,31 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         X : array-like, shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
+        prior_knowledge : array-like, shape (n_variables, n_variables), optional (default=None)
+            Prior knowledge matrix.
 
         Returns
         -------
         self : object
             Returns the instance itself.
         """
+        sink_vars = get_sink_variables(prior_knowledge)
+        exo_vars = get_exo_variables(prior_knowledge)
+
         B = np.zeros([X.shape[1], X.shape[1]], dtype='float64')
         for i in range(1, len(self._causal_order)):
-            B[self._causal_order[i], self._causal_order[:i]] = predict_adaptive_lasso(
-                X, self._causal_order[:i], self._causal_order[i])
+            target = self._causal_order[i]
+            predictors = self._causal_order[:i]
+
+            # target is not used for prediction if it is included in exogenous variables
+            if target in exo_vars:
+                continue
+
+            # sink variables are not used as predictors
+            predictors = [v for v in predictors if v not in sink_vars]
+
+            B[target, predictors] = predict_adaptive_lasso(
+                X, predictors, target)
 
         self._adjacency_matrix = B
         return self

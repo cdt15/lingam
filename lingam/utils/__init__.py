@@ -2,15 +2,15 @@
 Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
+import graphviz
 import numpy as np
 from sklearn import linear_model
-from sklearn.utils import check_array
 from sklearn.linear_model import LassoLarsIC, LinearRegression
-import graphviz
+from sklearn.utils import check_array
 
 __all__ = ['print_causal_directions', 'print_dagc',
            'make_prior_knowledge', 'remove_effect', 'make_dot',
-           'predict_adaptive_lasso']
+           'predict_adaptive_lasso', 'get_sink_variables', 'get_exo_variables']
 
 
 def print_causal_directions(cdc, n_sampling, labels=None):
@@ -92,15 +92,56 @@ def make_prior_knowledge(n_variables, exogenous_variables=None, sink_variables=N
     if paths:
         for path in paths:
             prior_knowledge[path[1], path[0]] = 1
-            prior_knowledge[path[0], path[1]] = 0
     if sink_variables:
         for var in sink_variables:
             prior_knowledge[:, var] = 0
     if exogenous_variables:
         for var in exogenous_variables:
             prior_knowledge[var, :] = 0
-    np.fill_diagonal(prior_knowledge, 0)
+    np.fill_diagonal(prior_knowledge, -1)
     return prior_knowledge
+
+
+def get_sink_variables(prior_knowledge):
+    """The sink variables(index) in prior knowledge matrix.
+
+    Parameters
+    ----------
+    prior_knowledge : array-like, shape (n_variables, n_variables)
+        Prior knowledge matrix.
+
+    Returns
+    -------
+    sink_variables : array-like
+        List of sink variables(index).
+    """
+    if prior_knowledge is None:
+        return []
+    pk = prior_knowledge.copy()
+    np.fill_diagonal(pk, 0)
+    sink_vars = [i for i in range(pk.shape[1]) if pk[:, i].sum() == 0]
+    return sink_vars
+
+
+def get_exo_variables(prior_knowledge):
+    """The exogenous variables(index) in prior knowledge matrix.
+
+    Parameters
+    ----------
+    prior_knowledge : array-like, shape (n_variables, n_variables)
+        Prior knowledge matrix.
+
+    Returns
+    -------
+    exogenous_variables : array-like
+        List of exogenous variables(index).
+    """
+    if prior_knowledge is None:
+        return []
+    pk = prior_knowledge.copy()
+    np.fill_diagonal(pk, 0)
+    exo_vars = [i for i in range(pk.shape[1]) if pk[i, :].sum() == 0]
+    return exo_vars
 
 
 def remove_effect(X, remove_features):
@@ -153,7 +194,7 @@ def make_dot(adjacency_matrix, labels=None, lower_limit=0.01,
         Coefficients to use for prediction's graph.
     prediction_feature_importance : array-like, optional (default=None)
         Feature importance to use for prediction's graph.
-    ignore_shape : boolean
+    ignore_shape : boolean, optional (default=False)
         Ignore checking the shape of adjaceny_matrix or not.
 
     Returns
