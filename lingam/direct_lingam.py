@@ -123,6 +123,12 @@ class DirectLiNGAM(_BaseLiNGAM):
             no_path_pairs = pairs[counts < 2]
 
         check_pairs = np.concatenate([path_pairs, no_path_pairs[:, [1, 0]]])
+        if len(check_pairs) == 0:
+            # If no pairs are extracted from the specified prior knowledge, 
+            # discard the prior knowledge.
+            self._Aknw = None
+            return None
+
         pairs = np.unique(check_pairs, axis=0)
         return pairs[:, [1, 0]]  # [to, from] -> [from, to]
 

@@ -182,7 +182,7 @@ def test_prior_knowledge_invalid():
 
     # prior knowledge: invalid
     pk = np.array([
-        [0, -1, -1],
+        [0, -1, 1],
         [-1,  0, -1],
         [-1, -1,  0],
         [-1, -1, -1],
