@@ -133,20 +133,22 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         self : object
             Returns the instance itself.
         """
-        sink_vars = get_sink_variables(prior_knowledge)
-        exo_vars = get_exo_variables(prior_knowledge)
+        if prior_knowledge is not None:
+            pk = prior_knowledge.copy()
+            np.fill_diagonal(pk, 0)
 
         B = np.zeros([X.shape[1], X.shape[1]], dtype='float64')
         for i in range(1, len(self._causal_order)):
             target = self._causal_order[i]
             predictors = self._causal_order[:i]
 
-            # target is not used for prediction if it is included in exogenous variables
-            if target in exo_vars:
-                continue
+            # Exclude variables specified in no_path with prior knowledge
+            if prior_knowledge is not None:
+                predictors = [p for p in predictors if pk[target, p] != 0]
 
-            # sink variables are not used as predictors
-            predictors = [v for v in predictors if v not in sink_vars]
+            # target is exogenous variables if predictors are empty
+            if len(predictors) == 0:
+                continue
 
             B[target, predictors] = predict_adaptive_lasso(
                 X, predictors, target)

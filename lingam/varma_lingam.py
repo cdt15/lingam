@@ -84,7 +84,7 @@ class VARMALiNGAM:
         lingam_model = self._lingam_model
         if lingam_model is None:
             lingam_model = DirectLiNGAM()
-        elif not issubclass(lingam_model, _BaseLiNGAM):
+        elif not isinstance(lingam_model, _BaseLiNGAM):
             raise ValueError('lingam_model must be a subclass of _BaseLiNGAM')
 
         phis = self._ar_coefs
