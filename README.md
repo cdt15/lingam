@@ -45,7 +45,7 @@ Should you use this package for performing **VAR-LiNGAM**, we kindly request you
 Should you use this package for performing **VARMA-LiNGAM**, we kindly request you to cite the following paper:
 * Y. Kawahara, S. Shimizu and T. Washio. **Analyzing relationships among ARMA processes based on non-Gaussianity of external influences**. *Neurocomputing*, 74(12-13): 2212-2221, 2011. [[PDF]](http://dx.doi.org/10.1016/j.neucom.2011.02.008)
 
-Should you use this package for performing **estimation of intervension effects on prediction**, we kindly request you to cite the following paper:
+Should you use this package for performing **estimation of intervention effects on prediction**, we kindly request you to cite the following paper:
 * P. Blöbaum and S. Shimizu. **Estimation of interventional effects of features on prediction**. In Proc. 2017 IEEE International Workshop on Machine Learning for Signal Processing (MLSP2017), pp. 1--6, Tokyo, Japan, 2017. [[PDF]](https://arxiv.org/abs/1709.00776)
 
 Should you use this package for performing **LiNGAM for longitudinal data**, we kindly request you to cite the following paper:
