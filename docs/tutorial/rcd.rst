@@ -23,7 +23,7 @@ In this example, we need to import ``numpy``, ``pandas``, and
 
 .. parsed-literal::
 
-    ['1.16.2', '0.24.2', '0.11.1', '1.5.2']
+    ['1.16.2', '0.24.2', '0.11.1', '1.5.4']
     
 
 Test data
@@ -797,5 +797,113 @@ values of the causal effect, as shown below.
 
 
 .. image:: ../image/rcd_hist.png
+
+Bootstrap Probability of Path
+-----------------------------
+
+Using the ``get_paths()`` method, we can explore all paths from any
+variable to any variable and calculate the bootstrap probability for
+each path. The path will be output as an array of variable indices. For
+example, the array ``[3, 0, 1]`` shows the path from variable X3 through
+variable X0 to variable X1.
+
+.. code-block:: python
+
+    from_index = 5 # index of x5
+    to_index = 4 # index of x4
+    
+    pd.DataFrame(result.get_paths(from_index, to_index))
+
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
+        }
+        .dataframe thead th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>path</th>
+          <th>effect</th>
+          <th>probability</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>0</th>
+          <td>[5, 1, 0, 4]</td>
+          <td>0.534675</td>
+          <td>0.96</td>
+        </tr>
+        <tr>
+          <th>1</th>
+          <td>[5, 3, 0, 4]</td>
+          <td>0.580992</td>
+          <td>0.65</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>[5, 3, 4]</td>
+          <td>-0.197046</td>
+          <td>0.12</td>
+        </tr>
+        <tr>
+          <th>3</th>
+          <td>[5, 0, 4]</td>
+          <td>0.505671</td>
+          <td>0.08</td>
+        </tr>
+        <tr>
+          <th>4</th>
+          <td>[5, 1, 0, 2, 4]</td>
+          <td>0.071415</td>
+          <td>0.01</td>
+        </tr>
+        <tr>
+          <th>5</th>
+          <td>[5, 1, 4]</td>
+          <td>0.530308</td>
+          <td>0.01</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
 
 
