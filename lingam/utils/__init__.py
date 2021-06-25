@@ -102,45 +102,43 @@ def make_prior_knowledge(n_variables, exogenous_variables=None, sink_variables=N
     return prior_knowledge
 
 
-def get_sink_variables(prior_knowledge):
-    """The sink variables(index) in prior knowledge matrix.
+def get_sink_variables(adjacency_matrix):
+    """The sink variables(index) in the adjacency matrix.
 
     Parameters
     ----------
-    prior_knowledge : array-like, shape (n_variables, n_variables)
-        Prior knowledge matrix.
+    adjacency_matrix : array-like, shape (n_variables, n_variables)
+        Adjacency matrix, where n_variables is the number of variables.
 
     Returns
     -------
     sink_variables : array-like
         List of sink variables(index).
     """
-    if prior_knowledge is None:
-        return []
-    pk = prior_knowledge.copy()
-    np.fill_diagonal(pk, 0)
-    sink_vars = [i for i in range(pk.shape[1]) if pk[:, i].sum() == 0]
+    am = adjacency_matrix.copy()
+    am = np.abs(am)
+    np.fill_diagonal(am, 0)
+    sink_vars = [i for i in range(am.shape[1]) if am[:, i].sum() == 0]
     return sink_vars
 
 
-def get_exo_variables(prior_knowledge):
-    """The exogenous variables(index) in prior knowledge matrix.
+def get_exo_variables(adjacency_matrix):
+    """The exogenous variables(index) in the adjacency matrix.
 
     Parameters
     ----------
-    prior_knowledge : array-like, shape (n_variables, n_variables)
-        Prior knowledge matrix.
+    adjacency_matrix : array-like, shape (n_variables, n_variables)
+        Adjacency matrix, where n_variables is the number of variables.
 
     Returns
     -------
     exogenous_variables : array-like
         List of exogenous variables(index).
     """
-    if prior_knowledge is None:
-        return []
-    pk = prior_knowledge.copy()
-    np.fill_diagonal(pk, 0)
-    exo_vars = [i for i in range(pk.shape[1]) if pk[i, :].sum() == 0]
+    am = adjacency_matrix.copy()
+    am = np.abs(am)
+    np.fill_diagonal(am, 0)
+    exo_vars = [i for i in range(am.shape[1]) if am[i, :].sum() == 0]
     return exo_vars
 
 
@@ -301,3 +299,71 @@ def predict_adaptive_lasso(X, predictors, target, gamma=1.0):
     reg = LassoLarsIC(criterion='bic')
     reg.fit(X[:, predictors] * weight, X[:, target])
     return reg.coef_ * weight
+
+
+def find_all_paths(dag, from_index, to_index, min_causal_effect=0.0):
+    """Find all paths from point to point in DAG.
+
+    Parameters
+    ----------
+    dag : array-like, shape (n_features, n_features)
+        The adjacency matrix to fine all paths, where n_features is the number of features.
+    from_index : int
+        Index of the variable at the start of the path.
+    to_index : int
+        Index of the variable at the end of the path.
+    min_causal_effect : float, optional (default=0.0)
+        Threshold for detecting causal direction.
+        Causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+
+    Returns
+    -------
+    paths : array-like, shape (n_paths)
+        List of found path, where n_paths is the number of paths.
+    effects : array-like, shape (n_paths)
+        List of causal effect, where n_paths is the number of paths.
+    """
+    # Extract all edges
+    edges = np.array(np.where(np.abs(np.nan_to_num(dag)) > min_causal_effect)).T
+
+    # Aggregate edges by start point
+    to_indices = []
+    for i in range(dag.shape[0]):
+        adj_list = edges[edges[:, 1] == i][:, 0].tolist()
+        if len(adj_list) != 0:
+            to_indices.append(adj_list)
+        else:
+            to_indices.append([])
+
+    # DFS
+    paths = []
+    stack = [from_index]
+    stack_to_indice = [to_indices[from_index]]
+    while stack:
+        if len(stack) > dag.shape[0]:
+            raise ValueError(
+                "Unable to find the path because a cyclic graph has been specified.")
+
+        cur_index = stack[-1]
+        to_indice = stack_to_indice[-1]
+
+        if cur_index == to_index:
+            paths.append(stack.copy())
+            stack.pop()
+            stack_to_indice.pop()
+        else:
+            if len(to_indice) > 0:
+                next_index = to_indice.pop(0)
+                stack.append(next_index)
+                stack_to_indice.append(to_indices[next_index].copy())
+            else:
+                stack.pop()
+                stack_to_indice.pop()
+
+    # Calculate the causal effect for each path
+    effects = []
+    for p in paths:
+        coefs = [dag[p[i+1], p[i]] for i in range(len(p)-1)]
+        effects.append(np.cumprod(coefs)[-1])
+
+    return paths, effects
