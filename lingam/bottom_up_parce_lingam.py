@@ -15,8 +15,7 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .hsic import hsic_test_gamma
-from .utils import (get_exo_variables, get_sink_variables,
-                    predict_adaptive_lasso)
+from .utils import predict_adaptive_lasso
 
 
 class BottomUpParceLiNGAM():
