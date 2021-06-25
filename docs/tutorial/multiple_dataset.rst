@@ -24,7 +24,7 @@ In this example, we need to import ``numpy``, ``pandas``, and
 
 .. parsed-literal::
 
-    ['1.16.2', '0.24.2', '0.11.1', '1.5.2']
+    ['1.16.2', '0.24.2', '0.11.1', '1.5.4']
     
 
 Test data
@@ -1029,6 +1029,84 @@ values of the causal effect, as shown below.
     plt.hist(results[0].total_effects_[:, to_index, from_index])
 
 
-.. image:: ../image/multiple_dataset_hist.png
+Bootstrap Probability of Path
+-----------------------------
+
+Using the ``get_paths()`` method, we can explore all paths from any
+variable to any variable and calculate the bootstrap probability for
+each path. The path will be output as an array of variable indices. For
+example, the array ``[3, 0, 1]`` shows the path from variable X3 through
+variable X0 to variable X1.
+
+.. code-block:: python
+
+    from_index = 3 # index of x3
+    to_index = 1 # index of x0
+    
+    pd.DataFrame(results[0].get_paths(from_index, to_index))
+
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>path</th>
+          <th>effect</th>
+          <th>probability</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>0</th>
+          <td>[3, 0, 1]</td>
+          <td>8.561128</td>
+          <td>1.00</td>
+        </tr>
+        <tr>
+          <th>1</th>
+          <td>[3, 2, 1]</td>
+          <td>11.622379</td>
+          <td>1.00</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>[3, 1]</td>
+          <td>0.151715</td>
+          <td>0.08</td>
+        </tr>
+        <tr>
+          <th>3</th>
+          <td>[3, 2, 0, 1]</td>
+          <td>0.618533</td>
+          <td>0.08</td>
+        </tr>
+        <tr>
+          <th>4</th>
+          <td>[3, 0, 5, 1]</td>
+          <td>0.967472</td>
+          <td>0.05</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
 
 

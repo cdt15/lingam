@@ -13,6 +13,7 @@ API Reference
     varma_lingam
     longitudinal_lingam
     bootstrap
+    timeseries_bootstrap
     longitudinal_bootstrap
     bottom_up_parce_lingam
     rcd

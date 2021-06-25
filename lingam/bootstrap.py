@@ -8,6 +8,8 @@ import numbers
 import numpy as np
 from sklearn.utils import check_array, resample
 
+from .utils import find_all_paths
+
 
 class BootstrapMixin():
     """Mixin class for all LiNGAM algorithms that implement the method of bootstrapping."""
@@ -329,6 +331,80 @@ class BootstrapResult(object):
         }
 
         return ce
+
+    def get_paths(self, from_index, to_index, min_causal_effect=0.0):
+        """Get all paths from the start variable to the end variable and their bootstrap probabilities.
+
+        Parameters
+        ----------
+        from_index : int
+            Index of the variable at the start of the path.
+        to_index : int
+            Index of the variable at the end of the path.
+        min_causal_effect : float, optional (default=0.0)
+            Threshold for detecting causal direction.
+            Causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+
+        Returns
+        -------
+        paths : dict
+            List of path and bootstrap probability.
+            The dictionary has the following format::
+
+            {'path': [n_paths], 'effect': [n_paths], 'probability': [n_paths]}
+
+            where ``n_paths`` is the number of paths.
+        """
+        # Find all paths from from_index to to_index
+        paths_list = []
+        effects_list = []
+        for am in self._adjacency_matrices:
+            paths, effects = find_all_paths(am, from_index, to_index)
+            # Convert path to string to make them easier to handle.
+            paths_list.extend(['_'.join(map(str, p)) for p in paths])
+            effects_list.extend(effects)
+
+        paths_list = np.array(paths_list)
+        effects_list = np.array(effects_list)
+
+        # Count paths
+        paths_str, counts = np.unique(paths_list, axis=0, return_counts=True)
+
+        # Sort by count
+        order = np.argsort(-counts)
+        probs = counts[order]/len(self._adjacency_matrices)
+        paths_str = paths_str[order]
+
+        # Calculate median of causal effect for each path
+        effects = [np.median(effects_list[np.where(paths_list == p)])
+                   for p in paths_str]
+
+        result = {
+            'path': [[int(i) for i in p.split('_')] for p in paths_str],
+            'effect': effects,
+            'probability': probs.tolist(),
+        }
+        return result
+
+
+class TimeseriesBootstrapResult(BootstrapResult):
+    """The result of bootstrapping for Time series algorithm."""
+
+    def __init__(self, adjacency_matrices, total_effects):
+        """Construct a BootstrapResult.
+
+        Parameters
+        ----------
+        adjacency_matrices : array-like, shape (n_sampling)
+            The adjacency matrix list by bootstrapping.
+        total_effects : array-like, shape (n_sampling)
+            The total effects list by bootstrapping.
+        """
+        super().__init__(adjacency_matrices, total_effects)
+
+    def get_paths(self, from_index, to_index, min_causal_effect=0.0):
+        """Not implement"""
+        raise NotImplementedError('This method has not been implemented yet.')
 
 
 class LongitudinalBootstrapResult(object):

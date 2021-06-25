@@ -15,6 +15,9 @@ In this example, we need to import ``numpy``, ``pandas``, and
     import lingam
     from lingam.utils import print_causal_directions, print_dagc, make_dot
     
+    import warnings
+    warnings.filterwarnings('ignore')
+    
     print([np.__version__, pd.__version__, graphviz.__version__, lingam.__version__])
     
     np.set_printoptions(precision=3, suppress=True)
@@ -22,7 +25,7 @@ In this example, we need to import ``numpy``, ``pandas``, and
 
 .. parsed-literal::
 
-    ['1.16.2', '0.24.2', '0.11.1', '1.5.2']
+    ['1.16.2', '0.24.2', '0.11.1', '1.5.4']
     
 
 Test data
@@ -830,18 +833,98 @@ values of the causal effect, as shown below.
     plt.hist(result.total_effects_[:, to_index, from_index])
 
 
-
-
-.. parsed-literal::
-
-    (array([74.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0., 12.]),
-     array([0.   , 0.052, 0.103, 0.155, 0.206, 0.258, 0.309, 0.361, 0.412,
-            0.464, 0.516]),
-     <a list of 10 Patch objects>)
-
-
-
-
 .. image:: ../image/bottom_up_parce_hist.png
+
+Bootstrap Probability of Path
+-----------------------------
+
+Using the ``get_paths()`` method, we can explore all paths from any
+variable to any variable and calculate the bootstrap probability for
+each path. The path will be output as an array of variable indices. For
+example, the array ``[3, 0, 1]`` shows the path from variable X3 through
+variable X0 to variable X1.
+
+.. code-block:: python
+
+    from_index = 3 # index of x3
+    to_index = 1 # index of x0
+    
+    pd.DataFrame(result.get_paths(from_index, to_index))
+
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
+        }
+        .dataframe thead th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>path</th>
+          <th>effect</th>
+          <th>probability</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>0</th>
+          <td>[3, 1]</td>
+          <td>0.028621</td>
+          <td>0.23</td>
+        </tr>
+        <tr>
+          <th>1</th>
+          <td>[3, 0, 1]</td>
+          <td>0.255185</td>
+          <td>0.11</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>[3, 2, 1]</td>
+          <td>0.372204</td>
+          <td>0.02</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+
 
 

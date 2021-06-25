@@ -11,7 +11,7 @@ from sklearn.utils import check_array, resample
 from statsmodels.tsa.statespace.varmax import VARMAX
 
 from .base import _BaseLiNGAM
-from .bootstrap import BootstrapResult
+from .bootstrap import TimeseriesBootstrapResult
 from .direct_lingam import DirectLiNGAM
 from .hsic import hsic_test_gamma
 from .utils import predict_adaptive_lasso
@@ -133,7 +133,7 @@ class VARMALiNGAM:
 
         Returns
         -------
-        result : BootstrapResult
+        result : TimeseriesBootstrapResult
             Returns the result of bootstrapping.
         """
         X = check_array(X)
@@ -198,7 +198,7 @@ class VARMALiNGAM:
 
         self._criterion = criterion
 
-        return BootstrapResult(adjacency_matrices, total_effects)
+        return TimeseriesBootstrapResult(adjacency_matrices, total_effects)
 
     def estimate_total_effect(self, X, E, from_index, to_index, from_lag=0):
         """Estimate total effect using causal model.

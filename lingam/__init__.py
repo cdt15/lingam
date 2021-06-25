@@ -3,7 +3,7 @@ The lingam module includes implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/site/sshimizu06/lingam
 """
 
-from .bootstrap import BootstrapResult, LongitudinalBootstrapResult
+from .bootstrap import BootstrapResult, TimeseriesBootstrapResult, LongitudinalBootstrapResult
 from .bottom_up_parce_lingam import BottomUpParceLiNGAM
 from .causal_effect import CausalEffect
 from .direct_lingam import DirectLiNGAM
@@ -16,6 +16,6 @@ from .varma_lingam import VARMALiNGAM
 
 __all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult', 'MultiGroupDirectLiNGAM',
            'CausalEffect', 'VARLiNGAM', 'VARMALiNGAM', 'LongitudinalLiNGAM', 'LongitudinalBootstrapResult',
-           'BottomUpParceLiNGAM', 'RCD']
+           'BottomUpParceLiNGAM', 'RCD', 'TimeseriesBootstrapResult']
 
-__version__ = '1.5.3'
+__version__ = '1.5.4'
