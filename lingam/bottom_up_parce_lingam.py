@@ -68,9 +68,6 @@ class BottomUpParceLiNGAM():
             self._Aknw = check_array(self._Aknw)
             self._Aknw = np.where(self._Aknw < 0, np.nan, self._Aknw)
 
-            # Extract all partial orders in prior knowledge matrix
-            self._partial_orders = self._extract_partial_orders(self._Aknw)
-
     def fit(self, X):
         """Fit the model to X.
 
@@ -97,6 +94,9 @@ class BottomUpParceLiNGAM():
             if (n_features, n_features) != self._Aknw.shape:
                 raise ValueError(
                     'The shape of prior knowledge must be (n_features, n_features)')
+            else:
+                # Extract all partial orders in prior knowledge matrix
+                self._partial_orders = self._extract_partial_orders(self._Aknw)
 
         # Center variables for each group
         X = X - np.tile(np.mean(X, axis=0), (X.shape[0], 1))
