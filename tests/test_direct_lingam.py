@@ -319,3 +319,23 @@ def test_kernel_mode():
 
     model = DirectLiNGAM(measure='kernel')
     model.fit(X)
+
+def test_base():
+    # causal direction: x0 --> x1 --> x2
+    x0 = np.random.uniform(size=1100)
+    x1 = 0.5 * x0 + np.random.uniform(size=1100)
+    x2 = 0.5 * x0 + 0.5 * x1 + np.random.uniform(size=1100)
+    X = pd.DataFrame(np.array([x0, x1, x2]).T, columns=['x0', 'x1', 'x2'])
+
+    # prior knowledge: x1 is exogenous
+    pk = np.array(
+        [
+            [0, 0, 0, 0],
+            [-1, 0, -1, -1],
+            [-1, -1, 0, -1],
+            [-1, -1, -1, 0],
+        ]
+    )
+    model = DirectLiNGAM()
+    model._causal_order = [0, 1, 2, 3]
+    model._estimate_adjacency_matrix(X, prior_knowledge=pk)
