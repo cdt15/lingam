@@ -337,5 +337,5 @@ def test_base():
         ]
     )
     model = DirectLiNGAM()
-    model._causal_order = [0, 1, 2]
+    model._causal_order = [1, 0, 2]
     model._estimate_adjacency_matrix(X.values, prior_knowledge=pk)
