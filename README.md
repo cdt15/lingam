@@ -84,6 +84,7 @@ Should you use this package for performing **VARMA-LiNGAM**, we kindly request y
 
 * Y. Kawahara, S. Shimizu and T. Washio. **Analyzing relationships among ARMA processes based on non-Gaussianity of external influences**. *Neurocomputing*, 74(12-13): 2212-2221, 2011. [[PDF]](http://dx.doi.org/10.1016/j.neucom.2011.02.008)
 
+
 ### Multiple datasets
 
 Should you use this package for performing **DirectLiNGAM for multiple groups**, we kindly request you to cite the following paper:
