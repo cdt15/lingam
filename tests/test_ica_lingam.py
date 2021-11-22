@@ -36,6 +36,15 @@ def test_fit_success():
     model = ICALiNGAM()
     model._search_causal_order(matrix)
 
+    # for coverage
+    matrix = np.array([
+        [1, 1, 1],
+        [1, 1, 1],
+        [0, 0, 0],
+    ])
+    model = ICALiNGAM()
+    model._search_causal_order(matrix)
+
 
 def test_fit_invalid_data():
     # Not array data
