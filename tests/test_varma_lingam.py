@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 
+from lingam.direct_lingam import DirectLiNGAM
 from lingam.varma_lingam import VARMALiNGAM
 
 def randnetbalanced(dims, samples, indegree, parminmax, errminmax):
@@ -145,42 +146,109 @@ def generate_data(n=5, T=800, initial_data=None):
     return y[:, head:].T, psi0, psi1, omega1, causal_order
 
 def test_fit_success():
-    initial_data = {}
-    initial_data['psi0'] = np.array([
-        [0, 0.2669171, -0.16719712],
-        [0, 0, 0],
-        [0, -0.92769185, 0],
-    ])
-    initial_data['phi1'] = np.array([
-        [-0.50941033, -0.01429937, 0.09002112],
-        [0.09321691, -0.44028983, -0.05818995],
-        [-0.12986617, -0.88781915, 0.21726865],
-    ])
-    initial_data['omega1'] = np.array([
-        [0.02264769, 0.29487095, 0.29243977],
-        [-0.15626269, 0.22860591, 0.11884103],
-        [-0.09901518, 0.45200271, 0.05312345],
-    ])
-    initial_data['theta1'] = np.array([
-        [-0.02674394, 0.31577469, 0.33371151],
-        [-0.15626269, 0.22860591, 0.11884103],
-        [0.04594844, 0.23992688, -0.05712441],
-    ])
-    initial_data['causal_order'] = [1, 2, 0]
-    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=500, initial_data=initial_data)
+    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=100)
 
-    model = VARMALiNGAM(order=(1, 1), criterion=None)
+    # default
+    model = VARMALiNGAM()
+    model.fit(X)
+    co = model.causal_order_
+    am = model.adjacency_matrices_
+    resid = model.residuals_
+    p_values = model.get_error_independence_p_values()
+
+    print('_ma_coefs:\n', model._ma_coefs)
+
+    # order=(2, 1)
+    model = VARMALiNGAM(order=(2, 2))
     model.fit(X)
 
-#     # check the causal ordering
-#     co = model.causal_order_
-#     assert co.index(1) < co.index(2) < co.index(0)
+    # criterion='aic'
+    model = VARMALiNGAM(criterion='aic')
+    model.fit(X)
 
-#     # check the adjacency matrix
-#     psi0 = model.adjacency_matrices_[0][0]
-#     assert psi0[0, 1] > 0.2 and psi0[0, 2] < -0.1 and psi0[2, 1] < -0.8
+    # prune=True
+    model = VARMALiNGAM(prune=True)
+    model.fit(X)
 
-#     psi0[0, 1] = 0.0
-#     psi0[0, 2] = 0.0
-#     psi0[2, 1] = 0.0
-#     assert np.sum(psi0) < 0.1
+    model = VARMALiNGAM(prune=True, criterion=None, order=(2, 2))
+    model.fit(X)
+
+    # ar_coefs
+    model = VARMALiNGAM(ar_coefs=[[[0.1, 0.1, 0.1], [0.1, 0.1, 0.1], [0.1, 0.1, 0.1]]])
+    model.fit(X)
+
+    # ma_coefs
+    model = VARMALiNGAM(ma_coefs=[[[0.1, 0.1, 0.1], [0.1, 0.1, 0.1], [0.1, 0.1, 0.1]]])
+    model.fit(X)
+
+    # lingam_model
+    m = DirectLiNGAM()
+    model = VARMALiNGAM(lingam_model=m)
+    model.fit(X)
+
+def test_fit_invalid():
+    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=100)
+
+    # invalid lingam_model
+    try:
+        model = VARMALiNGAM(lingam_model=1)
+        model.fit(X)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+def test_bootstrap_success():
+    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=100)
+
+    model = VARMALiNGAM()
+    result = model.bootstrap(X, n_sampling=3)
+
+    result.adjacency_matrices_
+    result.total_effects_
+
+    # No argument
+    cdc = result.get_causal_direction_counts()
+
+    # n_directions=2
+    cdc = result.get_causal_direction_counts(n_directions=2)
+
+    # min_causal_effect=0.2
+    cdc = result.get_causal_direction_counts(min_causal_effect=0.2)
+
+    # split_by_causal_effect_sign=True
+    cdc = result.get_causal_direction_counts(split_by_causal_effect_sign=True)
+
+    # No argument
+    dagc = result.get_directed_acyclic_graph_counts()
+
+    # n_dags=2
+    dagc = result.get_directed_acyclic_graph_counts(n_dags=2)
+
+    # min_causal_effect=0.6
+    dagc = result.get_directed_acyclic_graph_counts(min_causal_effect=0.6)
+
+    # split_by_causal_effect_sign=True
+    dagc = result.get_directed_acyclic_graph_counts(split_by_causal_effect_sign=True)
+
+    # get_probabilities
+    probs = result.get_probabilities()
+
+    # get_probabilities
+    probs = result.get_probabilities(min_causal_effect=0.6)
+
+    # get_total_causal_effects
+    ce = result.get_total_causal_effects()
+
+    # get_total_causal_effects
+    ce = result.get_total_causal_effects(min_causal_effect=0.6)
+
+def test_estimate_total_effect_invalid():
+    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=100)
+
+    model = VARMALiNGAM()
+    model.fit(X)
+    model._causal_order = [0, 1, 2]
+
+    # warning
+    model.estimate_total_effect(X, model.residuals_, 2, 1)
