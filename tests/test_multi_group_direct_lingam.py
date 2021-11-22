@@ -43,6 +43,10 @@ def test_fit_success():
     am[3, 1] = 0.0
     assert np.sum(am) < 0.1
 
+    co = model.causal_order_
+    am = model.adjacency_matrices_
+    p_values = model.get_error_independence_p_values(X_list)
+
 
 def test_fit_invalid_data():
     # Different features
@@ -91,7 +95,25 @@ def test_fit_invalid_data():
 
     try:
         model = MultiGroupDirectLiNGAM()
-        model.fit(X)
+        model.fit(X_list)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # 
+    x0 = np.random.uniform(size=1000)
+    x1 = 2.0*x0 + np.random.uniform(size=1000)
+    x2 = np.random.uniform(size=1000)
+    x3 = 4.0*x1 + np.random.uniform(size=1000)
+    X1 = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
+                      columns=['x0', 'x1', 'x2', 'x3'])
+
+    X_list = [X1]
+
+    try:
+        model = MultiGroupDirectLiNGAM()
+        model.fit(X_list)
     except ValueError:
         pass
     else:
@@ -288,3 +310,124 @@ def test_prior_knowledge_invalid():
         pass
     else:
         raise AssertionError
+
+def test_bootstrap_success():
+    # causal direction: x0 --> x1 --> x3
+    x0 = np.random.uniform(size=1000)
+    x1 = 2.0*x0 + np.random.uniform(size=1000)
+    x2 = np.random.uniform(size=1000)
+    x3 = 4.0*x1 + np.random.uniform(size=1000)
+    X1 = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
+                      columns=['x0', 'x1', 'x2', 'x3'])
+
+    x0 = np.random.uniform(size=1000)
+    x1 = 2.1*x0 + np.random.uniform(size=1000)
+    x2 = np.random.uniform(size=1000)
+    x3 = 4.2*x1 + np.random.uniform(size=1000)
+    X2 = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
+                      columns=['x0', 'x1', 'x2', 'x3'])
+
+    X_list = [X1, X2]
+
+    model = MultiGroupDirectLiNGAM()
+    result_list = model.bootstrap(X_list, n_sampling=5)
+
+    result = result_list[0]
+    result.adjacency_matrices_
+    result.total_effects_
+
+    # No argument
+    cdc = result.get_causal_direction_counts()
+
+    # n_directions=2
+    cdc = result.get_causal_direction_counts(n_directions=2)
+
+    # min_causal_effect=0.2
+    cdc = result.get_causal_direction_counts(min_causal_effect=0.2)
+
+    # split_by_causal_effect_sign=True
+    cdc = result.get_causal_direction_counts(split_by_causal_effect_sign=True)
+
+    # No argument
+    dagc = result.get_directed_acyclic_graph_counts()
+
+    # n_dags=2
+    dagc = result.get_directed_acyclic_graph_counts(n_dags=2)
+
+    # min_causal_effect=0.6
+    dagc = result.get_directed_acyclic_graph_counts(min_causal_effect=0.6)
+
+    # split_by_causal_effect_sign=True
+    dagc = result.get_directed_acyclic_graph_counts(split_by_causal_effect_sign=True)
+
+    # get_probabilities
+    probs = result.get_probabilities()
+
+    # get_probabilities
+    probs = result.get_probabilities(min_causal_effect=0.6)
+
+    # get_total_causal_effects
+    ce = result.get_total_causal_effects()
+
+    # get_total_causal_effects
+    ce = result.get_total_causal_effects(min_causal_effect=0.6)
+
+def test_bootstrap_invalid_data():
+    # causal direction: x0 --> x1 --> x3
+    x0 = np.random.uniform(size=1000)
+    x1 = 2.0*x0 + np.random.uniform(size=1000)
+    x2 = np.random.uniform(size=1000)
+    x3 = 4.0*x1 + np.random.uniform(size=1000)
+    X1 = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
+                      columns=['x0', 'x1', 'x2', 'x3'])
+
+    x0 = np.random.uniform(size=1000)
+    x1 = 2.1*x0 + np.random.uniform(size=1000)
+    x2 = np.random.uniform(size=1000)
+    x3 = 4.2*x1 + np.random.uniform(size=1000)
+    X2 = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
+                      columns=['x0', 'x1', 'x2', 'x3'])
+
+    X_list = [X1, X2]
+
+    # Invalid argument: bootstrap(n_sampling=-1)
+    model = MultiGroupDirectLiNGAM()
+    try:
+        result = model.bootstrap(X_list, n_sampling=-1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid argument: bootstrap(n_sampling='3')
+    model = MultiGroupDirectLiNGAM()
+    try:
+        result = model.bootstrap(X_list, n_sampling='3')
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+def test_estimate_total_effect_invalid():
+    x0 = np.random.uniform(size=1000)
+    x1 = 2.0*x0 + np.random.uniform(size=1000)
+    x2 = np.random.uniform(size=1000)
+    x3 = 4.0*x1 + np.random.uniform(size=1000)
+    X1 = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
+                      columns=['x0', 'x1', 'x2', 'x3'])
+
+    x0 = np.random.uniform(size=1000)
+    x1 = 2.1*x0 + np.random.uniform(size=1000)
+    x2 = np.random.uniform(size=1000)
+    x3 = 4.2*x1 + np.random.uniform(size=1000)
+    X2 = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
+                      columns=['x0', 'x1', 'x2', 'x3'])
+
+    X_list = [X1, X2]
+
+    model = MultiGroupDirectLiNGAM()
+    model.fit(X_list)
+    model._causal_order = [0, 1, 2, 3]
+
+    # warning
+    model.estimate_total_effect(X_list, 3, 1)

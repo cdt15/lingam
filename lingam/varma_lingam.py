@@ -23,10 +23,21 @@ class VARMALiNGAM:
     References
     ----------
     .. [1] Yoshinobu Kawahara, Shohei Shimizu, Takashi Washio.
-       Analyzing relationships among ARMA processes based on non-Gaussianity of external influences. Neurocomputing, Volume 74: 2212-2221, 2011
+       Analyzing relationships among ARMA processes based on non-Gaussianity
+       of external influences. Neurocomputing, Volume 74: 2212-2221, 2011
     """
 
-    def __init__(self, order=(1, 1), criterion='bic', prune=False, max_iter=100, ar_coefs=None, ma_coefs=None, lingam_model=None, random_state=None):
+    def __init__(
+        self,
+        order=(1, 1),
+        criterion="bic",
+        prune=False,
+        max_iter=100,
+        ar_coefs=None,
+        ma_coefs=None,
+        lingam_model=None,
+        random_state=None,
+    ):
         """Construct a VARMALiNGAM model.
 
         Parameters
@@ -55,10 +66,12 @@ class VARMALiNGAM:
         self._criterion = criterion
         self._prune = prune
         self._max_iter = max_iter
-        self._ar_coefs = check_array(
-            ar_coefs, allow_nd=True) if ar_coefs is not None else None
-        self._ma_coefs = check_array(
-            ma_coefs, allow_nd=True) if ma_coefs is not None else None
+        self._ar_coefs = (
+            check_array(ar_coefs, allow_nd=True) if ar_coefs is not None else None
+        )
+        self._ma_coefs = (
+            check_array(ma_coefs, allow_nd=True) if ma_coefs is not None else None
+        )
         self._lingam_model = lingam_model
         self._random_state = random_state
 
@@ -85,7 +98,7 @@ class VARMALiNGAM:
         if lingam_model is None:
             lingam_model = DirectLiNGAM()
         elif not isinstance(lingam_model, _BaseLiNGAM):
-            raise ValueError('lingam_model must be a subclass of _BaseLiNGAM')
+            raise ValueError("lingam_model must be a subclass of _BaseLiNGAM")
 
         phis = self._ar_coefs
         thetas = self._ma_coefs
@@ -96,18 +109,20 @@ class VARMALiNGAM:
         else:
             p = phis.shape[0]
             q = thetas.shape[0]
-            residuals = self._calc_residuals(
-                X, phis, thetas, p, q)
+            residuals = self._calc_residuals(X, phis, thetas, p, q)
 
         model = lingam_model
         model.fit(residuals)
 
         psis, omegas = self._calc_psi_and_omega(
-            model.adjacency_matrix_, phis, thetas, order)
+            model.adjacency_matrix_, phis, thetas, order
+        )
 
         if self._prune:
-            ee = np.dot(np.eye(
-                model.adjacency_matrix_.shape[0]) - model.adjacency_matrix_, residuals.T).T
+            ee = np.dot(
+                np.eye(model.adjacency_matrix_.shape[0]) - model.adjacency_matrix_,
+                residuals.T,
+            ).T
             psis, omegas = self._pruning(X, ee, order, model.causal_order_)
 
         self._ar_coefs = phis
@@ -151,7 +166,7 @@ class VARMALiNGAM:
         ar_coefs = self._ar_coefs
         ma_coefs = self._ma_coefs
 
-        total_effects = np.zeros([n_sampling, n_features, n_features*(1+p)])
+        total_effects = np.zeros([n_sampling, n_features, n_features * (1 + p)])
 
         adjacency_matrices = []
         for i in range(n_sampling):
@@ -180,21 +195,24 @@ class VARMALiNGAM:
             am = np.concatenate([*psi, *omega], axis=1)
             adjacency_matrices.append(am)
 
-            ee = np.dot(np.eye(psi[0].shape[0]) -
-                        psi[0], sampled_residuals.T).T
+            ee = np.dot(np.eye(psi[0].shape[0]) - psi[0], sampled_residuals.T).T
 
             # total effects
             for c, to in enumerate(reversed(self._causal_order)):
                 # time t
-                for from_ in self._causal_order[:n_features-(c+1)]:
+                for from_ in self._causal_order[: n_features - (c + 1)]:
                     total_effects[i, to, from_] = self.estimate_total_effect(
-                        resampled_X, ee, from_, to)
+                        resampled_X, ee, from_, to
+                    )
 
                 # time t-tau
                 for lag in range(p):
                     for from_ in range(n_features):
-                        total_effects[i, to, from_+n_features] = self.estimate_total_effect(
-                            resampled_X, ee, from_, to, lag + 1)
+                        total_effects[
+                            i, to, from_ + n_features
+                        ] = self.estimate_total_effect(
+                            resampled_X, ee, from_, to, lag + 1
+                        )
 
         self._criterion = criterion
 
@@ -211,9 +229,9 @@ class VARMALiNGAM:
         E : array-like, shape (n_samples, n_features)
             Original error data, where n_samples is the number of samples
             and n_features is the number of features.
-        from_index : 
+        from_index :
             Index of source variable to estimate total effect.
-        to_index : 
+        to_index :
             Index of destination variable to estimate total effect.
 
         Returns
@@ -229,23 +247,26 @@ class VARMALiNGAM:
             from_order = self._causal_order.index(from_index)
             to_order = self._causal_order.index(to_index)
             if from_order > to_order:
-                warnings.warn(f'The estimated causal effect may be incorrect because '
-                              f'the causal order of the destination variable (to_index={to_index}) '
-                              f'is earlier than the source variable (from_index={from_index}).')
+                warnings.warn(
+                    f"The estimated causal effect may be incorrect because "
+                    f"the causal order of the destination variable (to_index={to_index}) "
+                    f"is earlier than the source variable (from_index={from_index})."
+                )
 
         # X + lagged X
         X_joined = np.zeros(
-            (X.shape[0], X.shape[1]*(1+from_lag+self._order[0]+self._order[1])))
+            (X.shape[0], X.shape[1] * (1 + from_lag + self._order[0] + self._order[1]))
+        )
 
-        for p in range(1+self._order[0]):
+        for p in range(1 + self._order[0]):
             pos = n_features * p
-            X_joined[:, pos:pos +
-                     n_features] = np.roll(X[:, 0:n_features], p, axis=0)
+            X_joined[:, pos : pos + n_features] = np.roll(X[:, 0:n_features], p, axis=0)
 
         for q in range(self._order[1]):
-            pos = n_features * (1+self._order[0]) + n_features * q
-            X_joined[:, pos:pos +
-                     n_features] = np.roll(E[:, 0:n_features], q+1, axis=0)
+            pos = n_features * (1 + self._order[0]) + n_features * q
+            X_joined[:, pos : pos + n_features] = np.roll(
+                E[:, 0:n_features], q + 1, axis=0
+            )
 
         # concat psi and omega
         psi = self._adjacency_matrices[0]
@@ -254,8 +275,8 @@ class VARMALiNGAM:
 
         # from_index + parents indices
         parents = np.where(np.abs(am[from_index]) > 0)[0]
-        from_index = from_index if from_lag == 0 else from_index+n_features
-        parents = parents if from_lag == 0 else parents+n_features
+        from_index = from_index if from_lag == 0 else from_index + n_features
+        parents = parents if from_lag == 0 else parents + n_features
         predictors = [from_index]
         predictors.extend(parents)
 
@@ -280,35 +301,42 @@ class VARMALiNGAM:
 
         p_values = np.zeros([n_features, n_features])
         for i, j in itertools.combinations(range(n_features), 2):
-            _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
-                                         np.reshape(E[:, j], [n_samples, 1]))
+            _, p_value = hsic_test_gamma(
+                np.reshape(E[:, i], [n_samples, 1]), np.reshape(E[:, j], [n_samples, 1])
+            )
             p_values[i, j] = p_value
             p_values[j, i] = p_value
 
         return p_values
 
     def _estimate_varma_coefs(self, X):
-        if self._criterion not in ['aic', 'bic', 'hqic']:
-            result = VARMAX(X, order=self._order, trend='c').fit(
-                maxiter=self._max_iter)
+        if self._criterion not in ["aic", "bic", "hqic"]:
+            result = VARMAX(X, order=self._order, trend="c").fit(maxiter=self._max_iter)
         else:
-            min_value = float('Inf')
+            min_value = float("Inf")
             result = None
 
-            orders = [(p, q) for p in range(self._order[0] + 1)
-                      for q in range(self._order[1] + 1)]
+            orders = [
+                (p, q)
+                for p in range(self._order[0] + 1)
+                for q in range(self._order[1] + 1)
+            ]
             orders.remove((0, 0))
 
             for order in orders:
-                fitted = VARMAX(X, order=order, trend='c').fit(
-                    maxiter=self._max_iter)
+                fitted = VARMAX(X, order=order, trend="c").fit(maxiter=self._max_iter)
 
                 value = getattr(fitted, self._criterion)
                 if value < min_value:
                     min_value = value
                     result = fitted
 
-        return result.coefficient_matrices_var, result.coefficient_matrices_vma, result.specification['order'], result.resid
+        return (
+            result.coefficient_matrices_var,
+            result.coefficient_matrices_vma,
+            result.specification["order"],
+            result.resid,
+        )
 
     def _calc_residuals(self, X, ar_coefs, ma_coefs, p, q):
         X = X.T
@@ -345,8 +373,11 @@ class VARMALiNGAM:
 
         omegas = []
         for j in range(order[1]):
-            omega = np.dot(np.eye(
-                psi0.shape[0]) - psi0, thetas[j], np.linalg.inv(np.eye(psi0.shape[0]) - psi0))
+            omega = np.dot(
+                np.eye(psi0.shape[0]) - psi0,
+                thetas[j],
+                np.linalg.inv(np.eye(psi0.shape[0]) - psi0),
+            )
             omegas.append(omega)
 
         return np.array(psis), np.array(omegas)
@@ -356,43 +387,44 @@ class VARMALiNGAM:
         n_features = X.shape[1]
 
         # join X(t), X(t-1) and e(t-1)
-        X_joined = np.zeros((X.shape[0], X.shape[1]*(1+order[0]+order[1])))
-        for p in range(1+order[0]):
+        X_joined = np.zeros((X.shape[0], X.shape[1] * (1 + order[0] + order[1])))
+        for p in range(1 + order[0]):
             pos = n_features * p
-            X_joined[:, pos:pos +
-                     n_features] = np.roll(X[:, 0:n_features], p, axis=0)
+            X_joined[:, pos : pos + n_features] = np.roll(X[:, 0:n_features], p, axis=0)
 
         for q in range(order[1]):
-            pos = n_features * (1+order[0]) + n_features * q
-            X_joined[:, pos:pos +
-                     n_features] = np.roll(ee[:, 0:n_features], q+1, axis=0)
+            pos = n_features * (1 + order[0]) + n_features * q
+            X_joined[:, pos : pos + n_features] = np.roll(
+                ee[:, 0:n_features], q + 1, axis=0
+            )
 
         # pruned by adaptive lasso
-        psi_omega = np.zeros((n_features, n_features*(1+order[0]+order[1])))
+        psi_omega = np.zeros((n_features, n_features * (1 + order[0] + order[1])))
         for i, target in enumerate(causal_order):
-            predictors = [j for j in range(
-                X_joined.shape[1]) if j not in causal_order[i:]]
+            predictors = [
+                j for j in range(X_joined.shape[1]) if j not in causal_order[i:]
+            ]
 
             # adaptive lasso
             gamma = 1.0
             lr = LinearRegression()
             lr.fit(X_joined[:, predictors], X_joined[:, target])
             weight = np.power(np.abs(lr.coef_), gamma)
-            reg = LassoLarsIC(criterion='bic')
+            reg = LassoLarsIC(criterion="bic")
             reg.fit(X_joined[:, predictors] * weight, X_joined[:, target])
 
             psi_omega[target, predictors] = reg.coef_ * weight
 
         # split psi and omega
-        psis = np.zeros(((1+order[0]), n_features, n_features))
-        for p in range(1+order[0]):
+        psis = np.zeros(((1 + order[0]), n_features, n_features))
+        for p in range(1 + order[0]):
             pos = n_features * p
-            psis[p] = psi_omega[:, pos:pos+n_features]
+            psis[p] = psi_omega[:, pos : pos + n_features]
 
         omegas = np.zeros((order[1], n_features, n_features))
         for q in range(order[1]):
-            pos = n_features * (1+order[0]) + n_features * q
-            omegas[q] = psi_omega[:, pos:pos+n_features]
+            pos = n_features * (1 + order[0]) + n_features * q
+            omegas[q] = psi_omega[:, pos : pos + n_features]
 
         return psis, omegas
 
@@ -403,7 +435,7 @@ class VARMALiNGAM:
         Returns
         -------
         causal_order_ : array-like, shape (n_features)
-            The causal order of fitted model, where 
+            The causal order of fitted model, where
             n_features is the number of features.
         """
         return self._causal_order
@@ -415,7 +447,7 @@ class VARMALiNGAM:
         Returns
         -------
         adjacency_matrices_ : array-like, shape ((p, n_features, n_features), (q, n_features, n_features))
-            The adjacency matrix psi and omega of fitted model, where 
+            The adjacency matrix psi and omega of fitted model, where
             n_features is the number of features.
         """
         return self._adjacency_matrices

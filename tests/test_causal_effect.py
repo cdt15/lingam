@@ -28,6 +28,20 @@ class DummyPrediction(object):
     def intercept_(self):
         return self._intercept
 
+class DummyPrediction2(object):
+    def __init__(self, reval_predict=None, coef=None, intercept=None):
+        self._reval_predict = reval_predict
+        self._coef = coef
+        self._intercept = intercept
+    def predict_proba(self, X):
+        return self._reval_predict
+    @property
+    def coef_(self):
+        return self._coef
+    @property
+    def intercept_(self):
+        return self._intercept
+
 def test_estimate_effects_on_prediction_success():
     # causal direction: x0 --> x1, x0 --> x2, x1 --> x2
     x0 = np.random.uniform(size=1000)
@@ -47,6 +61,9 @@ def test_estimate_effects_on_prediction_success():
     effects = ce.estimate_effects_on_prediction(X, 2, pred_model)
     assert effects.shape == (3, 2)
 
+    # retry
+    effects = ce.estimate_effects_on_prediction(X, 2, pred_model)
+
     En = np.array([0.1, 0.1, 0.1])
     effects = ce._get_propagated_effects(En, 0, 1)
     assert effects[0] == 1
@@ -62,6 +79,12 @@ def test_estimate_effects_on_prediction_success():
     # specified list for causal model
     ce = CausalEffect([[0., -1., 0.], [ 0., 0., 0.], [ 3., 2., 0.]])
     pred_model = DummyPrediction(reval_predict=np.array([0]))
+    effects = ce.estimate_effects_on_prediction(X, 2, pred_model)
+    assert effects.shape == (3, 2)
+
+    # predict_proba
+    ce = CausalEffect([[0., -1., 0.], [ 0., 0., 0.], [ 3., 2., 0.]])
+    pred_model = DummyPrediction2(reval_predict=np.array([[0, 0]]))
     effects = ce.estimate_effects_on_prediction(X, 2, pred_model)
     assert effects.shape == (3, 2)
 
@@ -264,3 +287,15 @@ def test_estimate_optimal_intervention_invalid_input():
         pass
     else:
         raise AssertionError
+
+    # predict_proba
+    try:
+        ce = CausalEffect([[ 0., 0., 0.], [-1., 0., 0.], [ 3., 2., 0.]])
+        pred_model = DummyPrediction2(reval_predict=np.array([[1, 1]]), coef=np.array([1, 2]), intercept=0)
+        ce.estimate_optimal_intervention(X, 2, pred_model, 0, 0)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+        
+

@@ -2,7 +2,6 @@ import os
 
 import numpy as np
 import pandas as pd
-
 from lingam.bootstrap import BootstrapMixin, BootstrapResult
 
 
@@ -144,6 +143,10 @@ def test_bootstrap_success():
 
     model = DummyBoostrapMixin()
     result = model.bootstrap(X, n_sampling=5)
+    am = result.adjacency_matrices_
+    assert len(am) == 5
+    te = result.total_effects_
+    assert len(te) == 5
 
     # No argument
     cdc = result.get_causal_direction_counts()
@@ -260,6 +263,25 @@ def test_bootstrap_success():
     assert dagc['dag'][4]['sign'] == [1, 1, 1]
     assert dagc['count'][4] == 1
 
+    # get_probabilities
+    probs = result.get_probabilities()
+    assert probs.shape[0]==4 and probs.shape[1]==4
+
+    # get_probabilities
+    probs = result.get_probabilities(min_causal_effect=0.6)
+    assert probs.shape[0]==4 and probs.shape[1]==4
+
+    # get_total_causal_effects
+    ce = result.get_total_causal_effects()
+
+    # get_total_causal_effects
+    ce = result.get_total_causal_effects(min_causal_effect=0.6)
+
+    # get_path
+    paths = result.get_paths(0, 1)
+
+    # get_path
+    paths = result.get_paths(0, 1, min_causal_effect=0.6)
 
 
 def test_bootstrap_invalid_data():
@@ -321,6 +343,9 @@ def test_bootstrap_invalid_data():
     cdc = result.get_causal_direction_counts()
     assert not cdc['from'] and not cdc['to'] and not cdc['count']
 
+    cdc = result.get_causal_direction_counts(split_by_causal_effect_sign=True)
+    assert not cdc['from'] and not cdc['to'] and not cdc['count'] and not cdc['sign']
+
     dagc = result.get_directed_acyclic_graph_counts()
     assert not dagc['dag'][0]['from'] and not dagc['dag'][0]['to'] and dagc['count'][0] == 5
 
@@ -331,11 +356,39 @@ def test_bootstrap_invalid_data():
     X_success = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
                              columns=['x0', 'x1', 'x2', 'x3'])
 
+    # Invalid argument: bootstrap(n_sampling=-1)
+    model = DummyBoostrapMixin()
+    try:
+        result = model.bootstrap(X_success, n_sampling=-1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid argument: bootstrap(n_sampling='3')
+    model = DummyBoostrapMixin()
+    try:
+        result = model.bootstrap(X_success, n_sampling='3')
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
     # Invalid argument: get_causal_direction_counts(n_directions=-1)
     model = DummyBoostrapMixin()
     result = model.bootstrap(X_success, n_sampling=5)
     try:
         result.get_causal_direction_counts(n_directions=-1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid argument: get_causal_direction_counts(n_directions='3')
+    model = DummyBoostrapMixin()
+    result = model.bootstrap(X_success, n_sampling=5)
+    try:
+        result.get_causal_direction_counts(n_directions='3')
     except ValueError:
         pass
     else:
@@ -361,6 +414,16 @@ def test_bootstrap_invalid_data():
     else:
         raise AssertionError
 
+    # Invalid argument: get_directed_acyclic_graph_counts(n_dags='3')
+    model = DummyBoostrapMixin()
+    result = model.bootstrap(X_success, n_sampling=5)
+    try:
+        result.get_directed_acyclic_graph_counts(n_dags='3')
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
     # Invalid argument: get_directed_acyclic_graph_counts(min_causal_effect=-1.0)
     model = DummyBoostrapMixin()
     result = model.bootstrap(X_success, n_sampling=5)
@@ -370,3 +433,34 @@ def test_bootstrap_invalid_data():
         pass
     else:
         raise AssertionError
+
+    # Invalid argument: get_probabilities(min_causal_effect=-1.0)
+    model = DummyBoostrapMixin()
+    result = model.bootstrap(X_success, n_sampling=5)
+    try:
+        result.get_probabilities(min_causal_effect=-1.0)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid argument: get_total_causal_effects(min_causal_effect=-1.0)
+    model = DummyBoostrapMixin()
+    result = model.bootstrap(X_success, n_sampling=5)
+    try:
+        result.get_total_causal_effects(min_causal_effect=-1.0)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid argument: get_paths(min_causal_effect=-1.0)
+    model = DummyBoostrapMixin()
+    result = model.bootstrap(X_success, n_sampling=5)
+    try:
+        result.get_paths(0, 1, min_causal_effect=-1.0)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+

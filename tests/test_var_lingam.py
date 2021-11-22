@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 
+from lingam.direct_lingam import DirectLiNGAM
 from lingam.var_lingam import VARLiNGAM
 
 
@@ -70,44 +71,108 @@ def generate_data(n=5, T=1000, random_state=None, initial_data=None):
     return data.T, B0, B1, causal_order
 
 def test_fit_success():
-    initial_data = {}
-    initial_data['B0'] = [
-        [0, 0.48364824, 0],
-        [0, 0, -0.24064466],
-        [0, 0, 0],
-    ]
-    initial_data['B1'] = [
-        [-0.35549579, -0.37428469, -0.31190891],
-        [0, 0, 0.09765842],
-        [0, -0.13384955, -0.38161318],
-    ]
-    initial_data['causal_order'] = [2, 1, 0]
-    
-    X, B0, B1, causal_order = generate_data(n=3, T=1000, initial_data=initial_data)
+    X, B0, B1, causal_order = generate_data(n=3, T=100)
 
-    model = VARLiNGAM(lags=1, criterion=None)
+    # default
+    model = VARLiNGAM()
+    model.fit(X)
+    co = model.causal_order_
+    am = model.adjacency_matrices_
+    resid = model.residuals_
+    p_values = model.get_error_independence_p_values()
+
+    # lags=2
+    model = VARLiNGAM(lags=2)
     model.fit(X)
 
-    # check the causal ordering
-    co = model.causal_order_
-    assert co.index(2) < co.index(1) < co.index(0)
+    # criterion='aic'
+    model = VARLiNGAM(criterion='aic')
+    model.fit(X)
 
-    # check the adjacency matrix
-    b0 = model.adjacency_matrices_[0]
-    assert b0[0, 1] > 0.4 and b0[1, 2] < -0.1
+    # prune=True
+    model = VARLiNGAM(prune=True)
+    model.fit(X)
 
-    b0[0, 1] = 0.0
-    b0[1, 2] = 0.0
-    assert np.sum(b0) < 0.1
+    # ar_coefs
+    model = VARLiNGAM(ar_coefs=[[[0.1, 0.1, 0.1], [0.1, 0.1, 0.1], [0.1, 0.1, 0.1]]])
+    model.fit(X)
 
-    b1 = model.adjacency_matrices_[1]
-    assert b1[0, 0] < -0.3 and b1[0, 1] < -0.3 and b1[0, 2] < -0.25 \
-       and b1[1, 2] > 0.05 and b1[2, 1] < -0.1 and b1[2, 2] < -0.3
+    # lingam_model
+    m = DirectLiNGAM()
+    model = VARLiNGAM(lingam_model=m)
+    model.fit(X)
 
-    b1[0, 0] = 0.0
-    b1[0, 1] = 0.0
-    b1[0, 2] = 0.0
-    b1[1, 2] = 0.0
-    b1[2, 1] = 0.0
-    b1[2, 2] = 0.0
-    assert np.sum(b1) < 0.1
+def test_fit_invalid():
+    X, B0, B1, causal_order = generate_data(n=3, T=100)
+
+    # invalid lingam_model
+    try:
+        model = VARLiNGAM(lingam_model=1)
+        model.fit(X)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+def test_bootstrap_success():
+    X, B0, B1, causal_order = generate_data(n=3, T=100)
+
+    model = VARLiNGAM()
+    result = model.bootstrap(X, n_sampling=3)
+
+    result.adjacency_matrices_
+    result.total_effects_
+
+    # Not implement
+    try:
+        result.get_paths(1, 0)
+    except NotImplementedError:
+        pass
+    else:
+        raise AssertionError
+
+    # No argument
+    cdc = result.get_causal_direction_counts()
+
+    # n_directions=2
+    cdc = result.get_causal_direction_counts(n_directions=2)
+
+    # min_causal_effect=0.2
+    cdc = result.get_causal_direction_counts(min_causal_effect=0.2)
+
+    # split_by_causal_effect_sign=True
+    cdc = result.get_causal_direction_counts(split_by_causal_effect_sign=True)
+
+    # No argument
+    dagc = result.get_directed_acyclic_graph_counts()
+
+    # n_dags=2
+    dagc = result.get_directed_acyclic_graph_counts(n_dags=2)
+
+    # min_causal_effect=0.6
+    dagc = result.get_directed_acyclic_graph_counts(min_causal_effect=0.6)
+
+    # split_by_causal_effect_sign=True
+    dagc = result.get_directed_acyclic_graph_counts(split_by_causal_effect_sign=True)
+
+    # get_probabilities
+    probs = result.get_probabilities()
+
+    # get_probabilities
+    probs = result.get_probabilities(min_causal_effect=0.6)
+
+    # get_total_causal_effects
+    ce = result.get_total_causal_effects()
+
+    # get_total_causal_effects
+    ce = result.get_total_causal_effects(min_causal_effect=0.6)
+
+def test_estimate_total_effect_invalid():
+    X, B0, B1, causal_order = generate_data(n=3, T=100)
+
+    model = VARLiNGAM()
+    model.fit(X)
+    model._causal_order = [0, 1, 2]
+
+    # warning
+    model.estimate_total_effect(X, 2, 1)

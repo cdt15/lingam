@@ -1,17 +1,15 @@
 import numpy as np
 import pandas as pd
-
 from lingam.ica_lingam import ICALiNGAM
 
 
 def test_fit_success():
     # causal direction: x0 --> x1 --> x3
     x0 = np.random.uniform(size=1000)
-    x1 = 2.0*x0 + np.random.uniform(size=1000)
+    x1 = 2.0 * x0 + np.random.uniform(size=1000)
     x2 = np.random.uniform(size=1000)
-    x3 = 4.0*x1 + np.random.uniform(size=1000)
-    X = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
-                     columns=['x0', 'x1', 'x2', 'x3'])
+    x3 = 4.0 * x1 + np.random.uniform(size=1000)
+    X = pd.DataFrame(np.array([x0, x1, x2, x3]).T, columns=['x0', 'x1', 'x2', 'x3'])
 
     model = ICALiNGAM()
     model.fit(X)
@@ -27,6 +25,26 @@ def test_fit_success():
     am[1, 0] = 0.0
     am[3, 1] = 0.0
     assert np.sum(am) < 0.1
+
+    # for coverage
+    matrix = np.array([
+        [0, 1, 1, 1],
+        [0, 0, 1, 1],
+        [0, 0, 0, 1],
+        [0, 0, 0, 0],
+    ])
+    model = ICALiNGAM()
+    model._search_causal_order(matrix)
+
+    # for coverage
+    matrix = np.array([
+        [1, 1, 1],
+        [1, 1, 1],
+        [0, 0, 0],
+    ])
+    model = ICALiNGAM()
+    model._search_causal_order(matrix)
+
 
 def test_fit_invalid_data():
     # Not array data
@@ -53,7 +71,7 @@ def test_fit_invalid_data():
 
     # Include NaN values
     x0 = np.random.uniform(size=1000)
-    x1 = 2.0*x0 + np.random.uniform(size=1000)
+    x1 = 2.0 * x0 + np.random.uniform(size=1000)
     X = pd.DataFrame(np.array([x0, x1]).T, columns=['x0', 'x1'])
     X.iloc[100, 0] = np.nan
     try:
@@ -66,7 +84,7 @@ def test_fit_invalid_data():
 
     # Include infinite values
     x0 = np.random.uniform(size=1000)
-    x1 = 2.0*x0 + np.random.uniform(size=1000)
+    x1 = 2.0 * x0 + np.random.uniform(size=1000)
     X = pd.DataFrame(np.array([x0, x1]).T, columns=['x0', 'x1'])
     X.iloc[100, 0] = np.inf
     try:

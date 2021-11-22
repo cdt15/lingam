@@ -8,7 +8,6 @@ import warnings
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
-from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array
 
 from .bootstrap import BootstrapMixin
@@ -56,9 +55,9 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         X : array-like, shape (n_samples, n_features)
             Original data, where n_samples is the number of samples
             and n_features is the number of features.
-        from_index : 
+        from_index :
             Index of source variable to estimate total effect.
-        to_index : 
+        to_index :
             Index of destination variable to estimate total effect.
 
         Returns
@@ -73,9 +72,11 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         from_order = self._causal_order.index(from_index)
         to_order = self._causal_order.index(to_index)
         if from_order > to_order:
-            warnings.warn(f'The estimated causal effect may be incorrect because '
-                          f'the causal order of the destination variable (to_index={to_index}) '
-                          f'is earlier than the source variable (from_index={from_index}).')
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the causal order of the destination variable (to_index={to_index}) "
+                f"is earlier than the source variable (from_index={from_index})."
+            )
 
         # from_index + parents indices
         parents = np.where(np.abs(self._adjacency_matrix[from_index]) > 0)[0]
@@ -109,8 +110,9 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         E = X - np.dot(self._adjacency_matrix, X.T).T
         p_values = np.zeros([n_features, n_features])
         for i, j in itertools.combinations(range(n_features), 2):
-            _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
-                                         np.reshape(E[:, j], [n_samples, 1]))
+            _, p_value = hsic_test_gamma(
+                np.reshape(E[:, i], [n_samples, 1]), np.reshape(E[:, j], [n_samples, 1])
+            )
             p_values[i, j] = p_value
             p_values[j, i] = p_value
 
@@ -136,7 +138,7 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
             pk = prior_knowledge.copy()
             np.fill_diagonal(pk, 0)
 
-        B = np.zeros([X.shape[1], X.shape[1]], dtype='float64')
+        B = np.zeros([X.shape[1], X.shape[1]], dtype="float64")
         for i in range(1, len(self._causal_order)):
             target = self._causal_order[i]
             predictors = self._causal_order[:i]
@@ -149,8 +151,7 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
             if len(predictors) == 0:
                 continue
 
-            B[target, predictors] = predict_adaptive_lasso(
-                X, predictors, target)
+            B[target, predictors] = predict_adaptive_lasso(X, predictors, target)
 
         self._adjacency_matrix = B
         return self
@@ -162,7 +163,7 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         Returns
         -------
         causal_order_ : array-like, shape (n_features)
-            The causal order of fitted model, where 
+            The causal order of fitted model, where
             n_features is the number of features.
         """
         return self._causal_order
@@ -174,7 +175,7 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         Returns
         -------
         adjacency_matrix_ : array-like, shape (n_features, n_features)
-            The adjacency matrix B of fitted model, where 
+            The adjacency matrix B of fitted model, where
             n_features is the number of features.
         """
         return self._adjacency_matrix
