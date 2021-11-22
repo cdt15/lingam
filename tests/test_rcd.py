@@ -32,6 +32,10 @@ def test_fit_success():
     model = RCD(max_explanatory_num=3)
     model.fit(X)
 
+    # max_explanatory_num=1
+    model = RCD(max_explanatory_num=1)
+    model.fit(X)
+
     # cor_alpha=0.1
     model = RCD(cor_alpha=0.1)
     model.fit(X)
