@@ -44,23 +44,23 @@ def test_fit_success():
 
     # check B(t,t)
     B_t = model.adjacency_matrices_[1, 0] # B(1,1)
-    assert B_t[1, 0] > 0.2 and B_t[3, 1] > 0.6
+    assert B_t[1, 0] > 0.1 and B_t[3, 1] > 0.5
     B_t[1, 0] = 0.0
     B_t[3, 1] = 0.0
     assert np.sum(B_t) < 0.1
 
     B_t = model.adjacency_matrices_[2, 0] # B(2,2)
-    assert B_t[1, 0] > 0.4 and B_t[3, 1] > 0.4
+    assert B_t[1, 0] > 0.3 and B_t[3, 1] > 0.3
     B_t[1, 0] = 0.0
     B_t[3, 1] = 0.0
     assert np.sum(B_t) < 0.1
 
     # check B(t,t-τ)
     B_tau = model.adjacency_matrices_[1, 1] # B(1,0)
-    assert B_tau[0, 2] > 0.4 and B_tau[2, 3] > 0.4
+    assert B_tau[0, 2] > 0.3 and B_tau[2, 3] > 0.3
 
     B_tau = model.adjacency_matrices_[1, 1] # B(2,1)
-    assert B_tau[0, 2] > 0.4 and B_tau[2, 3] > 0.4
+    assert B_tau[0, 2] > 0.3 and B_tau[2, 3] > 0.3
 
     # fit by list
     X_list = [X1, X2, X3]
