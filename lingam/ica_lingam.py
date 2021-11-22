@@ -12,12 +12,12 @@ from .base import _BaseLiNGAM
 
 
 class ICALiNGAM(_BaseLiNGAM):
-    """Implementation of ICA-based LiNGAM Algorithm [1]_ 
+    """Implementation of ICA-based LiNGAM Algorithm [1]_
 
     References
     ----------
-    .. [1] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen. 
-       A linear non-gaussian acyclic model for causal discovery. 
+    .. [1] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
+       A linear non-gaussian acyclic model for causal discovery.
        Journal of Machine Learning Research, 7:2003-2030, 2006.
     """
 
@@ -89,7 +89,7 @@ class ICALiNGAM(_BaseLiNGAM):
 
         row_num = matrix.shape[0]
         original_index = np.arange(row_num)
-    
+
         while 0 < len(matrix):
             # find a row all of which elements are zero
             row_index_list = np.where(np.sum(np.abs(matrix), axis=1) == 0)[0]
@@ -97,11 +97,11 @@ class ICALiNGAM(_BaseLiNGAM):
                 break
 
             target_index = row_index_list[0]
-    
+
             # append i to the end of the list
             causal_order.append(original_index[target_index])
             original_index = np.delete(original_index, target_index, axis=0)
-    
+
             # remove the i-th row and the i-th column from matrix
             mask = np.delete(np.arange(len(matrix)), target_index, axis=0)
             matrix = matrix[mask][:, mask]
@@ -118,7 +118,7 @@ class ICALiNGAM(_BaseLiNGAM):
         ----------
         matrix : array-like, shape (n_features, n_samples)
             Target matrix.
-        
+
         Return
         ------
         causal_order : array, shape [n_features, ]
@@ -138,7 +138,7 @@ class ICALiNGAM(_BaseLiNGAM):
             matrix[i, j] = 0
 
             causal_order = self._search_causal_order(matrix)
-            if causal_order is not None: 
+            if causal_order is not None:
                 break
 
         return causal_order

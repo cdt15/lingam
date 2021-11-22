@@ -11,7 +11,7 @@ from sklearn.utils import check_array, resample
 from .utils import find_all_paths
 
 
-class BootstrapMixin():
+class BootstrapMixin:
     """Mixin class for all LiNGAM algorithms that implement the method of bootstrapping."""
 
     def bootstrap(self, X, n_sampling):
@@ -35,10 +35,9 @@ class BootstrapMixin():
 
         if isinstance(n_sampling, (numbers.Integral, np.integer)):
             if not 0 < n_sampling:
-                raise ValueError(
-                    'n_sampling must be an integer greater than 0.')
+                raise ValueError("n_sampling must be an integer greater than 0.")
         else:
-            raise ValueError('n_sampling must be an integer greater than 0.')
+            raise ValueError("n_sampling must be an integer greater than 0.")
 
         # Bootstrapping
         adjacency_matrices = np.zeros([n_sampling, X.shape[1], X.shape[1]])
@@ -49,9 +48,10 @@ class BootstrapMixin():
 
             # Calculate total effects
             for c, from_ in enumerate(self._causal_order):
-                for to in self._causal_order[c+1:]:
+                for to in self._causal_order[c + 1 :]:
                     total_effects[i, to, from_] = self.estimate_total_effect(
-                        X, from_, to)
+                        X, from_, to
+                    )
 
         return BootstrapResult(adjacency_matrices, total_effects)
 
@@ -96,7 +96,12 @@ class BootstrapResult(object):
         """
         return self._total_effects
 
-    def get_causal_direction_counts(self, n_directions=None, min_causal_effect=None, split_by_causal_effect_sign=False):
+    def get_causal_direction_counts(
+        self,
+        n_directions=None,
+        min_causal_effect=None,
+        split_by_causal_effect_sign=False,
+    ):
         """Get causal direction count as a result of bootstrapping.
 
         Parameters
@@ -105,7 +110,8 @@ class BootstrapResult(object):
             If int, then The top ``n_directions`` items are included in the result
         min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction.
-            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+            If float, then causal directions with absolute values of causal effects
+            less than ``min_causal_effect`` are excluded.
         split_by_causal_effect_sign : boolean, optional (default=False)
             If True, then causal directions are split depending on the sign of the causal effect.
 
@@ -122,54 +128,59 @@ class BootstrapResult(object):
         # Check parameters
         if isinstance(n_directions, (numbers.Integral, np.integer)):
             if not 0 < n_directions:
-                raise ValueError(
-                    'n_directions must be an integer greater than 0')
+                raise ValueError("n_directions must be an integer greater than 0")
         elif n_directions is None:
             pass
         else:
-            raise ValueError('n_directions must be an integer greater than 0')
+            raise ValueError("n_directions must be an integer greater than 0")
 
         if min_causal_effect is None:
             min_causal_effect = 0.0
         else:
             if not 0.0 < min_causal_effect:
-                raise ValueError(
-                    'min_causal_effect must be an value greater than 0.')
+                raise ValueError("min_causal_effect must be an value greater than 0.")
 
         # Count causal directions
         directions = []
         for am in np.nan_to_num(self._adjacency_matrices):
             direction = np.array(np.where(np.abs(am) > min_causal_effect))
             if split_by_causal_effect_sign:
-                signs = np.array([np.sign(am[i][j])
-                                  for i, j in direction.T]).astype('int64').T
+                signs = (
+                    np.array([np.sign(am[i][j]) for i, j in direction.T])
+                    .astype("int64")
+                    .T
+                )
                 direction = np.vstack([direction, signs])
             directions.append(direction.T)
         directions = np.concatenate(directions)
 
         if len(directions) == 0:
-            cdc = {'from': [], 'to': [], 'count': []}
+            cdc = {"from": [], "to": [], "count": []}
             if split_by_causal_effect_sign:
-                cdc['sign'] = []
+                cdc["sign"] = []
             return cdc
 
         directions, counts = np.unique(directions, axis=0, return_counts=True)
         sort_order = np.argsort(-counts)
-        sort_order = sort_order[:n_directions] if n_directions is not None else sort_order
+        sort_order = (
+            sort_order[:n_directions] if n_directions is not None else sort_order
+        )
         counts = counts[sort_order]
         directions = directions[sort_order]
 
         cdc = {
-            'from': directions[:, 1].tolist(),
-            'to': directions[:, 0].tolist(),
-            'count': counts.tolist()
+            "from": directions[:, 1].tolist(),
+            "to": directions[:, 0].tolist(),
+            "count": counts.tolist(),
         }
         if split_by_causal_effect_sign:
-            cdc['sign'] = directions[:, 2].tolist()
+            cdc["sign"] = directions[:, 2].tolist()
 
         return cdc
 
-    def get_directed_acyclic_graph_counts(self, n_dags=None, min_causal_effect=None, split_by_causal_effect_sign=False):
+    def get_directed_acyclic_graph_counts(
+        self, n_dags=None, min_causal_effect=None, split_by_causal_effect_sign=False
+    ):
         """Get DAGs count as a result of bootstrapping.
 
         Parameters
@@ -178,7 +189,8 @@ class BootstrapResult(object):
             If int, then The top ``n_dags`` items are included in the result
         min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction.
-            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+            If float, then causal directions with absolute values of causal effects less than
+            ``min_causal_effect`` are excluded.
         split_by_causal_effect_sign : boolean, optional (default=False)
             If True, then causal directions are split depending on the sign of the causal effect.
 
@@ -195,18 +207,17 @@ class BootstrapResult(object):
         # Check parameters
         if isinstance(n_dags, (numbers.Integral, np.integer)):
             if not 0 < n_dags:
-                raise ValueError('n_dags must be an integer greater than 0')
+                raise ValueError("n_dags must be an integer greater than 0")
         elif n_dags is None:
             pass
         else:
-            raise ValueError('n_dags must be an integer greater than 0')
+            raise ValueError("n_dags must be an integer greater than 0")
 
         if min_causal_effect is None:
             min_causal_effect = 0.0
         else:
             if not 0.0 < min_causal_effect:
-                raise ValueError(
-                    'min_causal_effect must be an value greater than 0.')
+                raise ValueError("min_causal_effect must be an value greater than 0.")
 
         # Count directed acyclic graphs
         dags = []
@@ -214,9 +225,9 @@ class BootstrapResult(object):
             dag = np.abs(am) > min_causal_effect
             if split_by_causal_effect_sign:
                 direction = np.array(np.where(dag))
-                signs = np.zeros_like(dag).astype('int64')
+                signs = np.zeros_like(dag).astype("int64")
                 for i, j in direction.T:
-                    signs[i][j] = np.sign(am[i][j]).astype('int64')
+                    signs[i][j] = np.sign(am[i][j]).astype("int64")
                 dag = signs
             dags.append(dag)
 
@@ -227,19 +238,21 @@ class BootstrapResult(object):
         dags = dags[sort_order]
 
         if split_by_causal_effect_sign:
-            dags = [{
-                'from': np.where(dag)[1].tolist(),
-                'to': np.where(dag)[0].tolist(),
-                'sign': [dag[i][j] for i, j in np.array(np.where(dag)).T]} for dag in dags]
+            dags = [
+                {
+                    "from": np.where(dag)[1].tolist(),
+                    "to": np.where(dag)[0].tolist(),
+                    "sign": [dag[i][j] for i, j in np.array(np.where(dag)).T],
+                }
+                for dag in dags
+            ]
         else:
-            dags = [{
-                'from': np.where(dag)[1].tolist(),
-                'to': np.where(dag)[0].tolist()} for dag in dags]
+            dags = [
+                {"from": np.where(dag)[1].tolist(), "to": np.where(dag)[0].tolist()}
+                for dag in dags
+            ]
 
-        return {
-            'dag': dags,
-            'count': counts.tolist()
-        }
+        return {"dag": dags, "count": counts.tolist()}
 
     def get_probabilities(self, min_causal_effect=None):
         """Get bootstrap probability.
@@ -248,7 +261,8 @@ class BootstrapResult(object):
         ----------
         min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction.
-            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+            If float, then causal directions with absolute values of causal effects less than
+            ``min_causal_effect`` are excluded.
 
         Returns
         -------
@@ -260,20 +274,19 @@ class BootstrapResult(object):
             min_causal_effect = 0.0
         else:
             if not 0.0 < min_causal_effect:
-                raise ValueError(
-                    'min_causal_effect must be an value greater than 0.')
+                raise ValueError("min_causal_effect must be an value greater than 0.")
 
         adjacency_matrices = np.nan_to_num(self._adjacency_matrices)
         shape = adjacency_matrices[0].shape
         bp = np.zeros(shape)
         for B in adjacency_matrices:
             bp += np.where(np.abs(B) > min_causal_effect, 1, 0)
-        bp = bp/len(adjacency_matrices)
+        bp = bp / len(adjacency_matrices)
 
-        if int(shape[1]/shape[0]) == 1:
+        if int(shape[1] / shape[0]) == 1:
             return bp
         else:
-            return np.hsplit(bp, int(shape[1]/shape[0]))
+            return np.hsplit(bp, int(shape[1] / shape[0]))
 
     def get_total_causal_effects(self, min_causal_effect=None):
         """Get total effects list.
@@ -282,7 +295,8 @@ class BootstrapResult(object):
         ----------
         min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction.
-            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+            If float, then causal directions with absolute values of causal effects less than
+            ``min_causal_effect`` are excluded.
 
         Returns
         -------
@@ -299,13 +313,15 @@ class BootstrapResult(object):
             min_causal_effect = 0.0
         else:
             if not 0.0 < min_causal_effect:
-                raise ValueError(
-                    'min_causal_effect must be an value greater than 0.')
+                raise ValueError("min_causal_effect must be an value greater than 0.")
 
         # Calculate probability
-        probs = np.sum(np.where(np.abs(self._total_effects) >
-                                min_causal_effect, 1, 0), axis=0, keepdims=True)[0]
-        probs = probs/len(self._total_effects)
+        probs = np.sum(
+            np.where(np.abs(self._total_effects) > min_causal_effect, 1, 0),
+            axis=0,
+            keepdims=True,
+        )[0]
+        probs = probs / len(self._total_effects)
 
         # Causal directions
         dirs = np.array(np.where(np.abs(probs) > 0))
@@ -324,15 +340,15 @@ class BootstrapResult(object):
         probs = probs[order]
 
         ce = {
-            'from': dirs[:, 1].tolist(),
-            'to': dirs[:, 0].tolist(),
-            'effect': effects.tolist(),
-            'probability': probs.tolist()
+            "from": dirs[:, 1].tolist(),
+            "to": dirs[:, 0].tolist(),
+            "effect": effects.tolist(),
+            "probability": probs.tolist(),
         }
 
         return ce
 
-    def get_paths(self, from_index, to_index, min_causal_effect=0.0):
+    def get_paths(self, from_index, to_index, min_causal_effect=None):
         """Get all paths from the start variable to the end variable and their bootstrap probabilities.
 
         Parameters
@@ -341,7 +357,7 @@ class BootstrapResult(object):
             Index of the variable at the start of the path.
         to_index : int
             Index of the variable at the end of the path.
-        min_causal_effect : float, optional (default=0.0)
+        min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction.
             Causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
 
@@ -355,13 +371,20 @@ class BootstrapResult(object):
 
             where ``n_paths`` is the number of paths.
         """
+        # check parameters
+        if min_causal_effect is None:
+            min_causal_effect = 0.0
+        else:
+            if not 0.0 < min_causal_effect:
+                raise ValueError("min_causal_effect must be an value greater than 0.")
+
         # Find all paths from from_index to to_index
         paths_list = []
         effects_list = []
         for am in self._adjacency_matrices:
             paths, effects = find_all_paths(am, from_index, to_index)
             # Convert path to string to make them easier to handle.
-            paths_list.extend(['_'.join(map(str, p)) for p in paths])
+            paths_list.extend(["_".join(map(str, p)) for p in paths])
             effects_list.extend(effects)
 
         paths_list = np.array(paths_list)
@@ -372,17 +395,18 @@ class BootstrapResult(object):
 
         # Sort by count
         order = np.argsort(-counts)
-        probs = counts[order]/len(self._adjacency_matrices)
+        probs = counts[order] / len(self._adjacency_matrices)
         paths_str = paths_str[order]
 
         # Calculate median of causal effect for each path
-        effects = [np.median(effects_list[np.where(paths_list == p)])
-                   for p in paths_str]
+        effects = [
+            np.median(effects_list[np.where(paths_list == p)]) for p in paths_str
+        ]
 
         result = {
-            'path': [[int(i) for i in p.split('_')] for p in paths_str],
-            'effect': effects,
-            'probability': probs.tolist(),
+            "path": [[int(i) for i in p.split("_")] for p in paths_str],
+            "effect": effects,
+            "probability": probs.tolist(),
         }
         return result
 
@@ -404,7 +428,7 @@ class TimeseriesBootstrapResult(BootstrapResult):
 
     def get_paths(self, from_index, to_index, min_causal_effect=0.0):
         """Not implement"""
-        raise NotImplementedError('This method has not been implemented yet.')
+        raise NotImplementedError("This method has not been implemented yet.")
 
 
 class LongitudinalBootstrapResult(object):
@@ -448,7 +472,12 @@ class LongitudinalBootstrapResult(object):
         """
         return self._total_effects
 
-    def get_causal_direction_counts(self, n_directions=None, min_causal_effect=None, split_by_causal_effect_sign=False):
+    def get_causal_direction_counts(
+        self,
+        n_directions=None,
+        min_causal_effect=None,
+        split_by_causal_effect_sign=False,
+    ):
         """Get causal direction count as a result of bootstrapping.
 
         Parameters
@@ -457,7 +486,8 @@ class LongitudinalBootstrapResult(object):
             If int, then The top ``n_directions`` items are included in the result
         min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction.
-            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+            If float, then causal directions with absolute values of causal
+            effects less than ``min_causal_effect`` are excluded.
         split_by_causal_effect_sign : boolean, optional (default=False)
             If True, then causal directions are split depending on the sign of the causal effect.
 
@@ -474,19 +504,17 @@ class LongitudinalBootstrapResult(object):
         # Check parameters
         if isinstance(n_directions, (numbers.Integral, np.integer)):
             if not 0 < n_directions:
-                raise ValueError(
-                    'n_directions must be an integer greater than 0')
+                raise ValueError("n_directions must be an integer greater than 0")
         elif n_directions is None:
             pass
         else:
-            raise ValueError('n_directions must be an integer greater than 0')
+            raise ValueError("n_directions must be an integer greater than 0")
 
         if min_causal_effect is None:
             min_causal_effect = 0.0
         else:
             if not 0.0 < min_causal_effect:
-                raise ValueError(
-                    'min_causal_effect must be an value greater than 0.')
+                raise ValueError("min_causal_effect must be an value greater than 0.")
 
         # Count causal directions
         cdc_list = []
@@ -497,39 +525,45 @@ class LongitudinalBootstrapResult(object):
                 am = np.concatenate([*m[t]], axis=1)
                 direction = np.array(np.where(np.abs(am) > min_causal_effect))
                 if split_by_causal_effect_sign:
-                    signs = np.array([np.sign(am[i][j])
-                                      for i, j in direction.T]).astype('int64').T
+                    signs = (
+                        np.array([np.sign(am[i][j]) for i, j in direction.T])
+                        .astype("int64")
+                        .T
+                    )
                     direction = np.vstack([direction, signs])
                 directions.append(direction.T)
             directions = np.concatenate(directions)
 
             if len(directions) == 0:
-                cdc = {'from': [], 'to': [], 'count': []}
+                cdc = {"from": [], "to": [], "count": []}
                 if split_by_causal_effect_sign:
-                    cdc['sign'] = []
+                    cdc["sign"] = []
                 cdc_list.append(cdc)
                 continue
 
-            directions, counts = np.unique(
-                directions, axis=0, return_counts=True)
+            directions, counts = np.unique(directions, axis=0, return_counts=True)
             sort_order = np.argsort(-counts)
-            sort_order = sort_order[:n_directions] if n_directions is not None else sort_order
+            sort_order = (
+                sort_order[:n_directions] if n_directions is not None else sort_order
+            )
             counts = counts[sort_order]
             directions = directions[sort_order]
 
             cdc = {
-                'from': directions[:, 1].tolist(),
-                'to': directions[:, 0].tolist(),
-                'count': counts.tolist()
+                "from": directions[:, 1].tolist(),
+                "to": directions[:, 0].tolist(),
+                "count": counts.tolist(),
             }
             if split_by_causal_effect_sign:
-                cdc['sign'] = directions[:, 2].tolist()
+                cdc["sign"] = directions[:, 2].tolist()
 
             cdc_list.append(cdc)
 
         return cdc_list
 
-    def get_directed_acyclic_graph_counts(self, n_dags=None, min_causal_effect=None, split_by_causal_effect_sign=False):
+    def get_directed_acyclic_graph_counts(
+        self, n_dags=None, min_causal_effect=None, split_by_causal_effect_sign=False
+    ):
         """Get DAGs count as a result of bootstrapping.
 
         Parameters
@@ -538,7 +572,8 @@ class LongitudinalBootstrapResult(object):
             If int, then The top ``n_dags`` items are included in the result
         min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction.
-            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+            If float, then causal directions with absolute values of causal effects less than
+            ``min_causal_effect`` are excluded.
         split_by_causal_effect_sign : boolean, optional (default=False)
             If True, then causal directions are split depending on the sign of the causal effect.
 
@@ -555,18 +590,17 @@ class LongitudinalBootstrapResult(object):
         # Check parameters
         if isinstance(n_dags, (numbers.Integral, np.integer)):
             if not 0 < n_dags:
-                raise ValueError('n_dags must be an integer greater than 0')
+                raise ValueError("n_dags must be an integer greater than 0")
         elif n_dags is None:
             pass
         else:
-            raise ValueError('n_dags must be an integer greater than 0')
+            raise ValueError("n_dags must be an integer greater than 0")
 
         if min_causal_effect is None:
             min_causal_effect = 0.0
         else:
             if not 0.0 < min_causal_effect:
-                raise ValueError(
-                    'min_causal_effect must be an value greater than 0.')
+                raise ValueError("min_causal_effect must be an value greater than 0.")
 
         # Count directed acyclic graphs
         dagc_list = []
@@ -579,9 +613,9 @@ class LongitudinalBootstrapResult(object):
                 dag = np.abs(am) > min_causal_effect
                 if split_by_causal_effect_sign:
                     direction = np.array(np.where(dag))
-                    signs = np.zeros_like(dag).astype('int64')
+                    signs = np.zeros_like(dag).astype("int64")
                     for i, j in direction.T:
-                        signs[i][j] = np.sign(am[i][j]).astype('int64')
+                        signs[i][j] = np.sign(am[i][j]).astype("int64")
                     dag = signs
                 dags.append(dag)
 
@@ -592,19 +626,21 @@ class LongitudinalBootstrapResult(object):
             dags = dags[sort_order]
 
             if split_by_causal_effect_sign:
-                dags = [{
-                    'from': np.where(dag)[1].tolist(),
-                    'to': np.where(dag)[0].tolist(),
-                    'sign': [dag[i][j] for i, j in np.array(np.where(dag)).T]} for dag in dags]
+                dags = [
+                    {
+                        "from": np.where(dag)[1].tolist(),
+                        "to": np.where(dag)[0].tolist(),
+                        "sign": [dag[i][j] for i, j in np.array(np.where(dag)).T],
+                    }
+                    for dag in dags
+                ]
             else:
-                dags = [{
-                    'from': np.where(dag)[1].tolist(),
-                    'to': np.where(dag)[0].tolist()} for dag in dags]
+                dags = [
+                    {"from": np.where(dag)[1].tolist(), "to": np.where(dag)[0].tolist()}
+                    for dag in dags
+                ]
 
-            dagc_list.append({
-                'dag': dags,
-                'count': counts.tolist()
-            })
+            dagc_list.append({"dag": dags, "count": counts.tolist()})
 
         return dagc_list
 
@@ -615,7 +651,8 @@ class LongitudinalBootstrapResult(object):
         ----------
         min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction.
-            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+            If float, then causal directions with absolute values of causal effects less than
+            ``min_causal_effect`` are excluded.
 
         Returns
         -------
@@ -627,13 +664,12 @@ class LongitudinalBootstrapResult(object):
             min_causal_effect = 0.0
         else:
             if not 0.0 < min_causal_effect:
-                raise ValueError(
-                    'min_causal_effect must be an value greater than 0.')
+                raise ValueError("min_causal_effect must be an value greater than 0.")
 
         prob = np.zeros(self._adjacency_matrices[0].shape)
         for adj_mat in self._adjacency_matrices:
             prob += np.where(np.abs(adj_mat) > min_causal_effect, 1, 0)
-        prob = prob/len(self._adjacency_matrices)
+        prob = prob / len(self._adjacency_matrices)
 
         return prob
 
@@ -644,7 +680,8 @@ class LongitudinalBootstrapResult(object):
         ----------
         min_causal_effect : float, optional (default=None)
             Threshold for detecting causal direction.
-            If float, then causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+            If float, then causal directions with absolute values of causal effects less than
+            ``min_causal_effect`` are excluded.
 
         Returns
         -------
@@ -661,13 +698,15 @@ class LongitudinalBootstrapResult(object):
             min_causal_effect = 0.0
         else:
             if not 0.0 < min_causal_effect:
-                raise ValueError(
-                    'min_causal_effect must be an value greater than 0.')
+                raise ValueError("min_causal_effect must be an value greater than 0.")
 
         # probability
-        probs = np.sum(np.where(np.abs(self._total_effects) >
-                                min_causal_effect, 1, 0), axis=0, keepdims=True)[0]
-        probs = probs/len(self._total_effects)
+        probs = np.sum(
+            np.where(np.abs(self._total_effects) > min_causal_effect, 1, 0),
+            axis=0,
+            keepdims=True,
+        )[0]
+        probs = probs / len(self._total_effects)
 
         # causal directions
         dirs = np.array(np.where(np.abs(probs) > 0))
@@ -686,10 +725,10 @@ class LongitudinalBootstrapResult(object):
         probs = probs[order]
 
         ce = {
-            'from': dirs[:, 1].tolist(),
-            'to': dirs[:, 0].tolist(),
-            'effect': effects.tolist(),
-            'probability': probs.tolist()
+            "from": dirs[:, 1].tolist(),
+            "to": dirs[:, 0].tolist(),
+            "effect": effects.tolist(),
+            "probability": probs.tolist(),
         }
 
         return ce

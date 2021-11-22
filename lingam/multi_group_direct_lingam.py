@@ -7,7 +7,6 @@ import numbers
 import warnings
 
 import numpy as np
-from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
@@ -21,10 +20,15 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
 
     References
     ----------
-    .. [1] S. Shimizu. Joint estimation of linear non-Gaussian acyclic models. Neurocomputing, 81: 104-107, 2012. 
+    .. [1] S. Shimizu. Joint estimation of linear non-Gaussian acyclic models. Neurocomputing, 81: 104-107, 2012.
     """
 
-    def __init__(self, random_state=None, prior_knowledge=None, apply_prior_knowledge_softly=False):
+    def __init__(
+        self,
+        random_state=None,
+        prior_knowledge=None,
+        apply_prior_knowledge_softly=False,
+    ):
         """Construct a model.
 
         Parameters
@@ -51,7 +55,7 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         ----------
         X_list : list, shape [X, ...]
             Multiple datasets for training, where ``X`` is an dataset.
-            The shape of ''X'' is (n_samples, n_features), 
+            The shape of ''X'' is (n_samples, n_features),
             where ``n_samples`` is the number of samples and ``n_features`` is the number of features.
 
         Returns
@@ -65,7 +69,8 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         if self._Aknw is not None:
             if (self._n_features, self._n_features) != self._Aknw.shape:
                 raise ValueError(
-                    'The shape of prior knowledge must be (n_features, n_features)')
+                    "The shape of prior knowledge must be (n_features, n_features)"
+                )
 
         # Causal discovery
         U = np.arange(self._n_features)
@@ -77,11 +82,14 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
                 if i != m:
                     for d in range(len(X_list_)):
                         X_list_[d][:, i] = self._residual(
-                            X_list_[d][:, i], X_list_[d][:, m])
+                            X_list_[d][:, i], X_list_[d][:, m]
+                        )
             K.append(m)
             U = U[U != m]
             if (self._Aknw is not None) and (not self._apply_prior_knowledge_softly):
-                self._partial_orders = self._partial_orders[self._partial_orders[:, 0] != m]
+                self._partial_orders = self._partial_orders[
+                    self._partial_orders[:, 0] != m
+                ]
 
         self._causal_order = K
 
@@ -98,7 +106,7 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         ----------
         X_list : array-like, shape (X, ...)
             Multiple datasets for training, where ``X`` is an dataset.
-            The shape of ''X'' is (n_samples, n_features), 
+            The shape of ''X'' is (n_samples, n_features),
             where ``n_samples`` is the number of samples and ``n_features`` is the number of features.
         n_sampling : int
             Number of bootstrapping samples.
@@ -113,16 +121,17 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
 
         if isinstance(n_sampling, (numbers.Integral, np.integer)):
             if not 0 < n_sampling:
-                raise ValueError(
-                    'n_sampling must be an integer greater than 0.')
+                raise ValueError("n_sampling must be an integer greater than 0.")
         else:
-            raise ValueError('n_sampling must be an integer greater than 0.')
+            raise ValueError("n_sampling must be an integer greater than 0.")
 
         # Bootstrapping
         adjacency_matrices_list = np.zeros(
-            [len(X_list), n_sampling, self._n_features, self._n_features])
+            [len(X_list), n_sampling, self._n_features, self._n_features]
+        )
         total_effects_list = np.zeros(
-            [len(X_list), n_sampling, self._n_features, self._n_features])
+            [len(X_list), n_sampling, self._n_features, self._n_features]
+        )
         for n in range(n_sampling):
             resampled_X_list = [resample(X) for X in X_list]
             self.fit(resampled_X_list)
@@ -132,9 +141,8 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
 
             # Calculate total effects
             for c, from_ in enumerate(self._causal_order):
-                for to in self._causal_order[c+1:]:
-                    effects = self.estimate_total_effect(
-                        resampled_X_list, from_, to)
+                for to in self._causal_order[c + 1 :]:
+                    effects = self.estimate_total_effect(resampled_X_list, from_, to)
                     for i, effect in enumerate(effects):
                         total_effects_list[i, n, to, from_] = effect
 
@@ -151,11 +159,11 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         ----------
         X_list : array-like, shape (X, ...)
             Multiple datasets for training, where ``X`` is an dataset.
-            The shape of ''X'' is (n_samples, n_features), 
+            The shape of ''X'' is (n_samples, n_features),
             where ``n_samples`` is the number of samples and ``n_features`` is the number of features.
-        from_index : 
+        from_index :
             Index of source variable to estimate total effect.
-        to_index : 
+        to_index :
             Index of destination variable to estimate total effect.
 
         Returns
@@ -170,9 +178,11 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         from_order = self._causal_order.index(from_index)
         to_order = self._causal_order.index(to_index)
         if from_order > to_order:
-            warnings.warn(f'The estimated causal effect may be incorrect because '
-                          f'the causal order of the destination variable (to_index={to_index}) '
-                          f'is earlier than the source variable (from_index={from_index}).')
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the causal order of the destination variable (to_index={to_index}) "
+                f"is earlier than the source variable (from_index={from_index})."
+            )
 
         effects = []
         for X, am in zip(X_list, self._adjacency_matrices):
@@ -196,7 +206,7 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         ----------
         X_list : array-like, shape (X, ...)
             Multiple datasets for training, where ``X`` is an dataset.
-            The shape of ''X'' is (n_samples, n_features), 
+            The shape of ''X'' is (n_samples, n_features),
             where ``n_samples`` is the number of samples and ``n_features`` is the number of features.
 
         Returns
@@ -212,8 +222,10 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
             n_samples = X.shape[0]
             E = X - np.dot(am, X.T).T
             for i, j in itertools.combinations(range(self._n_features), 2):
-                _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
-                                             np.reshape(E[:, j], [n_samples, 1]))
+                _, p_value = hsic_test_gamma(
+                    np.reshape(E[:, i], [n_samples, 1]),
+                    np.reshape(E[:, j], [n_samples, 1]),
+                )
                 p_values[d, i, j] = p_value
                 p_values[d, j, i] = p_value
 
@@ -222,11 +234,10 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
     def _check_X_list(self, X_list):
         """Check input X list."""
         if not isinstance(X_list, list):
-            raise ValueError('X_list must be a list.')
+            raise ValueError("X_list must be a list.")
 
         if len(X_list) < 2:
-            raise ValueError(
-                'X_list must be a list containing at least two items')
+            raise ValueError("X_list must be a list containing at least two items")
 
         self._n_features = check_array(X_list[0]).shape[1]
         X_list_ = []
@@ -234,7 +245,8 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
             X_ = check_array(X)
             if X_.shape[1] != self._n_features:
                 raise ValueError(
-                    'X_list must be a list with the same number of features')
+                    "X_list must be a list with the same number of features"
+                )
             X_list_.append(X_)
 
         return np.array(X_list_)
@@ -258,12 +270,9 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
                     if i != j:
                         xi_std = (X[:, i] - np.mean(X[:, i])) / np.std(X[:, i])
                         xj_std = (X[:, j] - np.mean(X[:, j])) / np.std(X[:, j])
-                        ri_j = xi_std if i in Vj and j in Uc else self._residual(
-                            xi_std, xj_std)
-                        rj_i = xj_std if j in Vj and i in Uc else self._residual(
-                            xj_std, xi_std)
-                        M += np.min([0, self._diff_mutual_info(xi_std,
-                                                               xj_std, ri_j, rj_i)])**2
+                        ri_j = (xi_std if i in Vj and j in Uc else self._residual(xi_std, xj_std))
+                        rj_i = (xj_std if j in Vj and i in Uc else self._residual(xj_std, xi_std))
+                        M += (np.min([0, self._diff_mutual_info(xi_std, xj_std, ri_j, rj_i)]) ** 2)
                 MG += M * (len(X) / total_size)
             MG_list.append(-1.0 * MG)
         return Uc[np.argmax(MG_list)]
@@ -276,7 +285,7 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
         -------
         adjacency_matrices_ : array-like, shape (B, ...)
             The list of adjacency matrix B for multiple datasets.
-            The shape of B is (n_features, n_features), where 
+            The shape of B is (n_features, n_features), where
             n_features is the number of features.
         """
         return self._adjacency_matrices

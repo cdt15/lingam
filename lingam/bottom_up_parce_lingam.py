@@ -8,9 +8,7 @@ import numbers
 import warnings
 
 import numpy as np
-from scipy.stats import gamma
 from scipy.stats.distributions import chi2
-from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
@@ -18,7 +16,7 @@ from .hsic import hsic_test_gamma
 from .utils import predict_adaptive_lasso
 
 
-class BottomUpParceLiNGAM():
+class BottomUpParceLiNGAM:
     """Implementation of ParceLiNGAM Algorithm [1]_
 
     References
@@ -28,7 +26,9 @@ class BottomUpParceLiNGAM():
        Neural computation, 26.1: 57-83, 2014.
     """
 
-    def __init__(self, random_state=None, alpha=0.1, regressor=None, prior_knowledge=None):
+    def __init__(
+        self, random_state=None, alpha=0.1, regressor=None, prior_knowledge=None
+    ):
         """Construct a BottomUpParceLiNGAM model.
 
         Parameters
@@ -51,11 +51,11 @@ class BottomUpParceLiNGAM():
         """
         # Check parameters
         if regressor is not None:
-            if not (hasattr(regressor, 'fit') and hasattr(regressor, 'predict')):
+            if not (hasattr(regressor, "fit") and hasattr(regressor, "predict")):
                 raise ValueError("'regressor' has no fit or predict method.")
 
         if alpha < 0.0:
-            raise ValueError('alpha must be an float greater than 0.')
+            raise ValueError("alpha must be an float greater than 0.")
 
         self._random_state = random_state
         self._alpha = alpha
@@ -93,7 +93,8 @@ class BottomUpParceLiNGAM():
         if self._Aknw is not None:
             if (n_features, n_features) != self._Aknw.shape:
                 raise ValueError(
-                    'The shape of prior knowledge must be (n_features, n_features)')
+                    "The shape of prior knowledge must be (n_features, n_features)"
+                )
             else:
                 # Extract all partial orders in prior knowledge matrix
                 self._partial_orders = self._extract_partial_orders(self._Aknw)
@@ -120,7 +121,7 @@ class BottomUpParceLiNGAM():
         return self._estimate_adjacency_matrix(X, prior_knowledge=self._Aknw)
 
     def _extract_partial_orders(self, pk):
-        """ Extract partial orders from prior knowledge."""
+        """Extract partial orders from prior knowledge."""
         path_pairs = np.array(np.where(pk == 1)).transpose()
         no_path_pairs = np.array(np.where(pk == 0)).transpose()
 
@@ -130,7 +131,8 @@ class BottomUpParceLiNGAM():
             pairs, counts = np.unique(check_pairs, axis=0, return_counts=True)
             if len(pairs[counts > 1]) > 0:
                 raise ValueError(
-                    f'The prior knowledge contains inconsistencies at the following indices: {pairs[counts>1].tolist()}')
+                    f"The prior knowledge contains inconsistencies at the following indices: {pairs[counts>1].tolist()}"
+                )
 
         # Check for inconsistencies in pairs without path
         # If there are duplicate pairs without path, they cancel out and are not ordered.
@@ -143,7 +145,7 @@ class BottomUpParceLiNGAM():
 
         check_pairs = np.concatenate([path_pairs, no_path_pairs[:, [1, 0]]])
         if len(check_pairs) == 0:
-            # If no pairs are extracted from the specified prior knowledge, 
+            # If no pairs are extracted from the specified prior knowledge,
             # discard the prior knowledge.
             self._Aknw = None
             return None
@@ -152,7 +154,7 @@ class BottomUpParceLiNGAM():
         return pairs[:, [1, 0]]  # [to, from] -> [from, to]
 
     def _search_candidate(self, U):
-        """ Search for candidate features """
+        """Search for candidate features"""
         # If no prior knowledge is specified, nothing to do.
         if self._Aknw is None:
             return U
@@ -168,11 +170,6 @@ class BottomUpParceLiNGAM():
         p_bttm = []
         is_search_causal_order = True
 
-        if len(U) <= 1:
-            K_bttm = np.append(U, K_bttm).astype(np.int64)
-            p_bttm.insert(0, 0.0)
-            is_search_causal_order = False
-
         while is_search_causal_order:
             # Search for candidate features
             Uc = self._search_candidate(U)
@@ -183,8 +180,7 @@ class BottomUpParceLiNGAM():
                 m = np.array([Uc[0]])
                 predictors = np.setdiff1d(U, Uc[0])
                 R = self._compute_residuals(X, predictors, m)
-                fisher_p, _ = self._fisher_hsic_test(
-                    X[:, predictors], R, np.inf)
+                fisher_p, _ = self._fisher_hsic_test(X[:, predictors], R, np.inf)
             else:
                 # Find the most sink variable
                 m, _, fisher_p = self._find_exo_vec(X, Uc)
@@ -199,7 +195,9 @@ class BottomUpParceLiNGAM():
                 # Update U and partial orders
                 U = U[U != m]
                 if self._Aknw is not None:
-                    self._partial_orders = self._partial_orders[self._partial_orders[:, 1] != m]
+                    self._partial_orders = self._partial_orders[
+                        self._partial_orders[:, 1] != m
+                    ]
 
                 # If there is only one candidate for sink variable, the search ends
                 if len(U) <= 1:
@@ -227,7 +225,8 @@ class BottomUpParceLiNGAM():
 
             # HSIC test with Fisher's method
             fisher_p, fisher_stat = self._fisher_hsic_test(
-                X[:, xi_index], R, max_p_stat)
+                X[:, xi_index], R, max_p_stat
+            )
 
             # Update output
             if fisher_stat < max_p_stat or fisher_p > max_p:
@@ -243,13 +242,14 @@ class BottomUpParceLiNGAM():
         if self._reg is None:
             # Compute residuals of least square regressions
             cov = np.cov(X.T)
-            coef = np.dot(np.linalg.pinv(cov[np.ix_(predictors, predictors)]),
-                          cov[np.ix_(target, predictors)].reshape(predictors.shape[0], 1))
+            coef = np.dot(
+                np.linalg.pinv(cov[np.ix_(predictors, predictors)]),
+                cov[np.ix_(target, predictors)].reshape(predictors.shape[0], 1),
+            )
             R = X[:, target] - np.dot(X[:, predictors], coef)
         else:
             self._reg.fit(X[:, predictors], np.ravel(X[:, target]))
-            R = X[:, target] - \
-                self._reg.predict(X[:, predictors]).reshape(-1, 1)
+            R = X[:, target] - self._reg.predict(X[:, predictors]).reshape(-1, 1)
 
         return R
 
@@ -263,7 +263,7 @@ class BottomUpParceLiNGAM():
         else:
             for i in range(n_features):
                 _, hsic_p = hsic_test_gamma(X[:, [i]], R)
-                fisher_stat += np.inf if hsic_p == 0 else - 2 * np.log(hsic_p)
+                fisher_stat += np.inf if hsic_p == 0 else -2 * np.log(hsic_p)
 
                 if fisher_stat > max_p_stat:
                     break
@@ -273,7 +273,15 @@ class BottomUpParceLiNGAM():
 
     def _flatten(self, arr):
         """Return a copy of an array flattened in one dimension."""
-        return [val for item in arr for val in (self._flatten(item) if hasattr(item, '__iter__') and not isinstance(item, str) else [item])]
+        return [
+            val
+            for item in arr
+            for val in (
+                self._flatten(item)
+                if hasattr(item, "__iter__") and not isinstance(item, str)
+                else [item]
+            )
+        ]
 
     def _estimate_adjacency_matrix(self, X, prior_knowledge=None):
         """Estimate adjacency matrix by causal order.
@@ -295,7 +303,7 @@ class BottomUpParceLiNGAM():
             pk = prior_knowledge.copy()
             np.fill_diagonal(pk, 0)
 
-        B = np.zeros([X.shape[1], X.shape[1]], dtype='float64')
+        B = np.zeros([X.shape[1], X.shape[1]], dtype="float64")
         for i in range(1, len(self._causal_order)):
             target = self._causal_order[i]
 
@@ -307,18 +315,15 @@ class BottomUpParceLiNGAM():
                 predictors = [p for p in predictors if pk[target, p] != 0]
 
             # target is exogenous variables if predictors are empty
-            if len(predictors) == 0:
-                continue
-
-            B[target, predictors] = predict_adaptive_lasso(
-                X, predictors, target)
+            if len(predictors) != 0:
+                B[target, predictors] = predict_adaptive_lasso(X, predictors, target)
 
         # Set np.nan if order is unknown
         for unk_order in self._causal_order:
-            if hasattr(unk_order, '__iter__') and not isinstance(unk_order, str):
-                for i in range(len(unk_order)-1):
+            if hasattr(unk_order, "__iter__") and not isinstance(unk_order, str):
+                for i in range(len(unk_order) - 1):
                     xi = unk_order[i]
-                    for xj in unk_order[i+1:]:
+                    for xj in unk_order[i + 1 :]:
                         B[xi, xj] = np.nan
                         B[xj, xi] = np.nan
 
@@ -348,30 +353,34 @@ class BottomUpParceLiNGAM():
 
         # Check from/to causal order
         for i, order in enumerate(self._causal_order):
-            if hasattr(order, '__iter__') and from_index in order:
+            if hasattr(order, "__iter__") and from_index in order:
                 from_order = i
                 break
-            elif not hasattr(order, '__iter__') and int(from_index) == int(order):
+            elif not hasattr(order, "__iter__") and int(from_index) == int(order):
                 from_order = i
                 break
 
         for i, order in enumerate(self._causal_order):
-            if hasattr(order, '__iter__') and to_index in order:
+            if hasattr(order, "__iter__") and to_index in order:
                 to_order = i
                 break
-            elif not hasattr(order, '__iter__') and int(to_index) == int(order):
+            elif not hasattr(order, "__iter__") and int(to_index) == int(order):
                 to_order = i
                 break
 
         if from_order > to_order:
-            warnings.warn(f'The estimated causal effect may be incorrect because '
-                          f'the causal order of the destination variable (to_index={to_index}) '
-                          f'is earlier than the source variable (from_index={from_index}).')
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the causal order of the destination variable (to_index={to_index}) "
+                f"is earlier than the source variable (from_index={from_index})."
+            )
 
         # Check confounders
         if True in np.isnan(self._adjacency_matrix[from_index]):
-            warnings.warn(f'The estimated causal effect may be incorrect because '
-                          f'the source variable (from_index={from_index}) is influenced by confounders.')
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the source variable (from_index={from_index}) is influenced by confounders."
+            )
             return np.nan
 
         # from_index + parents indices
@@ -404,16 +413,17 @@ class BottomUpParceLiNGAM():
         n_features = X.shape[1]
 
         E = X - np.dot(self._adjacency_matrix, X.T).T
-        nan_cols = list(
-            set(np.argwhere(np.isnan(self._adjacency_matrix)).ravel()))
+        nan_cols = list(set(np.argwhere(np.isnan(self._adjacency_matrix)).ravel()))
         p_values = np.zeros([n_features, n_features])
         for i, j in itertools.combinations(range(n_features), 2):
             if i in nan_cols or j in nan_cols:
                 p_values[i, j] = np.nan
                 p_values[j, i] = np.nan
             else:
-                _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
-                                             np.reshape(E[:, j], [n_samples, 1]))
+                _, p_value = hsic_test_gamma(
+                    np.reshape(E[:, i], [n_samples, 1]),
+                    np.reshape(E[:, j], [n_samples, 1]),
+                )
                 p_values[i, j] = p_value
                 p_values[j, i] = p_value
 
@@ -466,10 +476,9 @@ class BottomUpParceLiNGAM():
 
         if isinstance(n_sampling, (numbers.Integral, np.integer)):
             if not 0 < n_sampling:
-                raise ValueError(
-                    'n_sampling must be an integer greater than 0.')
+                raise ValueError("n_sampling must be an integer greater than 0.")
         else:
-            raise ValueError('n_sampling must be an integer greater than 0.')
+            raise ValueError("n_sampling must be an integer greater than 0.")
 
         # Bootstrapping
         adjacency_matrices = np.zeros([n_sampling, X.shape[1], X.shape[1]])
@@ -480,13 +489,15 @@ class BottomUpParceLiNGAM():
 
             # Calculate total effects
             for c, from_ in enumerate(self._causal_order):
-                for to in self._causal_order[c+1:]:
-                    if hasattr(from_, '__iter__'):
+                for to in self._causal_order[c + 1 :]:
+                    if hasattr(from_, "__iter__"):
                         for from_item in from_:
-                            total_effects[i, to, from_item] = self.estimate_total_effect(
-                                X, from_item, to)
+                            total_effects[
+                                i, to, from_item
+                            ] = self.estimate_total_effect(X, from_item, to)
                     else:
                         total_effects[i, to, from_] = self.estimate_total_effect(
-                            X, from_, to)
+                            X, from_, to
+                        )
 
         return BootstrapResult(adjacency_matrices, total_effects)

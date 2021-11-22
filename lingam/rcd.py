@@ -14,58 +14,66 @@ from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
-from .hsic import (get_gram_matrix, get_kernel_width, hsic_test_gamma,
-                   hsic_teststat)
+from .hsic import get_gram_matrix, get_kernel_width, hsic_test_gamma, hsic_teststat
 from .utils import predict_adaptive_lasso
 
 
-class RCD():
+class RCD:
     """Implementation of RCD Algorithm [1]_
 
     References
     ----------
-    .. [1] T.N.Maeda and S.Shimizu. RCD: Repetitive causal discovery of linear non-Gaussian acyclic models with latent confounders.
-       In Proc. 23rd International Conference on Artificial Intelligence and Statistics (AISTATS2020), Palermo, Sicily, Italy. PMLR  108:735-745, 2020.
+    .. [1] T.N.Maeda and S.Shimizu. RCD: Repetitive causal discovery of
+       linear non-Gaussian acyclic models with latent confounders.
+       In Proc. 23rd International Conference on Artificial Intelligence and
+       Statistics (AISTATS2020), Palermo, Sicily, Italy. PMLR  108:735-745, 2020.
     """
 
-    def __init__(self, max_explanatory_num=2, cor_alpha=0.01, ind_alpha=0.01, shapiro_alpha=0.01, MLHSICR=False, bw_method='mdbs'):
+    def __init__(
+        self,
+        max_explanatory_num=2,
+        cor_alpha=0.01,
+        ind_alpha=0.01,
+        shapiro_alpha=0.01,
+        MLHSICR=False,
+        bw_method="mdbs",
+    ):
         """Construct a RCD model.
 
-           Parameters
-           ----------
-            max_explanatory_num : int, optional (default=2)
-                Maximum number of explanatory variables.
-            cor_alpha : float, optional (default=0.01)
-                Alpha level for pearson correlation.
-            ind_alpha : float, optional (default=0.01)
-                Alpha level for HSIC.
-            shapiro_alpha : float, optional (default=0.01)
-                Alpha level for Shapiro-Wilk test.
-            MLHSICR : bool, optional (default=False)
-                If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
-            bw_method : str, optional (default=``mdbs``)
-                    The method used to calculate the bandwidth of the HSIC.
+        Parameters
+        ----------
+         max_explanatory_num : int, optional (default=2)
+             Maximum number of explanatory variables.
+         cor_alpha : float, optional (default=0.01)
+             Alpha level for pearson correlation.
+         ind_alpha : float, optional (default=0.01)
+             Alpha level for HSIC.
+         shapiro_alpha : float, optional (default=0.01)
+             Alpha level for Shapiro-Wilk test.
+         MLHSICR : bool, optional (default=False)
+             If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
+         bw_method : str, optional (default=``mdbs``)
+                 The method used to calculate the bandwidth of the HSIC.
 
-                * ``mdbs`` : Median distance between samples.
-                * ``scott`` : Scott's Rule of Thumb.
-                * ``silverman`` : Silverman's Rule of Thumb.
+             * ``mdbs`` : Median distance between samples.
+             * ``scott`` : Scott's Rule of Thumb.
+             * ``silverman`` : Silverman's Rule of Thumb.
         """
         # Check parameters
         if max_explanatory_num <= 0:
-            raise ValueError('max_explanatory_num must be > 0.')
+            raise ValueError("max_explanatory_num must be > 0.")
 
         if cor_alpha < 0:
-            raise ValueError('cor_alpha must be >= 0.')
+            raise ValueError("cor_alpha must be >= 0.")
 
         if ind_alpha < 0:
-            raise ValueError('ind_alpha must be >= 0.')
+            raise ValueError("ind_alpha must be >= 0.")
 
         if shapiro_alpha < 0:
-            raise ValueError('shapiro_alpha must be >= 0.')
+            raise ValueError("shapiro_alpha must be >= 0.")
 
-        if bw_method not in ('mdbs', 'scott', 'silverman'):
-            raise ValueError(
-                "bw_method must be 'mdbs', 'scott' or 'silverman'.")
+        if bw_method not in ("mdbs", "scott", "silverman"):
+            raise ValueError("bw_method must be 'mdbs', 'scott' or 'silverman'.")
 
         self._max_explanatory_num = max_explanatory_num
         self._cor_alpha = cor_alpha
@@ -185,7 +193,8 @@ class RCD():
 
         # Estimate coefficients by minimizing the sum of HSICs using the L-BFGS method.
         coefs, _, _ = fmin_l_bfgs_b(
-            func=sum_empirical_hsic, x0=initial_coef, approx_grad=True)
+            func=sum_empirical_hsic, x0=initial_coef, approx_grad=True
+        )
 
         resid = Y[:, xi]
         for j, xj in enumerate(xj_list):
@@ -200,19 +209,23 @@ class RCD():
         is_all_independent = True
         resid, _ = self._get_resid_and_coef(Y, xi, xj_list)
         for xj in xj_list:
-            if not self._is_independent(np.reshape(resid, [n_samples, 1]), np.reshape(Y[:, xj], [n_samples, 1])):
+            if not self._is_independent(
+                np.reshape(resid, [n_samples, 1]), np.reshape(Y[:, xj], [n_samples, 1])
+            ):
                 is_all_independent = False
                 break
 
         if is_all_independent:
             return True
-        elif len(xj_list) == 1 or self._MLHSICR == False:
+        elif len(xj_list) == 1 or self._MLHSICR is False:
             return False
 
         # Multiple Regression with MLHSICR.
         resid, _ = self._get_resid_and_coef_by_MLHSICR(Y, xi, xj_list)
         for xj in xj_list:
-            if not self._is_independent(np.reshape(resid, [n_samples, 1]), np.reshape(Y[:, xj], [n_samples, 1])):
+            if not self._is_independent(
+                np.reshape(resid, [n_samples, 1]), np.reshape(Y[:, xj], [n_samples, 1])
+            ):
                 return False
         return True
 
@@ -223,9 +236,9 @@ class RCD():
         l = 1
         hu_history = {}
 
-        while(True):
+        while True:
             changed = False
-            U_list = itertools.combinations(range(n_features), l+1)
+            U_list = itertools.combinations(range(n_features), l + 1)
             for U in U_list:
                 U = list(U)
                 U.sort()
@@ -346,7 +359,7 @@ class RCD():
         """
         # Check parents
         n_features = X.shape[1]
-        B = np.zeros([n_features, n_features], dtype='float64')
+        B = np.zeros([n_features, n_features], dtype="float64")
         for xi in range(n_features):
             xj_list = list(P[xi])
             xj_list.sort()
@@ -378,14 +391,18 @@ class RCD():
 
         # Check from/to ancestors
         if to_index in self._ancestors_list[from_index]:
-            warnings.warn(f'The estimated causal effect may be incorrect because '
-                          f'the causal order of the destination variable (to_index={to_index}) '
-                          f'is earlier than the source variable (from_index={from_index}).')
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the causal order of the destination variable (to_index={to_index}) "
+                f"is earlier than the source variable (from_index={from_index})."
+            )
 
         # Check confounders
         if True in np.isnan(self._adjacency_matrix[from_index]):
-            warnings.warn(f'The estimated causal effect may be incorrect because '
-                          f'the source variable (from_index={from_index}) is influenced by confounders.')
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the source variable (from_index={from_index}) is influenced by confounders."
+            )
             return np.nan
 
         # from_index + parents indices
@@ -418,16 +435,17 @@ class RCD():
         n_features = X.shape[1]
 
         E = X - np.dot(self._adjacency_matrix, X.T).T
-        nan_cols = list(
-            set(np.argwhere(np.isnan(self._adjacency_matrix)).ravel()))
+        nan_cols = list(set(np.argwhere(np.isnan(self._adjacency_matrix)).ravel()))
         p_values = np.zeros([n_features, n_features])
         for i, j in itertools.combinations(range(n_features), 2):
             if i in nan_cols or j in nan_cols:
                 p_values[i, j] = np.nan
                 p_values[j, i] = np.nan
             else:
-                _, p_value = hsic_test_gamma(np.reshape(E[:, i], [n_samples, 1]),
-                                             np.reshape(E[:, j], [n_samples, 1]))
+                _, p_value = hsic_test_gamma(
+                    np.reshape(E[:, i], [n_samples, 1]),
+                    np.reshape(E[:, j], [n_samples, 1]),
+                )
                 p_values[i, j] = p_value
                 p_values[j, i] = p_value
 
@@ -479,23 +497,22 @@ class RCD():
 
         if isinstance(n_sampling, (numbers.Integral, np.integer)):
             if not 0 < n_sampling:
-                raise ValueError(
-                    'n_sampling must be an integer greater than 0.')
+                raise ValueError("n_sampling must be an integer greater than 0.")
         else:
-            raise ValueError('n_sampling must be an integer greater than 0.')
+            raise ValueError("n_sampling must be an integer greater than 0.")
 
         # Bootstrapping
         adjacency_matrices = np.zeros([n_sampling, X.shape[1], X.shape[1]])
         total_effects = np.zeros([n_sampling, X.shape[1], X.shape[1]])
         for i in range(n_sampling):
-            self.fit(resample(X, replace=False,
-                              n_samples=X.shape[0] - n_sampling))
+            self.fit(resample(X, replace=False, n_samples=X.shape[0] - n_sampling))
             adjacency_matrices[i] = self._adjacency_matrix
 
             # Calculate total effects
             for to, ancestors in enumerate(self._ancestors_list):
                 for from_ in ancestors:
                     total_effects[i, to, from_] = self.estimate_total_effect(
-                        X, from_, to)
+                        X, from_, to
+                    )
 
         return BootstrapResult(adjacency_matrices, total_effects)
