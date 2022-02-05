@@ -138,9 +138,7 @@ class DirectLiNGAM(_BaseLiNGAM):
         check_pairs = np.concatenate([path_pairs, no_path_pairs[:, [1, 0]]])
         if len(check_pairs) == 0:
             # If no pairs are extracted from the specified prior knowledge,
-            # discard the prior knowledge.
-            self._Aknw = None
-            return None
+            return check_pairs
 
         pairs = np.unique(check_pairs, axis=0)
         return pairs[:, [1, 0]]  # [to, from] -> [from, to]
@@ -171,8 +169,11 @@ class DirectLiNGAM(_BaseLiNGAM):
 
         # Apply prior knowledge in a strong way
         if not self._apply_prior_knowledge_softly:
-            Uc = [i for i in U if i not in self._partial_orders[:, 1]]
-            return Uc, []
+            if len(self._partial_orders) != 0:
+                Uc = [i for i in U if i not in self._partial_orders[:, 1]]
+                return Uc, []
+            else:
+                return U, []
 
         # Find exogenous features
         Uc = []
