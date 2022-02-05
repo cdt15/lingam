@@ -57,10 +57,6 @@ class DirectLiNGAM(_BaseLiNGAM):
             self._Aknw = check_array(self._Aknw)
             self._Aknw = np.where(self._Aknw < 0, np.nan, self._Aknw)
 
-            # Extract all partial orders in prior knowledge matrix
-            if not self._apply_prior_knowledge_softly:
-                self._partial_orders = self._extract_partial_orders(self._Aknw)
-
     def fit(self, X):
         """Fit the model to X.
 
@@ -78,11 +74,17 @@ class DirectLiNGAM(_BaseLiNGAM):
         # Check parameters
         X = check_array(X)
         n_features = X.shape[1]
+
+        # Check prior knowledge
         if self._Aknw is not None:
             if (n_features, n_features) != self._Aknw.shape:
                 raise ValueError(
                     "The shape of prior knowledge must be (n_features, n_features)"
                 )
+            else:
+                # Extract all partial orders in prior knowledge matrix
+                if not self._apply_prior_knowledge_softly:
+                    self._partial_orders = self._extract_partial_orders(self._Aknw)
 
         # Causal discovery
         U = np.arange(n_features)
