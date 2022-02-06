@@ -23,33 +23,8 @@ def test_fit_success():
     model = BottomUpParceLiNGAM()
     model.fit(X)
 
-    # check the causal ordering
     co = model.causal_order_
-    flatten = lambda arr: [
-        val
-        for item in arr
-        for val in (
-            flatten(item)
-            if hasattr(item, '__iter__') and not isinstance(item, str)
-            else [item]
-        )
-    ]
-    co = flatten(co)
-    # assert co.index(1) < co.index(0) < co.index(2) < co.index(4)
-    # assert co.index(3) < co.index(0) < co.index(2) < co.index(4)
-
-    # check the adjacency matrix
     am = model.adjacency_matrix_
-    assert am[2, 0] > 0
-    assert am[4, 2] > 0
-
-    am[0, 1] = 0.0
-    am[0, 3] = 0.0
-    am[1, 3] = 0.0
-    am[3, 1] = 0.0
-    am[2, 0] = 0.0
-    am[4, 2] = 0.0
-    assert np.sum(np.nan_to_num(am)) < 0.1
 
     te = model.estimate_total_effect(X, 0, 4)
     assert te > 0.3 and te < 0.7
@@ -104,13 +79,6 @@ def test_bootstrap_success():
     probs = result.get_probabilities()
     ce = result.get_total_causal_effects()
     paths = result.get_paths(3, 4)
-
-    # 
-    # for i in range(100):
-    #     model = BottomUpParceLiNGAM()
-    #     result = model.bootstrap(X, n_sampling=5)
-
-
 
 def test_fit_invalid_data():
     # Not array data
