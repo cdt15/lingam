@@ -146,7 +146,7 @@ def generate_data(n=5, T=800, initial_data=None):
     return y[:, head:].T, psi0, psi1, omega1, causal_order
 
 def test_fit_success():
-    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=100)
+    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=30)
 
     # default
     model = VARMALiNGAM()
@@ -187,7 +187,7 @@ def test_fit_success():
     model.fit(X)
 
 def test_fit_invalid():
-    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=100)
+    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=30)
 
     # invalid lingam_model
     try:
@@ -199,7 +199,7 @@ def test_fit_invalid():
         raise AssertionError
 
 def test_bootstrap_success():
-    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=100)
+    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=30)
 
     model = VARMALiNGAM()
     result = model.bootstrap(X, n_sampling=3)
@@ -243,8 +243,44 @@ def test_bootstrap_success():
     # get_total_causal_effects
     ce = result.get_total_causal_effects(min_causal_effect=0.6)
 
-def test_estimate_total_effect_invalid():
+    # get_paths
+    result.get_paths(1, 0, 1, 0)
+
+def test_bootstrap_invalid():
     X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=100)
+
+    model = VARMALiNGAM()
+    result = model.bootstrap(X, n_sampling=3)
+
+    result.adjacency_matrices_
+    result.total_effects_
+
+    # min_causal_effect
+    try:
+        result.get_paths(1, 0, 0, 1, -1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # to_lag > from_lag
+    try:
+        result.get_paths(1, 0, 0, 1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # same variable
+    try:
+        result.get_paths(0, 0, 1, 1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+def test_estimate_total_effect_invalid():
+    X, psi0, phi1, omega1, causal_order = generate_data(n=3, T=30)
 
     model = VARMALiNGAM()
     model.fit(X)
