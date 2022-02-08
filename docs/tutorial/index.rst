@@ -28,3 +28,4 @@ Contents:
     pk_bottom_up_parce
     rcd
     draw_graph
+    lina
