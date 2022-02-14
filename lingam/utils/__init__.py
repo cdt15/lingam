@@ -36,21 +36,43 @@ def set_random_seed(seed):
     np.random.seed(seed)
 
 
-def simulate_linear_sem(W, n, sem_type, noise_scale=1.0):
+def simulate_linear_sem(adjacency_matrix, n_samples, sem_type, noise_scale=1.0):
     """Simulate samples from linear SEM with specified type of noise.
 
-    Args:
-        W (np.ndarray): [d, d] weighted adj matrix of DAG
-        n (int): num of samples, n=inf mimics population risk
-        sem_type (str): gauss, exp, gumbel, logistic, poisson
-        noise_scale (float): scale parameter of additive noise
+    Parameters
+    ----------
+    adjacency_matrix : array-like, shape (n_features, n_features)
+        Weighted adjacency matrix of DAG, where ``n_features``
+        is the number of variables.
+    n_samples : int
+        Number of samples. n_samples=inf mimics population risk.
+    sem_type : str
+        SEM type. gauss, exp, gumbel, logistic, poisson.
+    noise_scale : float
+        scale parameter of additive noise.
 
-    Returns:
-        X (np.ndarray): [n, d] sample matrix, [d, d] if n=inf
+    Returns
+    -------
+    X : array-like, shape (n_samples, n_features)
+        Data generated from linear SEM with specified type of noise,
+        where ``n_features`` is the number of variables.
     """
+    def _simulate_single_equation(X, w):
+        """Simulate samples from a single equation.
 
-    def _simulate_single_equation(X, w, E, E_weight, e):
-        """X: [n, num of parents], w: [num of parents], x: [n]"""
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features_parents)
+            Data of parents for a specified variable, where
+            n_features_parents is the number of parents.
+        w : array-like, shape (1, n_features_parents)
+            Weights of parents.
+
+        Returns
+        -------
+        x : array-like, shape (n_samples, 1)
+            Data for the  specified variable.
+        """
         if sem_type == 'gauss':
             z = np.random.normal(scale=noise_scale, size=n)
             x = X @ w + z
@@ -99,11 +121,6 @@ def simulate_linear_sem(W, n, sem_type, noise_scale=1.0):
             z = z - np.mean(z)
             z = z / np.std(z)
             x = X @ w + z
-        elif sem_type == 'laplace-lingam':
-            z = np.random.laplace(0, scale=noise_scale, size=n)
-            z = z - np.mean(z)
-            z = z / np.std(z)
-            x = X @ w + z
         elif sem_type == 'laplace':
             z = np.random.laplace(0, scale=noise_scale, size=n)
             x = X @ w + z
@@ -111,55 +128,45 @@ def simulate_linear_sem(W, n, sem_type, noise_scale=1.0):
             raise ValueError('unknown sem type')
         return x
 
-    d = W.shape[0]
-    if np.isinf(n):
+    n_features = adjacency_matrix.shape[0]
+    if np.isinf(n_samples):
         if sem_type == 'gauss':
-            # make 1/d X'X = true cov
-            X = np.sqrt(d) * noise_scale * np.linalg.pinv(np.eye(d) - W)
+            # make 1/n_features X'X = true cov
+            X = np.sqrt(n_features) * noise_scale * np.linalg.pinv(np.eye(n_features) - adjacency_matrix)
             return X
         else:
             raise ValueError('population risk not available')
-    X = np.zeros([n, d])
+    X = np.zeros([n_samples, n_features])
 
-    G = ig.Graph.Weighted_Adjacency(W.tolist())
+    G = ig.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
     ordered_vertices = G.topological_sorting()
-    assert len(ordered_vertices) == d
+    assert len(ordered_vertices) == n_features
 
-    p = 100
-    E = np.zeros([n, p])
-    E_weight = np.zeros([1, p])
-    for i in range(p):
-        e = np.random.normal(scale=noise_scale, size=n)
-        E[:, i] = e
-        E_weight[0, i] = np.random.rand(1)
-
-    e = np.random.normal(scale=noise_scale, size=n)
     for j in ordered_vertices:
         parents = G.neighbors(j, mode=ig.IN)
-        X[:, j] = _simulate_single_equation(X[:, parents], W[parents, j], E[:, 50 * j:2 * j + 50],
-                                            E_weight[0, 50 * j:2 * j + 50], e)
-    return X, E, E_weight
+        X[:, j] = _simulate_single_equation(X[:, parents], adjacency_matrix[parents, j])
+    return X
 
 
 def count_accuracy(W_true, W, W_und=None):
     """Compute FDR, TPR, and FPR for B, or optionally for CPDAG = B + B_und.
 
-    Args:
-        W_true (np.ndarray): [d, d] ground truth graph
-        W (np.ndarray): [d, d] predicted graph
-        W_und (np.ndarray): [d, d] predicted undirected edges in CPDAG, asymmetric
+    Parameters
+    ----------
+    W_true : array-like, shape (n_features, n_features)
+        Ground truth graph, where ``n_features`` is
+        the number of features.
+    W : array-like, shape (n_features, n_features)
+        Predicted graph.
+    W_und : array-like, shape (n_features, n_features)
+        Predicted undirected edges in CPDAG, asymmetric.
 
-    Returns:
-        fdr: (reverse + false positive) / prediction positive  False Discovery Rate fp/tp+fp
-        tpr: (true positive) / condition positive              == recall: tp/tp+fn
-        fpr: (reverse + false positive) / condition negative   == fp/(fp+tn) 与recall对应的错误召回率
-        shd: undirected extra + undirected missing + reverse
-        nnz: prediction positive
-
-        recall: tp/tp+fn
-        precision: tp/tp+fp
-        F1: 2*recall*precison/(recall+precison)
-
+    Returns
+    -------
+    recall : float
+        (true positive) / (true positive + false negative).
+    precision : float
+        (true positive) / (true positive + false positive).
     """
     # convert to binary adjacency matrix
     B_true = (W_true != 0)
@@ -203,31 +210,45 @@ def count_accuracy(W_true, W, W_und=None):
 def simulate_parameter(B, w_ranges=((-2.0, -0.5), (0.5, 2.0))):
     """Simulate SEM parameters for a DAG.
 
-    Args:
-        B (np.ndarray): [d, d] binary adj matrix of DAG
-        w_ranges (tuple): disjoint weight ranges
+    Parameters
+    ----------
+    B : array-like, shape (n_features, n_features)
+        Binary adjacency matrix of DAG, where ``n_features``
+        is the number of features.
+    w_ranges : tuple
+        Disjoint weight ranges.
 
-    Returns:
-        W (np.ndarray): [d, d] weighted adj matrix of DAG
+    Returns
+    -------
+    adjacency_matrix : array-like, shape (n_features, n_features)
+        Weighted adj matrix of DAG, where ``n_features``
+        is the number of features.
     """
-    W = np.zeros(B.shape)
+
+    adjacency_matrix = np.zeros(B.shape)
     S = np.random.randint(len(w_ranges), size=B.shape)  # which range
     for i, (low, high) in enumerate(w_ranges):
         U = np.random.uniform(low=low, high=high, size=B.shape)
-        W += B * (S == i) * U
-    return W
+        adjacency_matrix += B * (S == i) * U
+    return adjacency_matrix
 
 
-def simulate_dag(d, s0, graph_type):
+def simulate_dag(n_features, n_edges, graph_type):
     """Simulate random DAG with some expected number of edges.
 
-    Args:
-        d (int): num of nodes
-        s0 (int): expected num of edges
-        graph_type (str): ER, SF
+    Parameters
+    ----------
+    n_features : int
+        Number of features.
+    n_edges : int
+        Expected number of edges.
+    graph_type : str
+        ER, SF.
 
-    Returns:
-        B (np.ndarray): [d, d] binary adj matrix of DAG
+    Returns
+    -------
+    B : array-like, shape (n_features, n_features)
+        binary adjacency matrix of DAG.
     """
     def _random_permutation(M):
         # np.random.permutation permutes first axis only
@@ -242,17 +263,17 @@ def simulate_dag(d, s0, graph_type):
 
     if graph_type == 'ER':
         # Erdos-Renyi
-        G_und = ig.Graph.Erdos_Renyi(n=d, m=s0)
+        G_und = ig.Graph.Erdos_Renyi(n=n_features, m=n_edges)
         B_und = _graph_to_adjmat(G_und)
         B = _random_acyclic_orientation(B_und)
     elif graph_type == 'SF':
         # Scale-free, Barabasi-Albert
-        G = ig.Graph.Barabasi(n=d, m=int(round(s0 / d)), directed=True)
+        G = ig.Graph.Barabasi(n=n_features, m=int(round(n_edges / n_features)), directed=True)
         B = _graph_to_adjmat(G)
     elif graph_type == 'BP':
         # Bipartite, Sec 4.1 of (Gu, Fu, Zhou, 2018)
-        top = int(0.2 * d)
-        G = ig.Graph.Random_Bipartite(top, d - top, m=s0, directed=True, neimode=ig.OUT)
+        top = int(0.2 * n_features)
+        G = ig.Graph.Random_Bipartite(top, n_features - top, m=n_edges, directed=True, neimode=ig.OUT)
         B = _graph_to_adjmat(G)
     else:
         raise ValueError('unknown graph type')
