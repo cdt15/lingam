@@ -25,7 +25,7 @@ def test_fit_lina():
     B_true = ut.simulate_dag(n_features_latent, n_edges, graph_type)
     W_true = ut.simulate_parameter(B_true)  # row to column
 
-    f, E, E_weight = ut.simulate_linear_sem(W_true, n_samples, sem_type)
+    f = ut.simulate_linear_sem(W_true, n_samples, sem_type)
     f_nor = np.zeros([n_samples, n_features_latent])
     scale = np.zeros([1, n_features_latent])
     W_true_scale = np.zeros([n_features_latent, n_features_latent])
@@ -82,7 +82,7 @@ def test_fit_mdlina():
     W_true = ut.simulate_parameter(B_true)  # causal effects matrix btw. latent factors
 
     # 1 domain
-    f, E, E_weight = ut.simulate_linear_sem(W_true, n_samples, sem_type1)
+    f = ut.simulate_linear_sem(W_true, n_samples, sem_type1)
     f_nor1 = np.zeros([n_samples, n_features_latent])
     scale1 = np.zeros([1, n_features_latent])
     W_true_scale = np.zeros([n_features_latent, n_features_latent])
@@ -112,7 +112,7 @@ def test_fit_mdlina():
     X1 = X1.T
 
     # 2 domain
-    f2, E, E_weight = ut.simulate_linear_sem(W_true, n_samples, sem_type2)
+    f2 = ut.simulate_linear_sem(W_true, n_samples, sem_type2)
     f_nor2 = np.zeros([n_samples, n_features_latent])
     scale2 = np.zeros([1, n_features_latent])
     W_true_scale = np.zeros([n_features_latent, n_features_latent])
