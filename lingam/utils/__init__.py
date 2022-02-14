@@ -71,7 +71,7 @@ def simulate_linear_sem(adjacency_matrix, n_samples, sem_type, noise_scale=1.0):
         Returns
         -------
         x : array-like, shape (n_samples, 1)
-            Data for the  specified variable.
+            Data for the specified variable.
         """
         if sem_type == 'gauss':
             z = np.random.normal(scale=noise_scale, size=n)
@@ -149,7 +149,7 @@ def simulate_linear_sem(adjacency_matrix, n_samples, sem_type, noise_scale=1.0):
 
 
 def count_accuracy(W_true, W, W_und=None):
-    """Compute FDR, TPR, and FPR for B, or optionally for CPDAG = B + B_und.
+    """Compute recalls and precisions for W, or optionally for CPDAG = W + W_und.
 
     Parameters
     ----------
