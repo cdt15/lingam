@@ -74,34 +74,34 @@ def simulate_linear_sem(adjacency_matrix, n_samples, sem_type, noise_scale=1.0):
             Data for the specified variable.
         """
         if sem_type == 'gauss':
-            z = np.random.normal(scale=noise_scale, size=n)
+            z = np.random.normal(scale=noise_scale, size=n_samples)
             x = X @ w + z
         elif sem_type == 'exp':
-            z = np.random.exponential(scale=noise_scale, size=n)
+            z = np.random.exponential(scale=noise_scale, size=n_samples)
             x = X @ w + z
         elif sem_type == 'gumbel':
-            z = np.random.gumbel(scale=noise_scale, size=n)
+            z = np.random.gumbel(scale=noise_scale, size=n_samples)
             x = X @ w + z
         elif sem_type == 'logistic':
             x = np.random.binomial(1, sigmoid(X @ w)) * 1.0
         elif sem_type == 'poisson':
             x = np.random.poisson(np.exp(X @ w)) * 1.0
         elif sem_type == 'subGaussian':
-            z = np.random.normal(scale=noise_scale, size=n)
+            z = np.random.normal(scale=noise_scale, size=n_samples)
             q = 0.5 + 0.3 * np.random.rand(1)  # sub-Gaussian
             z = np.sign(z) * pow(np.abs(z), q)
             z = z - np.mean(z)
             z = z / np.std(z)
             x = X @ w + z
         elif sem_type == 'supGaussian':
-            z = np.random.normal(scale=noise_scale, size=n)
+            z = np.random.normal(scale=noise_scale, size=n_samples)
             q = 1.2 + 0.8 * np.random.rand(1)  # super-Gaussian
             z = np.sign(z) * pow(np.abs(z), q)
             z = z - np.mean(z)
             z = z / np.std(z)
             x = X @ w + z
         elif sem_type == 'nonGaussian':
-            z = np.random.normal(scale=noise_scale, size=n)
+            z = np.random.normal(scale=noise_scale, size=n_samples)
             qq = -1
             if qq == 1:
                 q = 0.5 + 0.3 * np.random.rand(1)  # sub-Gaussian
@@ -112,17 +112,17 @@ def simulate_linear_sem(adjacency_matrix, n_samples, sem_type, noise_scale=1.0):
             z = z / np.std(z)
             x = X @ w + z
         elif sem_type == 'uniform':
-            z = np.random.uniform(0, 1, n)
+            z = np.random.uniform(0, 1, n_samples)
             z = z - np.mean(z)
             z = z / np.std(z)
             x = X @ w + z
         elif sem_type == 'gamma':
-            z = np.random.gamma(2, 2, n)
+            z = np.random.gamma(2, 2, n_samples)
             z = z - np.mean(z)
             z = z / np.std(z)
             x = X @ w + z
         elif sem_type == 'laplace':
-            z = np.random.laplace(0, scale=noise_scale, size=n)
+            z = np.random.laplace(0, scale=noise_scale, size=n_samples)
             x = X @ w + z
         else:
             raise ValueError('unknown sem type')
