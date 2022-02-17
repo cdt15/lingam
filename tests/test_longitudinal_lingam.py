@@ -315,6 +315,9 @@ def test_bootstrap_success():
     # get_total_causal_effects
     ce = result.get_total_causal_effects(min_causal_effect=0.6)
 
+    # get_paths
+    result.get_paths(0, 1, 1, 2)
+
 
 def test_bootstrap_invalid_data():
     # Different features
@@ -580,7 +583,37 @@ def test_bootstrap_invalid_data():
     else:
         raise AssertionError
 
+    # Invalid argument: get_paths(min_causal_effect<0)
+    try:
+        result.get_paths(0, 1, 1, 2, -1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
 
+    # Invalid argument: get_paths(to_t < from_t)
+    try:
+        result.get_paths(0, 1, 1, 0)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid argument: get_paths(to_t < from_t)
+    try:
+        result.get_paths(0, 1, 1, 0)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid argument: get_paths(same variable)
+    try:
+        result.get_paths(0, 0, 1, 1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
 
 def test_estimate_total_effect_invalid():
     # causal direction: x0 --> x1 --> x3

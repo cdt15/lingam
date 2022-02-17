@@ -11,10 +11,10 @@ from sklearn.utils import check_array, resample
 from statsmodels.tsa.statespace.varmax import VARMAX
 
 from .base import _BaseLiNGAM
-from .bootstrap import TimeseriesBootstrapResult
+from .bootstrap import BootstrapResult
 from .direct_lingam import DirectLiNGAM
 from .hsic import hsic_test_gamma
-from .utils import predict_adaptive_lasso
+from .utils import predict_adaptive_lasso, find_all_paths
 
 
 class VARMALiNGAM:
@@ -216,7 +216,7 @@ class VARMALiNGAM:
 
         self._criterion = criterion
 
-        return TimeseriesBootstrapResult(adjacency_matrices, total_effects)
+        return VARMABootstrapResult(adjacency_matrices, total_effects, self._order)
 
     def estimate_total_effect(self, X, E, from_index, to_index, from_lag=0):
         """Estimate total effect using causal model.
@@ -462,3 +462,107 @@ class VARMALiNGAM:
             Residuals of regression, where n_samples is the number of samples.
         """
         return self._residuals
+
+
+class VARMABootstrapResult(BootstrapResult):
+    """The result of bootstrapping for Time series algorithm."""
+
+    def __init__(self, adjacency_matrices, total_effects, order):
+        """Construct a BootstrapResult.
+
+        Parameters
+        ----------
+        adjacency_matrices : array-like, shape (n_sampling)
+            The adjacency matrix list by bootstrapping.
+        total_effects : array-like, shape (n_sampling)
+            The total effects list by bootstrapping.
+        """
+        self._order = order
+        super().__init__(adjacency_matrices, total_effects)
+
+    def get_paths(self, from_index, to_index, from_lag=0, to_lag=0, min_causal_effect=None):
+        """Get all paths from the start variable to the end variable and their bootstrap probabilities.
+
+        Parameters
+        ----------
+        from_index : int
+            Index of the variable at the start of the path.
+        to_index : int
+            Index of the variable at the end of the path.
+        from_lag : int
+            Number of lag at the start of the path.
+            ``from_lag`` should be greater than or equal to ``to_lag``.
+        to_lag : int
+            Number of lag at the end of the path.
+            ``from_lag`` should be greater than or equal to ``to_lag``.
+        min_causal_effect : float, optional (default=None)
+            Threshold for detecting causal direction.
+            Causal directions with absolute values of causal effects less than ``min_causal_effect`` are excluded.
+
+        Returns
+        -------
+        paths : dict
+            List of path and bootstrap probability.
+            The dictionary has the following format::
+
+            {'path': [n_paths], 'effect': [n_paths], 'probability': [n_paths]}
+
+            where ``n_paths`` is the number of paths.
+        """
+        # check parameters
+        if min_causal_effect is None:
+            min_causal_effect = 0.0
+        else:
+            if not 0.0 < min_causal_effect:
+                raise ValueError("min_causal_effect must be an value greater than 0.")
+        if to_lag > from_lag:
+            raise ValueError("from_lag should be greater than or equal to to_lag.")
+        if to_lag == from_lag:
+            if to_index == from_index:
+                raise ValueError("The same variable is specified for from and to.")
+
+        # Find all paths from from_index to to_index
+        paths_list = []
+        effects_list = []
+        for am in self._adjacency_matrices:
+            n_features = am.shape[0]
+            expansion_m_size = n_features * (self._order[0] + 1)
+            expansion_m = np.zeros((expansion_m_size, expansion_m_size))
+            n_lags = int(expansion_m_size / n_features) - 1
+            for i in range(n_lags + 1):
+                for j in range(i, n_lags + 1):
+                    row = n_features * i
+                    col = n_features * j
+                    lag = col - row
+                    expansion_m[row:row + n_features, col:col + n_features] = am[0:n_features, lag:lag + n_features]
+            paths, effects = find_all_paths(expansion_m,
+                                            int(n_features * from_lag + from_index),
+                                            int(n_features * to_lag + to_index),
+                                            min_causal_effect)
+
+            # Convert path to string to make them easier to handle.
+            paths_list.extend(["_".join(map(str, p)) for p in paths])
+            effects_list.extend(effects)
+
+        paths_list = np.array(paths_list)
+        effects_list = np.array(effects_list)
+
+        # Count paths
+        paths_str, counts = np.unique(paths_list, axis=0, return_counts=True)
+
+        # Sort by count
+        order = np.argsort(-counts)
+        probs = counts[order] / len(self._adjacency_matrices)
+        paths_str = paths_str[order]
+
+        # Calculate median of causal effect for each path
+        effects = [
+            np.median(effects_list[np.where(paths_list == p)]) for p in paths_str
+        ]
+
+        result = {
+            "path": [[int(i) for i in p.split("_")] for p in paths_str],
+            "effect": effects,
+            "probability": probs.tolist(),
+        }
+        return result

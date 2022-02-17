@@ -8,16 +8,27 @@ from .bottom_up_parce_lingam import BottomUpParceLiNGAM
 from .causal_effect import CausalEffect
 from .direct_lingam import DirectLiNGAM
 from .ica_lingam import ICALiNGAM
-from .longitudinal_lingam import LongitudinalLiNGAM
+from .longitudinal_lingam import LongitudinalLiNGAM, LongitudinalBootstrapResult
 from .multi_group_direct_lingam import MultiGroupDirectLiNGAM
 from .rcd import RCD
-from .var_lingam import VARLiNGAM
-from .varma_lingam import VARMALiNGAM
+from .var_lingam import VARLiNGAM, VARBootstrapResult
+from .varma_lingam import VARMALiNGAM, VARMABootstrapResult
 from .lina import LiNA
 from .lina import MDLiNA
+__all__ = [
+    "ICALiNGAM",
+    "DirectLiNGAM",
+    "BootstrapResult",
+    "MultiGroupDirectLiNGAM",
+    "CausalEffect",
+    "VARLiNGAM",
+    "VARMALiNGAM",
+    "LongitudinalLiNGAM",
+    "VARBootstrapResult",
+    "VARMABootstrapResult",
+    "LongitudinalBootstrapResult",
+    "BottomUpParceLiNGAM",
+    "RCD",
+]
 
-__all__ = ['ICALiNGAM', 'DirectLiNGAM', 'BootstrapResult', 'MultiGroupDirectLiNGAM',
-           'CausalEffect', 'VARLiNGAM', 'VARMALiNGAM', 'LongitudinalLiNGAM', 'LongitudinalBootstrapResult',
-           'BottomUpParceLiNGAM', 'RCD', 'TimeseriesBootstrapResult', 'LiNA', 'MDLiNA']
-
-__version__ = '1.5.4'
+__version__ = "1.5.5"

@@ -146,9 +146,7 @@ class BottomUpParceLiNGAM:
         check_pairs = np.concatenate([path_pairs, no_path_pairs[:, [1, 0]]])
         if len(check_pairs) == 0:
             # If no pairs are extracted from the specified prior knowledge,
-            # discard the prior knowledge.
-            self._Aknw = None
-            return None
+            return check_pairs
 
         pairs = np.unique(check_pairs, axis=0)
         return pairs[:, [1, 0]]  # [to, from] -> [from, to]
@@ -160,8 +158,11 @@ class BottomUpParceLiNGAM:
             return U
 
         # Candidate features that are not to the left of the partial orders
-        Uc = [i for i in U if i not in self._partial_orders[:, 0]]
-        return Uc
+        if len(self._partial_orders) != 0:
+            Uc = [i for i in U if i not in self._partial_orders[:, 0]]
+            return Uc
+
+        return U
 
     def _search_causal_order(self, X, thresh_p):
         """Search causal orders one by one from the bottom upward."""
