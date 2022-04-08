@@ -2,6 +2,18 @@
 DirectLiNGAM
 ============
 
+Model
+-------------------
+DirectLiNGAM (Shimizu et al., 2011, J. Machine Learning Research) is a direct method for estimating the basic LiNGAM (Linear Non-Gaussian Acyclic Model) model DirectLiNGAM (Shimizu et al., 2006, J. Machine Learning Research). 
+The basic LiNGAM model is a linear structural causal model and makes the following assumptions: 
+
+#. Linearity
+#. Non-Gaussian continous error variables except at most one Gaussian error
+#. Acyclicity
+#. No hidden common causes
+
+Application examples of the model are found at https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods
+
 Import and settings
 -------------------
 
