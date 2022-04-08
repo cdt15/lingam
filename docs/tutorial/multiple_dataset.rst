@@ -2,6 +2,30 @@
 MultiGroupDirectLiNGAM
 ======================
 
+Model
+-------------------
+This algorithm simultaneously analyzes multiple datasets obtained from different sources, e.g., from groups of different ages.  
+The algorithm is an extention of DirectLiNGAM [1]_ to multiple-group cases.
+The algorithm assumes that each dataset comes from a basic LiNGAM model, i.e., makes the following assumptions in each dataset:
+#. Linearity
+#. Non-Gaussian continuous error variables (except at most one)
+#. Acyclicity
+#. No hidden common causes
+
+Further, it assumes the topological causal orders are common to the groups. 
+The similarity in the topological causal orders would give a better performance than analyzing each dataset separatly if the assumption on the causal orders are reasonable. 
+
+References
+
+    .. [1] S. Shimizu, T. Inazumi, Y. Sogawa, A. Hyvärinen, Y. Kawahara, T. Washio, P. O. Hoyer and K. Bollen. 
+        DirectLiNGAM: A direct method for learning a linear non-Gaussian structural equation model. 
+        Journal of Machine Learning Research, 12(Apr): 1225–1248, 2011.
+    .. [2] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
+       A linear non-gaussian acyclic model for causal discovery.
+       Journal of Machine Learning Research, 7:2003-2030, 2006.
+    .. [3] S. Shimizu. Joint estimation of linear non-Gaussian acyclic models. 
+        Neurocomputing, 81: 104-107, 2012.
+
 Import and settings
 -------------------
 
