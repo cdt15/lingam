@@ -1,5 +1,15 @@
-Causal Effect
+Causal Effect on predicted variables
 =============
+
+The following demonstrates a method [1]_ that analyzes the prediction mechanisms of constructed predictive models based on causality.
+This method estimates causal effects, i.e., intervention effects of features or explnatory variables used in constructed predictive models on the predicted variables. 
+Users can use estimated causal structures, e.g., by a LiNGAM-type method or known causal structures based on domain knowledge. 
+
+References
+
+    .. [1] P. Blöbaum and S. Shimizu. Estimation of interventional effects of features on prediction. 
+    In Proc. 2017 IEEE International Workshop on Machine Learning for Signal Processing (MLSP2017), pp. 1--6, Tokyo, Japan, 2017.
+
 
 First, we use lingam package:
 
