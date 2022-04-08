@@ -4,9 +4,9 @@ MultiGroupDirectLiNGAM
 
 Model
 -------------------
-This algorithm simultaneously analyzes multiple datasets obtained from different sources, e.g., from groups of different ages.  
+This algorithm [3]_ simultaneously analyzes multiple datasets obtained from different sources, e.g., from groups of different ages.  
 The algorithm is an extention of DirectLiNGAM [1]_ to multiple-group cases.
-The algorithm assumes that each dataset comes from a basic LiNGAM model, i.e., makes the following assumptions in each dataset:
+The algorithm assumes that each dataset comes from a basic LiNGAM model [2]_, i.e., makes the following assumptions in each dataset:
 #. Linearity
 #. Non-Gaussian continuous error variables (except at most one)
 #. Acyclicity
