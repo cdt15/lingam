@@ -4,16 +4,33 @@ DirectLiNGAM
 
 Model
 -------------------
-DirectLiNGAM (Shimizu et al., 2011, J. Machine Learning Research) is a direct method for estimating the basic LiNGAM (Linear Non-Gaussian Acyclic Model) model DirectLiNGAM (Shimizu et al., 2006, J. Machine Learning Research). 
-The basic LiNGAM model is a linear structural causal model and makes the following assumptions: 
+DirectLiNGAM [1]_ is a direct method for learning the basic LiNGAM model [2]_. 
+It uses an entropy-based measure [3]_ to evaluate independence between error variables. 
+The basic LiNGAM model makes the following assumptions. 
 
 #. Linearity
-#. Non-Gaussian continous error variables except at most one Gaussian error
+#. Non-Gaussian continuous error variables (except at most one)
 #. Acyclicity
 #. No hidden common causes
 
-Application examples of the model are found at https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods
+Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__. 
+For example, [4]_ uses the basic LiNGAM model to infer causal relations of health indice including LDL, HDL, and γGT. 
 
+References
+
+    .. [1] S. Shimizu, T. Inazumi, Y. Sogawa, A. Hyvärinen, Y. Kawahara, T. Washio, P. O. Hoyer and K. Bollen. 
+        DirectLiNGAM: A direct method for learning a linear non-Gaussian structural equation model. 
+        Journal of Machine Learning Research, 12(Apr): 1225–1248, 2011.
+    .. [2] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
+       A linear non-gaussian acyclic model for causal discovery.
+       Journal of Machine Learning Research, 7:2003-2030, 2006.
+    .. [3] A. Hyvärinen and S. M. Smith. 
+       Pairwise likelihood ratios for estimation of non-Gaussian structural eauation models. 
+       Journal of Machine Learning Research 14:111-152, 2013.
+    .. [4] J. Kotoku , A. Oyama, K. Kitazumi, H. Toki, A. Haga, R. Yamamoto, M. Shinzawa, M. Yamakawa, S. Fukui, K. Yamamoto, T. Moriyama. 
+    Causal relations of health indices inferred statistically using the DirectLiNGAM algorithm from big data of Osaka prefecture health checkups. 
+    PLoS ONE,15(12): e0243229, 2020.
+    
 Import and settings
 -------------------
 

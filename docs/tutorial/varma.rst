@@ -2,6 +2,32 @@
 VARMALiNGAM
 ===========
 
+Model
+-------------------
+VARMALiNGAM [3]_ is an extension of the basic LiNGAM model [1]_ to time series cases. 
+It combines the basic LiNGAM model with the classic vector autoregressive moving average models (VARMA). 
+It enables analyzing both lagged and contemporaneous (instantaneous) causal relations, whereas the classic VARMA only analyzes lagged causal relations. 
+This VARMALiNGAM model also is an extension of the VARLiNGAM model [2]_. 
+It uses VARMA to analyze lagged causal relations instead of VAR. 
+This VARMALiNGAM makes the following assumptions similarly to the basic LiNGAM model [1]_:
+#. Linearity
+#. Non-Gaussian continuous error variables (except at most one)
+#. Acyclicity of contemporaneous causal relations
+#. No hidden common causes between contempraneous error variables
+
+References
+
+    .. [1] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
+       A linear non-gaussian acyclic model for causal discovery.
+       Journal of Machine Learning Research, 7:2003-2030, 2006.
+    .. [2] A. Hyvärinen, K. Zhang, S. Shimizu, and P. O. Hoyer. 
+        Estimation of a structural vector autoregression model using non-Gaussianity. 
+        Journal of Machine Learning Research, 11: 1709-1731, 2010.
+    .. [3] Y. Kawahara, S. Shimizu and T. Washio. 
+        Analyzing relationships among ARMA processes based on non-Gaussianity of external influences. 
+        Neurocomputing, 74(12-13): 2212-2221, 2011. [PDF]
+
+
 Import and settings
 -------------------
 

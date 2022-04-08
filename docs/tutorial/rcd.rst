@@ -2,6 +2,30 @@
 RCD
 ===
 
+Model
+-------------------
+This method RCD (Repetitive Causal Discovery) assumes an extension of the basic LiNGAM model [1]_ to hidden common cause cases, i.e., the latent variable LiNGAM model [2]_.
+Similarly to the basic LiNGAM model [1]_, this method makes the following assumptions:
+
+#. Linearity
+#. Non-Gaussian continuous error variables (except at most one)
+#. Acyclicity
+
+However, RCD allows the existence of hidden common causes. 
+It outputs a causal graph where a bi-directed arc indicates the pair of variables that have the same hidden common causes, and a directed arrow indicates the causal direction of a pair of variables that are not affected by the same hidden common causes. 
+
+References
+
+    .. [1] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
+       A linear non-gaussian acyclic model for causal discovery.
+       Journal of Machine Learning Research, 7:2003-2030, 2006.
+    .. [2] P. O. Hoyer, S. Shimizu, A. Kerminen, and M. Palviainen. 
+      Estimation of causal effects using linear non-gaussian causal models with hidden variables. 
+      International Journal of Approximate Reasoning, 49(2): 362-378, 2008.
+    .. [3] T. N. Maeda and S. Shimizu. RCD: Repetitive causal discovery of linear non-Gaussian acyclic models with latent confounders. 
+    In Proc. 23rd International Conference on Artificial Intelligence and Statistics (AISTATS2020), Palermo, Sicily, Italy. PMLR 108:735-745, 2020.
+
+
 Import and settings
 -------------------
 
