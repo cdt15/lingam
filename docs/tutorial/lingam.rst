@@ -5,7 +5,7 @@ DirectLiNGAM
 Model
 -------------------
 DirectLiNGAM [1]_ is a direct method for learning the basic LiNGAM model [2]_. 
-It uses the entropy-based measure [3]_ to evaluate independence. 
+It uses an entropy-based measure [3]_ to evaluate independence between error variables. 
 The basic LiNGAM model makes the following assumptions. 
 
 #. Linearity
