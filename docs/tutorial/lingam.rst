@@ -4,16 +4,27 @@ DirectLiNGAM
 
 Model
 -------------------
-DirectLiNGAM is a direct method [1]_ for learning the basic LiNGAM model [2]_.
+DirectLiNGAM [1]_ is a direct method for learning the basic LiNGAM model [2]_. 
+It uses the entropy-based measure [3]_ to evaluate independence. 
+The basic LiNGAM model makes the following assumptions. 
+
+#. Linearity
+#. Non-Gaussian continuous error variables (except at most one)
+#. Acyclicity
+#. No hidden common causes
+#. No hidden common causes
 
 References
-----------
+
     .. [1] S. Shimizu, T. Inazumi, Y. Sogawa, A. Hyvärinen, Y. Kawahara, T. Washio, P. O. Hoyer and K. Bollen. 
         DirectLiNGAM: A direct method for learning a linear non-Gaussian structural equation model. 
         Journal of Machine Learning Research, 12(Apr): 1225–1248, 2011.
     .. [2] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
        A linear non-gaussian acyclic model for causal discovery.
        Journal of Machine Learning Research, 7:2003-2030, 2006.
+    .. [3] A. Hyvärinen and S. M. Smith. 
+       Pairwise likelihood ratios for estimation of non-Gaussian structural eauation models. 
+       Journal of Machine Learning Research 14:111-152, 2013.
 
 
 Import and settings
