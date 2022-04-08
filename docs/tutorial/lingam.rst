@@ -12,7 +12,9 @@ The basic LiNGAM model makes the following assumptions.
 #. Non-Gaussian continuous error variables (except at most one)
 #. Acyclicity
 #. No hidden common causes
-#. No hidden common causes
+
+Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__. 
+For example, [4]_ uses the basic LiNGAM model to infer causal relations of health indice including LDL, HDL, and γGT. 
 
 References
 
@@ -25,6 +27,9 @@ References
     .. [3] A. Hyvärinen and S. M. Smith. 
        Pairwise likelihood ratios for estimation of non-Gaussian structural eauation models. 
        Journal of Machine Learning Research 14:111-152, 2013.
+    .. [4] J. Kotoku , A. Oyama, K. Kitazumi, H. Toki, A. Haga, R. Yamamoto, M. Shinzawa, M. Yamakawa, S. Fukui, K. Yamamoto, T. Moriyama. 
+    Causal relations of health indices inferred statistically using the DirectLiNGAM algorithm from big data of Osaka prefecture health checkups. 
+    PLoS ONE,15(12): e0243229, 2020.
 
 
 Import and settings
