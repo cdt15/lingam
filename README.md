@@ -63,7 +63,7 @@ For guidelines how to contribute to lingam package, take a look at [CONTRIBUTING
 
 ## References
 
-### Basic
+### Basic DAG model
 
 Should you use this package for performing **ICA-based LiNGAM algorithm**, we kindly request you to cite the following paper:
 

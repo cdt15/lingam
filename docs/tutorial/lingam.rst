@@ -4,6 +4,7 @@ DirectLiNGAM
 
 Model
 -------------------
+
 DirectLiNGAM [1]_ is a direct method for learning the basic LiNGAM model [2]_. 
 It uses an entropy-based measure [3]_ to evaluate independence between error variables. 
 The basic LiNGAM model makes the following assumptions. 
@@ -30,7 +31,7 @@ References
     .. [4] J. Kotoku , A. Oyama, K. Kitazumi, H. Toki, A. Haga, R. Yamamoto, M. Shinzawa, M. Yamakawa, S. Fukui, K. Yamamoto, T. Moriyama. 
     Causal relations of health indices inferred statistically using the DirectLiNGAM algorithm from big data of Osaka prefecture health checkups. 
     PLoS ONE,15(12): e0243229, 2020.
-    
+
 Import and settings
 -------------------
 
