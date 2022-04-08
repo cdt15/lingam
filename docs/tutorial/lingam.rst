@@ -4,7 +4,16 @@ DirectLiNGAM
 
 Model
 -------------------
-DirectLiNGAM is a direct method
+DirectLiNGAM is a direct method [1]_ for learning the basic LiNGAM model [2]_.
+
+References
+----------
+    .. [1] S. Shimizu, T. Inazumi, Y. Sogawa, A. Hyvärinen, Y. Kawahara, T. Washio, P. O. Hoyer and K. Bollen. 
+        DirectLiNGAM: A direct method for learning a linear non-Gaussian structural equation model. 
+        Journal of Machine Learning Research, 12(Apr): 1225–1248, 2011.
+    .. [2] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
+       A linear non-gaussian acyclic model for causal discovery.
+       Journal of Machine Learning Research, 7:2003-2030, 2006.
 
 
 Import and settings
