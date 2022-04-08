@@ -93,14 +93,14 @@ Should you use this package for performing **DirectLiNGAM for multiple groups**,
 
 Should you use this package for performing **LiNGAM for longitudinal data**, we kindly request you to cite the following paper:
 
-* K. Kadowaki, S. Shimizu, and T. Washio. **Estimation of causal structures in longitudinal data using non-Gaussianity**. In Proc. 23rd IEEE International Workshop on Machine Learning for Signal Processing (MLSP2013), pp. 1--6, Southampton, United Kingdom, 2013. [[PDF]](https://sites.google.com/site/sshimizu06/Kadowaki13MLSP.pdf?attredirects=0)
+* K. Kadowaki, S. Shimizu, and T. Washio. **Estimation of causal structures in longitudinal data using non-Gaussianity**. In Proc. 23rd IEEE International Workshop on Machine Learning for Signal Processing (MLSP2013), pp. 1--6, Southampton, United Kingdom, 2013. [[PDF]](https://doi.org/10.1109/MLSP.2013.6661912)
 
 
 ### Latent confounders and latent factors
 
 Should you use this package for performing **BottomUpParceLiNGAM** with Algorithm 1 of the paper below except Step 2 for estimating causal orders, we kindly request you to cite the following paper:
 
-* T. Tashiro, S. Shimizu, A. Hyvärinen, T. Washio. **ParceLiNGAM: a causal ordering method robust against latent confounders**. Neural computation, 26(1): 57-83, 2014. [[PDF]](https://sites.google.com/site/sshimizu06/Tashiro13NECO.pdf?attredirects=0)
+* T. Tashiro, S. Shimizu, A. Hyvärinen, T. Washio. **ParceLiNGAM: a causal ordering method robust against latent confounders**. Neural computation, 26(1): 57-83, 2014. [[PDF]](https://ieeexplore.ieee.org/abstract/document/6797648)
 
 Should you use this package for performing **RCD algorithm**, we kindly request you to cite the following paper:
 
@@ -110,4 +110,4 @@ Should you use this package for performing **RCD algorithm**, we kindly request 
 
 Should you use this package for performing **estimation of intervension effects on prediction**, we kindly request you to cite the following paper:
 
-* P. Blöbaum and S. Shimizu. **Estimation of interventional effects of features on prediction**. In Proc. 2017 IEEE International Workshop on Machine Learning for Signal Processing (MLSP2017), pp. 1--6, Tokyo, Japan, 2017. [[PDF]](https://arxiv.org/abs/1709.00776)
+* P. Blöbaum and S. Shimizu. **Estimation of interventional effects of features on prediction**. In Proc. 2017 IEEE International Workshop on Machine Learning for Signal Processing (MLSP2017), pp. 1--6, Tokyo, Japan, 2017. [[PDF]](https://doi.org/10.1109/MLSP.2017.8168175)
