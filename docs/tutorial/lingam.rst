@@ -2,6 +2,9 @@
 DirectLiNGAM
 ============
 
+Model
+-------------------
+
 Import and settings
 -------------------
 
