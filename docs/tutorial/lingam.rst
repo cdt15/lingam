@@ -4,6 +4,7 @@ DirectLiNGAM
 
 Model
 -------------------
+DirectLiNGAM is a direct method
 
 Import and settings
 -------------------
