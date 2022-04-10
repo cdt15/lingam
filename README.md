@@ -16,6 +16,26 @@ LiNGAM is a new method for estimating structural equation models or linear Bayes
 * graphviz
 * statsmodels
 
+* factor_analyzer
+
+* python-igraph
+
+  Note: If any problems when installing the packages, please refer to this [tutorial](https://igraph.org/python/doc/tutorial/install.html#installing-igraph-from-the-python-package-index) for the igraph package and to this [tutorial](https://factor-analyzer.readthedocs.io/en/latest/index.html) for the factor_analyzer package.
+
+  Please make sure that the factor_analyzer package is installed successfully. When employing Confirmatory Factor Analysis to estimate the factor loading matrix $\bar{G}$, for better estimation, we input $G_sign$ as well to help initialization. That is, in *confirmatory_factor_analyzer.py* ,  we set
+
+```
+loading_init = self.model.loadings * G_sign
+```
+
+instead of 
+
+```
+loading_init = self.model.loadings
+```
+
+Then you may run the code successfully. 
+
 ## Installation
 
 To install lingam package, use `pip` as follows:
@@ -105,6 +125,10 @@ Should you use this package for performing **BottomUpParceLiNGAM** with Algorith
 Should you use this package for performing **RCD algorithm**, we kindly request you to cite the following paper:
 
 * T. N. Maeda and S. Shimizu. **RCD: Repetitive causal discovery of linear non-Gaussian acyclic models with latent confounders.** In Proc. 23rd International Conference on Artificial Intelligence and Statistics (AISTATS2020), Palermo, Sicily, Italy. PMLR  108:735-745, 2020. [[PDF]](http://proceedings.mlr.press/v108/maeda20a.html)
+
+Should you use this package for performing **LiNA algorithm**, we kindly request you to cite the following paper:
+
+* Y. Zeng, S. Shimizu, R. Cai, F. Xie, M. Yamamoto and Z. Hao. **Causal Discovery with Multi-Domain LiNGAM for Latent Factors**. In Proc. of the Thirtieth International Joint Conference on Artificial Intelligence (IJCAI-21), 2021: 2097--2103. [[PDF](https://www.ijcai.org/proceedings/2021/289)]
 
 ### Causality and prediction
 

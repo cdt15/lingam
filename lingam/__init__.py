@@ -13,7 +13,8 @@ from .multi_group_direct_lingam import MultiGroupDirectLiNGAM
 from .rcd import RCD
 from .var_lingam import VARLiNGAM, VARBootstrapResult
 from .varma_lingam import VARMALiNGAM, VARMABootstrapResult
-
+from .lina import LiNA
+from .lina import MDLiNA
 __all__ = [
     "ICALiNGAM",
     "DirectLiNGAM",
