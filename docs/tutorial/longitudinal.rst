@@ -2,6 +2,26 @@
 Longitudinal LiNGAM
 ===================
 
+Model
+-------------------
+This method [2]_ performs causal discovery on paired samples based on longitudinal data that collects samples over time. 
+Their algorithm can analyze causal structures, including topological causal orders, that may change over time.
+Similarly to the basic LiNGAM model [1]_, this method makes the following assumptions:
+
+#. Linearity
+#. Non-Gaussian continuous error variables (except at most one)
+#. Acyclicity
+#. No hidden common causes
+
+References
+
+    .. [1] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
+       A linear non-gaussian acyclic model for causal discovery.
+       Journal of Machine Learning Research, 7:2003-2030, 2006.
+    .. [2] K. Kadowaki, S. Shimizu, and T. Washio. Estimation of causal structures in longitudinal data using non-Gaussianity. 
+    In Proc. 23rd IEEE International Workshop on Machine Learning for Signal Processing (MLSP2013), pp. 1--6, Southampton, United Kingdom, 2013.
+
+
 Import and settings
 -------------------
 

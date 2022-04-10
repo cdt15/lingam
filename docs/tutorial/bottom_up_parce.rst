@@ -1,6 +1,38 @@
 BottomUpParceLiNGAM
 ===================
 
+Model
+-------------------
+This method assumes an extension of the basic LiNGAM model [1]_ to hidden common cause cases. 
+Specifically, this implements Algorithm 1 of [3]_ except the Step 2. 
+Similarly to the basic LiNGAM model [1]_, this method makes the following assumptions:
+
+#. Linearity
+#. Non-Gaussian continuous error variables (except at most one)
+#. Acyclicity
+
+However, it allows the following hidden common causes:
+
+#. Only exogenous observed variables may share hidden common causes.
+
+This is a simpler version of the latent variable LiNGAM [2]_ that extends the basic LiNGAM model to hidden common causes. 
+Note that the latent variable LiNGAM [2]_ allows the existence of hidden common causes between any observed variables. 
+However, this kind of causal graph structures are often assumed in the classic structural equation modelling [4]_. 
+
+References
+
+    .. [1] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
+       A linear non-gaussian acyclic model for causal discovery.
+       Journal of Machine Learning Research, 7:2003-2030, 2006.
+    .. [2] P. O. Hoyer, S. Shimizu, A. Kerminen, and M. Palviainen. 
+      Estimation of causal effects using linear non-gaussian causal models with hidden variables. 
+      International Journal of Approximate Reasoning, 49(2): 362-378, 2008.
+    .. [3] T. Tashiro, S. Shimizu, A. Hyvärinen, T. Washio. 
+      ParceLiNGAM: a causal ordering method robust against latent confounders. 
+      Neural computation, 26(1): 57-83, 2014. 
+    .. [4] K. A. Bollen. Structural Equations With Latent Variables, 1984, Wiley.
+
+
 Import and settings
 -------------------
 

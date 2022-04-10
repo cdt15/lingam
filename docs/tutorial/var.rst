@@ -2,6 +2,33 @@
 VARLiNGAM
 =========
 
+Model
+-------------------
+VARLiNGAM [2]_ is an extension of the basic LiNGAM model [1]_ to time series cases. 
+It combines the basic LiNGAM model with the classic vector autoregressive models (VAR). 
+It enables analyzing both lagged and contemporaneous (instantaneous) causal relations, whereas the classic VAR only analyzes lagged causal relations. 
+This VARLiNGAM makes the following assumptions similarly to the basic LiNGAM model [1]_:
+#. Linearity
+#. Non-Gaussian continuous error variables (except at most one)
+#. Acyclicity of contemporaneous causal relations
+#. No hidden common causes
+
+Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__, especially in Section. Economics/Finance/Marketing. 
+For example, [3]_ uses the VARLiNGAM model to to study the processes of firm growth and firm performance using microeconomic data 
+and to analyse the effects of monetary policy using macroeconomic data. 
+
+References
+
+    .. [1] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
+       A linear non-gaussian acyclic model for causal discovery.
+       Journal of Machine Learning Research, 7:2003-2030, 2006.
+    .. [2] A. Hyvärinen, K. Zhang, S. Shimizu, and P. O. Hoyer. 
+        Estimation of a structural vector autoregression model using non-Gaussianity. 
+        Journal of Machine Learning Research, 11: 1709-1731, 2010.
+    .. [3] A. Moneta, D. Entner, P. O. Hoyer and A. Coad. 
+        Causal inference by independent component analysis: Theory and applications. 
+        Oxford Bulletin of Economics and Statistics, 75(5): 705-730, 2013.
+
 Import and settings
 -------------------
 
