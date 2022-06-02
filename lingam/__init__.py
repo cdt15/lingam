@@ -15,6 +15,7 @@ from .var_lingam import VARLiNGAM, VARBootstrapResult
 from .varma_lingam import VARMALiNGAM, VARMABootstrapResult
 from .lina import LiNA
 from .lina import MDLiNA
+from .resit import RESIT
 __all__ = [
     "ICALiNGAM",
     "DirectLiNGAM",
@@ -29,6 +30,7 @@ __all__ = [
     "LongitudinalBootstrapResult",
     "BottomUpParceLiNGAM",
     "RCD",
+    "RESIT",
 ]
 
 __version__ = "1.5.5"

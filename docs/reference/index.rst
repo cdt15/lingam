@@ -20,3 +20,4 @@ API Reference
     causal_effect
     utils
     lina
+    resit
