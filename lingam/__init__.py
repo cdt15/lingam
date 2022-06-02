@@ -30,6 +30,8 @@ __all__ = [
     "LongitudinalBootstrapResult",
     "BottomUpParceLiNGAM",
     "RCD",
+    "LiNA",
+    "MDLiNA",
     "RESIT",
 ]
 

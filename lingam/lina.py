@@ -7,7 +7,6 @@ import numpy as np
 import scipy.optimize as sopt
 from scipy.special import expit as sigmoid
 from factor_analyzer import (ConfirmatoryFactorAnalyzer, ModelSpecificationParser)
-import random
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 import pandas as pd
 
