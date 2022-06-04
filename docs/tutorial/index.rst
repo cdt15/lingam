@@ -29,3 +29,4 @@ Contents:
     rcd
     draw_graph
     lina
+    resit

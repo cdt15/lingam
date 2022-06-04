@@ -108,3 +108,7 @@ venv.bak/
 
 # vi
 *.swp
+
+# docker
+Dockerfile
+.devcontainer/
