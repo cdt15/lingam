@@ -94,6 +94,10 @@ Should you use this package for performing **DirectLiNGAM algorithm**, we kindly
 * S. Shimizu, T. Inazumi, Y. Sogawa, A. Hyvärinen, Y. Kawahara, T. Washio, P. O. Hoyer and K. Bollen. **DirectLiNGAM: A direct method for learning a linear non-Gaussian structural equation model**. *Journal of Machine Learning Research*, 12(Apr): 1225--1248, 2011. [[PDF]](http://www.jmlr.org/papers/volume12/shimizu11a/shimizu11a.pdf)
 * A. Hyvärinen and S. M. Smith. **Pairwise likelihood ratios for estimation of non-Gaussian structural equation models**. *Journal of Machine Learning Research*, 14(Jan): 111--152, 2013. [[PDF]](http://www.jmlr.org/papers/volume14/hyvarinen13a/hyvarinen13a.pdf)
 
+Should you use this package for performing **RESIT algorithm**, we kindly request you to cite the following paper:
+
+* J. Peters, J. M. Mooij, D. Janzing, and B. Schölkopf. **Causal Discovery with Continuous Additive Noise Models**. *Journal of Machine Learning Research*, 15(58): 2009--2053, 2014. [[PDF]](http://www.jmlr.org/papers/volume15/peters14a/peters14a.pdf)
+
 ### Time series
 
 Should you use this package for performing **VAR-LiNGAM**, we kindly request you to cite the following paper:
