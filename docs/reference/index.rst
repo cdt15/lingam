@@ -21,3 +21,4 @@ API Reference
     utils
     lina
     resit
+    lim

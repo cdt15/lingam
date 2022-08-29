@@ -30,3 +30,4 @@ Contents:
     draw_graph
     lina
     resit
+    lim

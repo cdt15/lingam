@@ -26,8 +26,13 @@ __all__ = [
     "simulate_dag",
     "simulate_parameter",
     "simulate_linear_sem",
+    "simulate_linear_mixed_sem",
+    "is_dag",
     "count_accuracy",
     "set_random_seed",
+    "likelihood_i",
+    "log_p_super_gaussian",
+    "variance_i"
 ]
 
 
@@ -146,6 +151,112 @@ def simulate_linear_sem(adjacency_matrix, n_samples, sem_type, noise_scale=1.0):
         parents = G.neighbors(j, mode=ig.IN)
         X[:, j] = _simulate_single_equation(X[:, parents], adjacency_matrix[parents, j])
     return X
+
+
+def simulate_linear_mixed_sem(adjacency_matrix, n_samples, sem_type, dis_con, noise_scale=None):
+    """Simulate mixed samples from linear SEM with specified type of noise.
+
+    Parameters
+    ----------
+    adjacency_matrix : array-like, shape (n_features, n_features)
+        Weighted adjacency matrix of DAG, where ``n_features``
+        is the number of variables.
+    n_samples : int
+        Number of samples. n_samples=inf mimics population risk.
+    sem_type : str
+        SEM type. gauss, mixed_random_i_dis.
+    dis_con : array-like, shape (1, n_features)
+        Indicator of discrete/continuous variables, where "1"
+        indicates a continuous variable, while "0" a discrete
+        variable.
+    noise_scale : float
+        scale parameter of additive noise.
+
+    Returns
+    -------
+    X : array-like, shape (n_samples, n_features)
+        Data generated from linear SEM with specified type of noise,
+        where ``n_features`` is the number of variables.
+    """
+    def _simulate_single_equation(X, w, scale, dis_con_j):
+        """Simulate samples from a single equation.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features_parents)
+            Data of parents for a specified variable, where
+            n_features_parents is the number of parents.
+        w : array-like, shape (1, n_features_parents)
+            Weights of parents.
+        scale : scale parameter of additive noise.
+        dis_con_j : indicator of the j^th variable.
+
+        Returns
+        -------
+        x : array-like, shape (n_samples, 1)
+                    Data for the specified variable.
+        """
+        if sem_type == 'gauss':
+            z = np.random.normal(scale=scale, size=n_samples)
+            x = X @ w + z
+        elif sem_type == 'mixed_random_i_dis':
+            # randomly generated with fixed number of discrete variables.
+            if dis_con_j:  # 1:continuous;   0:discrete
+                z = np.random.laplace(0,scale=scale, size=n_samples)
+                x = X @ w + z
+            else:
+                x = np.random.binomial(1, sigmoid(X @ w)) * 1.0
+        else:
+            raise ValueError('unknown sem type')
+        return x
+
+    n_features = adjacency_matrix.shape[0]
+    if noise_scale is None:
+        scale_vec = np.ones(n_features)
+    elif np.isscalar(noise_scale):
+        scale_vec = noise_scale * np.ones(n_features)
+    else:
+        if len(noise_scale) != n_features:
+            raise ValueError('noise scale must be a scalar or has length n_features')
+        scale_vec = noise_scale
+    if not is_dag(adjacency_matrix):
+        raise ValueError('adjacency_matrix must be a DAG')
+    if np.isinf(n_samples):  # population risk for linear gauss SEM
+        if sem_type == 'gauss':
+            # make 1/n_features X'X = true cov
+            X = np.sqrt(n_features) * np.diag(scale_vec) @ np.linalg.inv(np.eye(n_features) - adjacency_matrix)
+            return X
+        else:
+            raise ValueError('population risk not available')
+    # empirical risk
+    G = ig.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
+    ordered_vertices = G.topological_sorting()
+    assert len(ordered_vertices) == n_features
+    X = np.zeros([n_samples, n_features])
+    for j in ordered_vertices:
+        parents = G.neighbors(j, mode=ig.IN)
+        # X[:, j] = _simulate_single_equation(X[:, parents], adjacency_matrix[parents, j], scale_vec[j])
+        X[:, j] = _simulate_single_equation(X[:, parents], adjacency_matrix[parents, j], scale_vec[j], dis_con[0, j])
+    return X
+
+
+def is_dag(W):
+    """Check if W is a dag or not.
+
+    Parameters
+    ----------
+    W : array-like, shape (n_features, n_features)
+        Binary adjacency matrix of DAG, where ``n_features``
+        is the number of features.
+
+    Returns
+    -------
+     G: boolean
+        Returns true or false.
+
+    """
+    G = ig.Graph.Weighted_Adjacency(W.tolist())
+    return G.is_dag()
 
 
 def count_accuracy(W_true, W, W_und=None):
@@ -666,3 +777,80 @@ def find_all_paths(dag, from_index, to_index, min_causal_effect=0.0):
         effects.append(np.cumprod(coefs)[-1])
 
     return paths, effects
+
+
+def likelihood_i(x, i, b_i, bi_0):
+    """Compute local log-likelihood of component i.
+
+    Parameters
+    ----------
+    x : array-like, shape (n_features, n_samples)
+        Data, where ``n_samples`` is the number of samples
+        and ``n_features`` is the number of features.
+    i : array-like
+        Variable index.
+    b_i : array-like
+        The i^th column of adjacency matrix, B[i].
+    bi_0 : float
+        Constant value for the i^th variable.
+
+    Return
+    -------
+    ll : float
+        Local log-likelihood of component i.
+    """
+
+    sample_size = x.shape[1]  # number of data points
+    var_i = variance_i(x, i, b_i)
+    #
+    ll = 0.0
+    ll += np.sum(log_p_super_gaussian((x[i] - np.dot(b_i, x) - bi_0) / np.sqrt(var_i)))
+
+    ll -= sample_size * np.log(np.sqrt(var_i))
+
+    return ll
+
+
+def log_p_super_gaussian(s):
+    """Compute density function of the normalized independent components.
+
+    Parameters
+    ----------
+    s : array-like, shape (1, n_samples)
+        Data, where ``n_samples`` is the number of samples.
+
+    Return
+    -------
+    x : float
+        Density function of the normalized independent components,
+        whose disturbances are super-Gaussian.
+    """
+    const = -0.35  # normalising constant
+    return -np.sqrt(2.0) * np.absolute(s) + const
+
+
+
+def variance_i(X, i, b_i):
+    """Compute empirical variance of component i.
+
+    Parameters
+    ----------
+    x : array-like, shape (n_features, n_samples)
+        Data, where ``n_samples`` is the number of samples
+        and ``n_features`` is the number of features.
+    i : array-like
+        Variable index.
+    b_i : array-like
+        The i^th column of adjacency matrix, B[i].
+
+    Return
+    -------
+    variance : float
+        Empirical variance of component i.
+    """
+    # T = X.shape[1]  # sample size
+    estimated_disturbance = (X[i] - np.dot(b_i, X))
+    # variance = np.sum(estimated_disturbance ** 2) / T  # JMLR paper assumes zero mean
+    variance = np.var(estimated_disturbance)  # stable version, even not zero mean.
+
+    return variance

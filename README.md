@@ -10,31 +10,42 @@ LiNGAM is a new method for estimating structural equation models or linear Bayes
 ## Requirements
 
 * Python3
-* numpy
-* scipy
-* scikit-learn
-* graphviz
-* statsmodels
 
-* factor_analyzer
+* numpy
+
+* scipy
+
+* scikit-learn
+
+* graphviz
+
+* statsmodels
 
 * python-igraph
 
   Note: If any problems when installing the packages, please refer to this [tutorial](https://igraph.org/python/doc/tutorial/install.html#installing-igraph-from-the-python-package-index) for the igraph package and to this [tutorial](https://factor-analyzer.readthedocs.io/en/latest/index.html) for the factor_analyzer package.
 
-  Please make sure that the factor_analyzer package is installed successfully. When employing Confirmatory Factor Analysis to estimate the factor loading matrix $\bar{G}$, for better estimation, we input $G_sign$ as well to help initialization. That is, in *confirmatory_factor_analyzer.py* ,  we set
+- networkx
+
+- pandas
+
+- itertools
+
+- factor_analyzer
+
+  For LiNA and MDLiNA methods, please make sure that the factor_analyzer package is installed successfully. When employing Confirmatory Factor Analysis to estimate the factor loading matrix $\bar{G}$, for better estimation, we input $G_sign$ as well to help initialization. That is, in *confirmatory_factor_analyzer.py* ,  we set
 
 ```
 loading_init = self.model.loadings * G_sign
 ```
 
-instead of 
+​		instead of 
 
 ```
 loading_init = self.model.loadings
 ```
 
-Then you may run the code successfully. 
+​		Then you may run the code successfully. 
 
 ## Installation
 
@@ -139,3 +150,12 @@ Should you use this package for performing **LiNA algorithm**, we kindly request
 Should you use this package for performing **estimation of intervension effects on prediction**, we kindly request you to cite the following paper:
 
 * P. Blöbaum and S. Shimizu. **Estimation of interventional effects of features on prediction**. In Proc. 2017 IEEE International Workshop on Machine Learning for Signal Processing (MLSP2017), pp. 1--6, Tokyo, Japan, 2017. [[PDF]](https://doi.org/10.1109/MLSP.2017.8168175)
+
+### Mixed data
+
+Should you use this package for performing **LiM algorithm**, we kindly request you to cite the following paper:
+
+* Zeng Y, Shimizu S, Matsui H, et al. **Causal discovery for linear mixed data**[C]//Conference on Causal Learning and Reasoning. PMLR, 2022: 994-1009. [[PDF]](https://proceedings.mlr.press/v177/zeng22a.html)
+
+  
+

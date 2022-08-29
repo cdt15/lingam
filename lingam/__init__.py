@@ -16,6 +16,7 @@ from .varma_lingam import VARMALiNGAM, VARMABootstrapResult
 from .lina import LiNA
 from .lina import MDLiNA
 from .resit import RESIT
+from .lim import LiM
 __all__ = [
     "ICALiNGAM",
     "DirectLiNGAM",
@@ -33,6 +34,7 @@ __all__ = [
     "LiNA",
     "MDLiNA",
     "RESIT",
+    "LiM"
 ]
 
 __version__ = "1.6.0"
