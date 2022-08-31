@@ -7,4 +7,3 @@ factor_analyzer
 igraph
 networkx
 pandas
-itertools
