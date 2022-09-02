@@ -17,10 +17,9 @@ This method makes the following assumptions.
 
 References
 
-    .. [1] * Y. Zeng, S. Shimizu, H. Matsui, F. Sun. 
-        Causal discovery for linear mixed data. 
-        In Proc. First Conference on Causal Learning and Reasoning (CLeaR2022). PMLR 177, pp. 994-1009, 2022.  
-
+    .. [1] Y. Zeng, S. Shimizu, H. Matsui, F. Sun. 
+       Causal discovery for linear mixed data. 
+       In Proc. First Conference on Causal Learning and Reasoning (CLeaR2022). PMLR 177, pp. 994-1009, 2022.  
 
 Import and settings
 -------------------

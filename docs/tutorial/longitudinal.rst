@@ -19,7 +19,7 @@ References
        A linear non-gaussian acyclic model for causal discovery.
        Journal of Machine Learning Research, 7:2003-2030, 2006.
     .. [2] K. Kadowaki, S. Shimizu, and T. Washio. Estimation of causal structures in longitudinal data using non-Gaussianity. 
-    In Proc. 23rd IEEE International Workshop on Machine Learning for Signal Processing (MLSP2013), pp. 1--6, Southampton, United Kingdom, 2013.
+       In Proc. 23rd IEEE International Workshop on Machine Learning for Signal Processing (MLSP2013), pp. 1--6, Southampton, United Kingdom, 2013.
 
 
 Import and settings
