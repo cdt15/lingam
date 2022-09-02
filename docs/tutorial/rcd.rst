@@ -23,7 +23,7 @@ References
       Estimation of causal effects using linear non-gaussian causal models with hidden variables. 
       International Journal of Approximate Reasoning, 49(2): 362-378, 2008.
     .. [3] T. N. Maeda and S. Shimizu. RCD: Repetitive causal discovery of linear non-Gaussian acyclic models with latent confounders. 
-    In Proc. 23rd International Conference on Artificial Intelligence and Statistics (AISTATS2020), Palermo, Sicily, Italy. PMLR 108:735-745, 2020.
+      In Proc. 23rd International Conference on Artificial Intelligence and Statistics (AISTATS2020), Palermo, Sicily, Italy. PMLR 108:735-745, 2020.
 
 
 Import and settings
