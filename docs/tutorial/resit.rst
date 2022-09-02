@@ -1,6 +1,28 @@
 RESIT
 =====
 
+Model
+-------------------
+RESIT [2]_ is an estimation algorithm for Additive Noise Model [1]_. 
+
+This method makes the following assumptions. 
+
+#. Continouos variables
+#. Nonlinearity
+#. Additive noise
+#. Acyclicity
+#. No hidden common causes
+
+References
+
+    .. [1] P. O. Hoyer, D. Janzing, J. M. Mooij, and J. Peters. and B. Schölkopf.
+       Nonlinear causal discovery with additive noise models.
+       Advances in Neural Information Processing Systems 21, pages 689–696. 2009.
+    .. [2] J. Peters, J. M. Mooij, D. Janzing, and B. Schölkopf.
+       Causal discovery with continuous additive noise models
+       Journal of Machine Learning Research, 15: 2009–2053, 2014.
+ 
+
 Import and settings
 -------------------
 
