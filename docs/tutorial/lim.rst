@@ -2,6 +2,26 @@
 LiM
 ========
 
+Model
+-------------------
+Linear Mixed (LiM) causal discovery algorithm [1]_ extends LiNGAM to handle the mixed data that consists of both continuous and discrete variables. 
+The estimation is performed by first globally optimizing the log-likelihood function on the joint distribution of data with the acyclicity constraint, and then applying a local combinatorial search to output a causal graph.
+
+This method makes the following assumptions. 
+
+#. Continous variables and binary variables.
+#. Linearity
+#. Acyclicity
+#. No hidden common causes
+#. Baselines are the same when predicting one binary variable from the other for every pair of binary variables.
+
+References
+
+    .. [1] * Y. Zeng, S. Shimizu, H. Matsui, F. Sun. 
+        Causal discovery for linear mixed data. 
+        In Proc. First Conference on Causal Learning and Reasoning (CLeaR2022). PMLR 177, pp. 994-1009, 2022.  
+
+
 Import and settings
 -------------------
 

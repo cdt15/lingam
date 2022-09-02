@@ -5,7 +5,7 @@ LiNA
 Model
 -------------------
 LiNA [1]_ allows to locate the latent factors as well as uncover the causal structure between such latent factors of interests. 
-Causal structure between latent factors can be ubiquitous in real-world applications, e.g., relations bewteen anxiety, depression, and coping in psychology [1]_ [3]_ , etc.
+Causal structure between latent factors can be ubiquitous in real-world applications, e.g., relations bewteen anxiety, depression, and coping in psychology [2]_ [3]_ , etc.
 
 This method makes the following assumptions. 
 
@@ -18,9 +18,9 @@ This method makes the following assumptions.
 
 References
 
-    .. [1] S. Shimizu, T. Inazumi, Y. Sogawa, A. Hyvärinen, Y. Kawahara, T. Washio, P. O. Hoyer and K. Bollen. 
+    .. [1] Y. Zeng, S. Shimizu, R. Cai, F. Xie, M. Yamamoto, and Z. Hao. 
         Causal discovery with multi-domain LiNGAM for latent factors. 
-        Journal of Machine Learning Research, 12(Apr): 1225–1248, 2011.
+        In Proc. Thirtieth International Joint Conference on Artificial Intelligence (IJCAI-21), 2021.
     .. [2] R. Silva, R. Scheines, C. Glymour, and P. Spirtes.
        Learning the structure of linear latent variable models.
        Journal of Machine Learning Research, 7(2):191-246, 2006.
