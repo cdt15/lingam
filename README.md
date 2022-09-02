@@ -155,7 +155,6 @@ Should you use this package for performing **estimation of intervension effects 
 
 Should you use this package for performing **LiM algorithm**, we kindly request you to cite the following paper:
 
-* Zeng Y, Shimizu S, Matsui H, et al. **Causal discovery for linear mixed data**[C]//Conference on Causal Learning and Reasoning. PMLR, 2022: 994-1009. [[PDF]](https://proceedings.mlr.press/v177/zeng22a.html)
+* Y. Zeng, S. Shimizu, H. Matsui, F. Sun. **Causal discovery for linear mixed data**. In Proc. First Conference on Causal Learning and Reasoning (CLeaR2022). PMLR 177, pp. 994-1009, 2022. [[PDF]](https://proceedings.mlr.press/v177/zeng22a.html)
 
   
-
