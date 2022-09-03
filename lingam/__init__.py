@@ -11,6 +11,7 @@ from .ica_lingam import ICALiNGAM
 from .longitudinal_lingam import LongitudinalLiNGAM, LongitudinalBootstrapResult
 from .multi_group_direct_lingam import MultiGroupDirectLiNGAM
 from .rcd import RCD
+from .camuv import CAMUV
 from .var_lingam import VARLiNGAM, VARBootstrapResult
 from .varma_lingam import VARMALiNGAM, VARMABootstrapResult
 from .lina import LiNA
@@ -31,6 +32,7 @@ __all__ = [
     "LongitudinalBootstrapResult",
     "BottomUpParceLiNGAM",
     "RCD",
+    "CAMUV",
     "LiNA",
     "MDLiNA",
     "RESIT",
