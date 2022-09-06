@@ -7,3 +7,4 @@ factor_analyzer
 igraph
 networkx
 pandas
+pygam
