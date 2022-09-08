@@ -8,7 +8,7 @@ This method RCD (Repetitive Causal Discovery) assumes an extension of the basic 
 Similarly to the basic LiNGAM model [1]_, this method makes the following assumptions:
 
 #. Linearity
-#. Non-Gaussian continuous error variables (except at most one)
+#. Non-Gaussian continuous error variables
 #. Acyclicity
 
 However, RCD allows the existence of hidden common causes. 
