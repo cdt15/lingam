@@ -77,7 +77,7 @@ print(model.adjacency_matrix_)
 
 ## Documentation
 
-[Tutrial and API reference](https://lingam.readthedocs.io/)
+[Tutorial and API reference](https://lingam.readthedocs.io/)
 
 ## Examples
 
@@ -151,7 +151,7 @@ Should you use this package for performing **CAM-UV algorithm**, we kindly reque
 
 ### Causality and prediction
 
-Should you use this package for performing **estimation of intervension effects on prediction**, we kindly request you to cite the following paper:
+Should you use this package for performing **estimation of intervention effects on prediction**, we kindly request you to cite the following paper:
 
 * P. Blöbaum and S. Shimizu. **Estimation of interventional effects of features on prediction**. In Proc. 2017 IEEE International Workshop on Machine Learning for Signal Processing (MLSP2017), pp. 1--6, Tokyo, Japan, 2017. [[PDF]](https://doi.org/10.1109/MLSP.2017.8168175)
 
