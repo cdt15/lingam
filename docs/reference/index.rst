@@ -22,3 +22,4 @@ API Reference
     lina
     resit
     lim
+    camuv
