@@ -31,3 +31,4 @@ Contents:
     lina
     resit
     lim
+    camuv
