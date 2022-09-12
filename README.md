@@ -33,7 +33,7 @@ LiNGAM is a new method for estimating structural equation models or linear Bayes
 
 - factor_analyzer
 
-  For LiNA and MDLiNA methods, please make sure that the factor_analyzer package is installed successfully. When employing Confirmatory Factor Analysis to estimate the factor loading matrix $\bar{G}$, for better estimation, we input $G_sign$ as well to help initialization. That is, in *confirmatory_factor_analyzer.py* ,  we set
+  For LiNA and MDLiNA methods, please make sure that the factor_analyzer package is installed successfully. When employing Confirmatory Factor Analysis to estimate the factor loading matrix $\bar{G}$, for better estimation, we input $G_{sign}$ as well to help initialization. That is, in *confirmatory_factor_analyzer.py* ,  we set
 
 ```
 loading_init = self.model.loadings * G_sign
