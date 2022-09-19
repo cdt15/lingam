@@ -151,13 +151,13 @@ class LongitudinalLiNGAM:
                     for to in self._causal_orders[from_t][c + 1 :]:
                         total_effects[
                             i, to_t * self._p + to, from_t * self._p + from_
-                        ] = self.estimate_total_effect(X_t, from_t, from_, to_t, to)
+                        ] = self.estimate_total_effect(resampled_X_t, from_t, from_, to_t, to)
 
                     for to_t in range(from_t + 1, self._T):
                         for to in self._causal_orders[to_t]:
                             total_effects[
                                 i, to_t * self._p + to, from_t * self._p + from_
-                            ] = self.estimate_total_effect(X_t, from_t, from_, to_t, to)
+                            ] = self.estimate_total_effect(resampled_X_t, from_t, from_, to_t, to)
 
         return LongitudinalBootstrapResult(self._T, adjacency_matrices, total_effects)
 

@@ -505,14 +505,15 @@ class RCD:
         adjacency_matrices = np.zeros([n_sampling, X.shape[1], X.shape[1]])
         total_effects = np.zeros([n_sampling, X.shape[1], X.shape[1]])
         for i in range(n_sampling):
-            self.fit(resample(X, replace=False, n_samples=X.shape[0] - n_sampling))
+            resampled_X = resample(X)
+            self.fit(resampled_X)
             adjacency_matrices[i] = self._adjacency_matrix
 
             # Calculate total effects
             for to, ancestors in enumerate(self._ancestors_list):
                 for from_ in ancestors:
                     total_effects[i, to, from_] = self.estimate_total_effect(
-                        X, from_, to
+                        resampled_X, from_, to
                     )
 
         return BootstrapResult(adjacency_matrices, total_effects)
