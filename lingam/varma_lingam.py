@@ -209,7 +209,7 @@ class VARMALiNGAM:
                 for lag in range(p):
                     for from_ in range(n_features):
                         total_effects[
-                            i, to, from_ + n_features
+                            i, to, from_ + n_features * (lag + 1)
                         ] = self.estimate_total_effect(
                             resampled_X, ee, from_, to, lag + 1
                         )

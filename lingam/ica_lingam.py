@@ -134,11 +134,11 @@ class ICALiNGAM(_BaseLiNGAM):
             matrix[i, j] = 0
 
         for i, j in pos_list[initial_zero_num:]:
-            # set the smallest(in absolute value) element to zero
-            matrix[i, j] = 0
-
             causal_order = self._search_causal_order(matrix)
             if causal_order is not None:
                 break
+            else:
+                # set the smallest(in absolute value) element to zero
+                matrix[i, j] = 0
 
         return causal_order
