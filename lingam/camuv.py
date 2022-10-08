@@ -212,3 +212,15 @@ class CAMUV:
             B[confounded_pair[1], confounded_pair[0]] = np.nan
         self._adjacency_matrix = B
         return self
+
+    @property
+    def adjacency_matrix_(self):
+        """Estimated adjacency matrix.
+
+        Returns
+        -------
+        adjacency_matrix_ : array-like, shape (n_features, n_features)
+            The adjacency matrix B of fitted model, where
+            n_features is the number of features.
+        """
+        return self._adjacency_matrix
