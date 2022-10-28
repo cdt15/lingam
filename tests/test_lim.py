@@ -15,14 +15,12 @@ import numpy as np
 import random
 # import itertools
 # from itertools import product, combinations, permutations, chain
-from lingam import  utils as ut
+from lingam import utils as ut
 import lingam
 
+def generate_data(n_features,n_samples,n_edges):
 
-def test_fit_lina():
-    i = np.random.randint(1000)
-    ut.set_random_seed(i)
-    n_samples, n_features, n_edges, graph_type, sem_type = 1000, 2, 1, 'ER', 'mixed_random_i_dis'
+    graph_type, sem_type = 'ER', 'mixed_random_i_dis'
     B_true = ut.simulate_dag(n_features, n_edges, graph_type)
     W_true = ut.simulate_parameter(B_true)  # row to column
 
@@ -36,8 +34,17 @@ def test_fit_lina():
             dis_con[0, iii] = 0  # 1:continuous;   0:discrete
         else:
             dis_con[0, iii] = 1
-    X = ut.simulate_linear_mixed_sem(W_true, n_samples, sem_type, dis_con)
+    data = ut.simulate_linear_mixed_sem(W_true, n_samples, sem_type, dis_con)
 
+    return  data, dis_con, W_true
+
+
+def test_fit_lina():
+    i = 1
+    ut.set_random_seed(i)
+    n_features, n_samples = 5, 5000
+    n_edges = np.random.randint(4,11)
+    X, dis_con, W_true = generate_data(n_features, n_samples, n_edges)
     model = lingam.LiM()
     model.fit(X, dis_con)
 
