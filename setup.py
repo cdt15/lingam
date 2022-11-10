@@ -4,6 +4,7 @@ with open('README.md', 'r', encoding='utf-8') as fh:
     README = fh.read()
 
 import lingam
+
 VERSION = lingam.__version__
 
 setuptools.setup(
@@ -18,7 +19,12 @@ setuptools.setup(
         'scipy',
         'scikit-learn',
         'graphviz',
-        'statsmodels'
+        'statsmodels',
+        'factor_analyzer',
+        'igraph',
+        'networkx',
+        'pandas',
+        'pygam',
     ],
     url='https://github.com/cdt15/lingam',
     packages=setuptools.find_packages(),
