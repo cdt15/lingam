@@ -15,7 +15,7 @@ Similarly to the basic LiNGAM model [1]_, this method makes the following assump
 
 Denote observed variables and error variables of $m$-the sample at time point $t$ 
 by $x_i^m (t)$ and $e_i^m (t)$. 
-Collect them in vectors $x^m (t)$ and $e^m (t)$, respectivelly from variables . 
+Collect them in vectors $x^m (t)$ and $e^m (t)$, respectivelly from variables. 
 Further, collect them in matrices $X(t)$ and $E(t)$ from samples. 
 Further, denote by $B_{t,\\tau}$ a adjacency matrices with time lag $\\tau$ ( $\\tau = 0, ..., k$ ).
 
