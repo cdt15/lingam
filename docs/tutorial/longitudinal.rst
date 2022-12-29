@@ -15,18 +15,17 @@ Similarly to the basic LiNGAM model [1]_, this method makes the following assump
 
 Denote observed variables and error variables of $m$-the sample at time point $t$ 
 by $x_i^m (t)$ and $e_i^m (t)$. 
-Collect them in vectors $x^m (t)$ and $e^m (t)$, respectivelly. 
-Further, collect them in matrices $X(t)$ and $E(t)$. 
+Collect them in vectors $x^m (t)$ and $e^m (t)$, respectivelly from variables . 
+Further, collect them in matrices $X(t)$ and $E(t)$ from samples. 
+Further, denote by $B_{t,\\tau}$ a adjacency matrices with time lag $\\tau$ ( $\\tau = 0, ..., k$ ).
 
- and coefficients or connection strengths $b_{ij}^{(g)}$ ( $i,j=1, ..., p, g=1, ..., G$ ). 
-Collect them in vectors $x$ and $e^{(g)}$ and a matrix $B^{(g)}$, respectivelly. 
-Due to the assumptions of acyclicity and common topological causal orders, the adjacency matrix $B^{(g)}$ ( $g=1, ..., G$ ) 
+Due to the assumptions of acyclicity, the adjacency matrix $B_{t,t}$ 
 can be permuted to be strictly lower-triangular by a simultaneous row and column permutation common to the groups. 
-The error variables $e_i^{(g)}$ ( $i=1, ..., p$, $g=1, ..., G$ ) are independent due to the assumption of no hidden common causes. 
+The error variables $e_i^m (t)$ are independent due to the assumption of no hidden common causes. 
 
-Then, mathematically, the model for observed variable vector $x^{(g)}$ is written as 
+Then, mathematically, the model for observed variable matrix $X(t)$ is written as 
 
-$$ x^{(g)} = B^{(g)}x^{(g)} + e^{(g)}. $$
+$$ X(t) = \\sum_{ \\tau = 0}^k B_{ t, t-\\tau } X(t - \\tau) + E(t).$$
 
 References
 
