@@ -18,7 +18,7 @@ Denote observed variables by $x_i$ and error variables by $e_i$ ( $i=1, ..., p$ 
 Collect them in vectors $x$ and $e$ and a matrix $B$, respectivelly. 
 
 Then, mathematically, the model for observed variables $x_i$ ( $i=1, ..., p$ ) is written as 
-$$ x = Bx + e. $$
+$x = Bx + e.$
 
 $x_i = \sum_{j \in pa(x_i)} b_{ij} x_j + e_i \hspace{5mm} (i=1, \ldots, p) $
 
