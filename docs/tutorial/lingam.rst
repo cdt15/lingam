@@ -28,7 +28,7 @@ $ \\sum $
 
 $$ \sum $$
 
-$$ \\sum $$
+$$ \\sum_{ \\tau = 1} $$
 
 Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__. 
 For example, [4]_ uses the basic LiNGAM model to infer causal relations of health indice including LDL, HDL, and γGT. 
