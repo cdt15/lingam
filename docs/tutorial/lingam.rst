@@ -14,6 +14,14 @@ The basic LiNGAM model makes the following assumptions.
 #. Acyclicity
 #. No hidden common causes
 
+Mathematically, the model for observed variables $x_i$ $(i=1, \ldots, p)$ is written as 
+\begin{eqnarray}
+x_i = \sum_{j \in \mathrm{pa}(x_i)} b_{ij} x_j + e_i \hspace{5mm} (i=1, \ldots, p), \label{eq:lingam1}
+\end{eqnarray}
+where $\mathrm{pa}(x_i)$ is the set of parents of observed variable $x_i$. 
+The error variables $e_i$ ($i = 1, \ldots, p$) are independent and follow non-Gaussian continuous distributions. 
+This independence between the error variables follows from the assumption that there are no unobserved or hidden common causes.
+
 Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__. 
 For example, [4]_ uses the basic LiNGAM model to infer causal relations of health indice including LDL, HDL, and γGT. 
 
