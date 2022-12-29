@@ -4,7 +4,7 @@ Longitudinal LiNGAM
 
 Model
 -------------------
-This method [2]_ performs causal discovery on paired samples based on longitudinal data that collects samples over time. 
+This method [2]_ performs causal discovery on "paired" samples based on longitudinal data that collects samples over time. 
 Their algorithm can analyze causal structures, including topological causal orders, that may change over time.
 Similarly to the basic LiNGAM model [1]_, this method makes the following assumptions:
 
