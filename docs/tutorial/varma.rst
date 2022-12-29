@@ -24,7 +24,7 @@ The error variables $e_i (t)$ ( $i=1, ..., p$, $t=1,...,T$ ) are independent due
 
 Then, mathematically, the model for observed variable vector $x(t)$ is written as 
 
-$$ x(t) = \\sum_{ \\tau = 0}^k B_{ \\tau } (t - \\tau ) + e(t) - \\sum_{ \\omega = 1}^{\\ell}.$$
+$$ x(t) = \\sum_{ \\tau = 0}^k B_{ \\tau } (t - \\tau ) + e(t) - \\sum_{ \\omega = 1}^{\\ell} \\Omega_{ \\omega } (t - \\omega ).$$
 
 Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__, especially in Section. Economics/Finance/Marketing. 
 For example, [3]_ uses the VARLiNGAM model to to study the processes of firm growth and firm performance using microeconomic data 
