@@ -13,6 +13,15 @@ This VARLiNGAM makes the following assumptions similarly to the basic LiNGAM mod
 #. Acyclicity of contemporaneous causal relations
 #. No hidden common causes
 
+Denote observed variables at time point $t$ by $x_i (t)$ and error variables by $e_i (t)$ ( $i=1, ..., p$, $t=1,...,T$ ). 
+Collect them in vectors $x(t)$ and $e(t)$ ($t=1,...,T$ ), respectivelly. 
+Further, denote by matrices $B_{\\tau}$ coefficient matrices with time lag $\\tau$$ ( $\\tau = 1, ..., k$ ), respectivelly.
+
+Due to the acyclicity assumption, the coefficient matrix $B$ can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
+The error variables $e_i$ ( $i=1, ..., p$ ) are independent due to the assumption of no hidden common causes. 
+
+Then, mathematically, the model for observed variable vector $x$ is written as 
+
 $$ x(t) = \\sum_{ \\tau = 0}^k B_{ \\tau } (t - \\tau ) + e(t).$$
 
 Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__, especially in Section. Economics/Finance/Marketing. 
