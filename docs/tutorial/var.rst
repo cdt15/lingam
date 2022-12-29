@@ -13,6 +13,8 @@ This VARLiNGAM makes the following assumptions similarly to the basic LiNGAM mod
 #. Acyclicity of contemporaneous causal relations
 #. No hidden common causes
 
+$$ x(t) = \\sum_{ \\tau = 0}^k B_{ \\tau } (t - \\tau ) + e(t).$$
+
 Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__, especially in Section. Economics/Finance/Marketing. 
 For example, [3]_ uses the VARLiNGAM model to to study the processes of firm growth and firm performance using microeconomic data 
 and to analyse the effects of monetary policy using macroeconomic data. 
