@@ -22,8 +22,6 @@ The error variables $e_i$ ( $i=1, ..., p$ ) are independent due to the assumptio
 Then, mathematically, the model for observed variables $x_i$ ( $i=1, ..., p$ ) is written as 
 $x = Bx + e.$
 
-$x_i = \sum_{j \in pa(x_i)} b_{ij} x_j + e_i \hspace{5mm} (i=1, \ldots, p) $
-
 Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__. 
 For example, [4]_ uses the basic LiNGAM model to infer causal relations of health indice including LDL, HDL, and γGT. 
 

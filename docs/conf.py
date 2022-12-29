@@ -46,17 +46,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
     'sphinx.ext.napoleon',
-    'sphinx.ext.mathjax',
 ]
-
-# setting of mathjax
-mathjax_config = {
-    'TeX' : {
-        'Macros': {
-            'bm': ['{\\boldsymbol{#1}}',1],
-        },
-    },
-}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
