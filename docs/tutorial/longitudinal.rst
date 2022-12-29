@@ -15,7 +15,7 @@ Similarly to the basic LiNGAM model [1]_, this method makes the following assump
 
 Denote observed variables and error variables of $i$-the sample at time point $t$ 
 by $x_i^m (t)$ and $e_i^m (t)$. 
-Collect them in vectors $x^m (t) = [x_i^m (t)] $ and $e^m (t) = [e_i^m (t)] $, respectivelly. 
+Collect them in vectors $ x^m (t) = [x_i^m (t)] $ and $ e^m (t) = [e_i^m (t)] $, respectivelly. 
 
 
  and coefficients or connection strengths $b_{ij}^{(g)}$ ( $i,j=1, ..., p, g=1, ..., G$ ). 
