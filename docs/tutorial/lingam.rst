@@ -15,11 +15,10 @@ The basic LiNGAM model makes the following assumptions.
 #. No hidden common causes
 
 Denote observed variables by $x_i$ and error variables by $e_i$ ( $i=1, ..., p$ ) and coefficients or connection strengths $b_{ij}$ ( $i,j=1, ..., p$ ). 
-Collect them in vectors $x$ and $e$ and a matrix $B$. 
+Collect them in vectors $x$ and $e$ and a matrix $B$, respectivelly. 
 
-\\text{some \\textbf{bold} text} 
-
-Mathematically, the model for observed variables $x_i$ ( $i=1, ..., p$ ) is written as 
+Then, mathematically, the model for observed variables $x_i$ ( $i=1, ..., p$ ) is written as 
+$$ x = Bx + e. $$
 
 $x_i = \sum_{j \in pa(x_i)} b_{ij} x_j + e_i \hspace{5mm} (i=1, \ldots, p) $
 
