@@ -17,7 +17,7 @@ Denote observed variables and error variables of $m$-the sample at time point $t
 by $x_i^m (t)$ and $e_i^m (t)$. 
 Collect them from variables in vectors $x^m (t)$ and $e^m (t)$. 
 Further, collect them from samples in matrices $X(t)$ and $E(t)$. 
-Further, denote by $B_{t,\\tau}$ adjacency matrices with time lag $\\tau$ ( $\\tau = 0, ..., k$ ).
+Further, denote by $B(t,\\tau)$ adjacency matrices with time lag $\\tau$ ( $\\tau = 0, ..., k$ ).
 
 Due to the assumptions of acyclicity, the adjacency matrix $B_{t,t}$ 
 can be permuted to be strictly lower-triangular by a simultaneous row and column permutation. 
@@ -25,7 +25,7 @@ The error variables $e_i^m (t)$ are independent due to the assumption of no hidd
 
 Then, mathematically, the model for observed variable matrix $X(t)$ is written as 
 
-$$ X(t) = \\sum_{ \\tau = 0}^k B_{ t, t-\\tau } X(t - \\tau) + E(t).$$
+$$ X(t) = \\sum_{ \\tau = 0}^k B (t, t-\\tau) X(t - \\tau) + E(t).$$
 
 References
 
