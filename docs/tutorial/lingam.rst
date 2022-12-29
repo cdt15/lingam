@@ -14,7 +14,7 @@ The basic LiNGAM model makes the following assumptions.
 #. Acyclicity
 #. No hidden common causes
 
-Denote observed variables by $x_i$ and error variables by $e_i$ ( $i=1, ..., p$ ). Collect them in vectors $x$ and $e$. 
+Denote observed variables by $x_i$ and error variables by $e_i$ ( $i=1, ..., p$ ). Collect them in vectors $bm{x}$ and $bm{e}$. 
 
 \\text{some \\textbf{bold} text} 
 
