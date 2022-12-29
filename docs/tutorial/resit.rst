@@ -19,7 +19,7 @@ Then, mathematically, the model for observed variables $x_i$ ( $i=1, ..., p$ ) i
 
 $$ x_i = f_i (pa(x_i))+e_i, $$
 
-where $pa(x_i)$ are the parents of $x_i$ ( $i=1, ..., p$ ).
+where $f_i$ are some nonlinear (differentiable) functions and $pa(x_i)$ are the parents of $x_i$ ( $i=1, ..., p$ ).
 
 References
 

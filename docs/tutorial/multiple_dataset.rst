@@ -16,6 +16,16 @@ The algorithm assumes that each dataset comes from a basic LiNGAM model [2]_, i.
 Further, it assumes the topological causal orders are common to the groups. 
 The similarity in the topological causal orders would give a better performance than analyzing each dataset separatly if the assumption on the causal orders are reasonable. 
 
+Denote observed variables of Group $g$ by $x_i^{(g)}$ and error variables by $e_i^{(g)}$ ( $i=1, ..., p$ ) and coefficients or connection strengths $b_{ij}^{(g)}$ ( $i,j=1, ..., p, g=1, ..., G$ ). 
+Collect them in vectors $x$ and $e^(g)$ and a matrix $B^(g)$, respectivelly. 
+Due to the assumptions of acyclicity and common topological causal orders, the adjacency matrix $B^(g)$ ( $g=1, ..., G$ ) 
+can be permuted to be strictly lower-triangular by a simultaneous row and column permutation common to the groups. 
+The error variables $e_i^{(g)}$ ( $i=1, ..., p$, $g=1, ..., G$ ) are independent due to the assumption of no hidden common causes. 
+
+Then, mathematically, the model for observed variable vector $x$ is written as 
+
+$$ x^{(g)} = B^{(g)}x^{(g)} + e^{(g)}. $$
+
 References
 
     .. [1] S. Shimizu, T. Inazumi, Y. Sogawa, A. Hyvärinen, Y. Kawahara, T. Washio, P. O. Hoyer and K. Bollen. 
