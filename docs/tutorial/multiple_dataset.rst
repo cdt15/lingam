@@ -22,7 +22,7 @@ Due to the assumptions of acyclicity and common topological causal orders, the a
 can be permuted to be strictly lower-triangular by a simultaneous row and column permutation common to the groups. 
 The error variables $e_i^{(g)}$ ( $i=1, ..., p$, $g=1, ..., G$ ) are independent due to the assumption of no hidden common causes. 
 
-Then, mathematically, the model for observed variable vector $x^{(g)$ is written as 
+Then, mathematically, the model for observed variable vector $x^{(g)}$ is written as 
 
 $$ x^{(g)} = B^{(g)}x^{(g)} + e^{(g)}. $$
 
