@@ -13,6 +13,12 @@ This method makes the following assumptions.
 #. Acyclicity
 #. No hidden common causes
 
+Denote observed variables by $x_i$ and error variables by $e_i$ ( $i=1, ..., p$ ). 
+The error variables $e_i$ ( $i=1, ..., p$ ) are independent due to the assumption of no hidden common causes. 
+Then, mathematically, the model for observed variables $x_i$ ( $i=1, ..., p$ ) is written as 
+
+$$ x_i = f_i (pa(x_i), e_i). $$
+
 References
 
     .. [1] P. O. Hoyer, D. Janzing, J. M. Mooij, and J. Peters. and B. Schölkopf.
