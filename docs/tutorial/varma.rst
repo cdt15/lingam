@@ -17,10 +17,10 @@ This VARMALiNGAM makes the following assumptions similarly to the basic LiNGAM m
 
 Denote observed variables at time point $t$ by $x_i (t)$ and error variables by $e_i (t)$ ( $i=1, ..., p$, $t=1,...,T$ ). 
 Collect them in vectors $x(t)$ and $e(t)$ ( $t=1,...,T$ ), respectivelly. 
-Further, denote by matrices $B_{\\tau}$ and $\\Omega_{ \\omega }$ adjacency matrices with time lags $\\tau$ and $\\omega$ ( $\\tau = 1, ..., k, \\omega = 1, ..., \\ell$ ), respectivelly.
+Further, denote by matrices $B_{\\tau}$ and $\\Omega_{ \\omega }$ coefficient matrices with time lags $\\tau$ and $\\omega$ ( $\\tau = 1, ..., k, \\omega = 1, ..., \\ell$ ), respectivelly.
 
 
-Due to the acyclicity assumption of contemporaneous causal relations, the coefficient matrix $B_0$ can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
+Due to the acyclicity assumption of contemporaneous causal relations, the adjacency matrix $B_0$ can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
 The error variables $e_i (t)$ ( $i=1, ..., p$, $t=1,...,T$ ) are independent due to the assumption of no hidden common causes. 
 
 Then, mathematically, the model for observed variable vector $x(t)$ is written as 
