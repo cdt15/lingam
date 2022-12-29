@@ -18,7 +18,7 @@ Mathematically, the model for observed variables $x_i$ ( $i=1, ..., p$ ) is writ
 
 $x_i = \sum_{j \in \mathrm{pa}(x_i)} b_{ij} x_j + e_i \hspace{5mm} (i=1, \ldots, p) $
 
-where $\mathrm{pa}(x_i)$ is the set of parents of observed variable $x_i$. 
+where $pa(x_i)$ is the set of parents of observed variable $x_i$. 
 The error variables $e_i$ ($i = 1, \ldots, p$) are independent and follow non-Gaussian continuous distributions. 
 This independence between the error variables follows from the assumption that there are no unobserved or hidden common causes.
 
