@@ -13,6 +13,21 @@ Similarly to the basic LiNGAM model [1]_, this method makes the following assump
 #. Acyclicity
 #. No hidden common causes
 
+Denote observed variables and error variables of $i$-the sample at time point $t$ 
+by $x_i^m (t)$ and $e_i^m (t)$. 
+Collect them in vectors $x^m (t) = [x_i^m (t)] $ and $e^m (t) = [e_i^m (t)] $, respectivelly. 
+
+
+ and coefficients or connection strengths $b_{ij}^{(g)}$ ( $i,j=1, ..., p, g=1, ..., G$ ). 
+Collect them in vectors $x$ and $e^{(g)}$ and a matrix $B^{(g)}$, respectivelly. 
+Due to the assumptions of acyclicity and common topological causal orders, the adjacency matrix $B^{(g)}$ ( $g=1, ..., G$ ) 
+can be permuted to be strictly lower-triangular by a simultaneous row and column permutation common to the groups. 
+The error variables $e_i^{(g)}$ ( $i=1, ..., p$, $g=1, ..., G$ ) are independent due to the assumption of no hidden common causes. 
+
+Then, mathematically, the model for observed variable vector $x^{(g)}$ is written as 
+
+$$ x^{(g)} = B^{(g)}x^{(g)} + e^{(g)}. $$
+
 References
 
     .. [1] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
