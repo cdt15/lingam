@@ -14,7 +14,7 @@ The basic LiNGAM model makes the following assumptions.
 #. Acyclicity
 #. No hidden common causes
 
-Mathematically, the model for observed variables $x_i$ ( $i=1, ..., p$ ) is written as 
+Mathematically, the model for observed variables $x_i$ ($i=1, ..., p$) is written as 
 
 .. math::
 
