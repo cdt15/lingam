@@ -14,7 +14,7 @@ This VARLiNGAM makes the following assumptions similarly to the basic LiNGAM mod
 #. No hidden common causes
 
 Denote observed variables at time point $t$ by $x_i (t)$ and error variables by $e_i (t)$ ( $i=1, ..., p$, $t=1,...,T$ ). 
-Collect them in vectors $x(t)$ and $e(t)$ ($t=1,...,T$ ), respectivelly. 
+Collect them in vectors $x(t)$ and $e(t)$ ( $t=1,...,T$ ), respectivelly. 
 Further, denote by matrices $B_{\\tau}$ coefficient matrices with time lag $\\tau$$ ( $\\tau = 1, ..., k$ ), respectivelly.
 
 Due to the acyclicity assumption, the coefficient matrix $B$ can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
