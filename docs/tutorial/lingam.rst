@@ -14,6 +14,8 @@ The basic LiNGAM model makes the following assumptions.
 #. Acyclicity
 #. No hidden common causes
 
+:math:`\rho_1=x^2` とする
+
 ..  math::
 x_i = \sum_{j \in \mathrm{pa}(x_i)} b_{ij} x_j + e_i 
 
