@@ -28,7 +28,7 @@ $ \\sum $
 
 $$ \sum $$
 
-$$ \\sum_{ \\tau = 1} $$
+$$ x(t) = \\sum_{ \\tau = 0}^k B_{ \\tau } (t - \\tau ) + e(t).$$
 
 Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__. 
 For example, [4]_ uses the basic LiNGAM model to infer causal relations of health indice including LDL, HDL, and γGT. 
