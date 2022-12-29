@@ -16,7 +16,7 @@ The basic LiNGAM model makes the following assumptions.
 
 Denote observed variables by $x_i$ and error variables by $e_i$ ( $i=1, ..., p$ ). Collect them in vectors $x$ and $e$. 
 
-\text{some \textbf{bold} text} 
+\\text{some \\textbf{bold} text} 
 
 Mathematically, the model for observed variables $x_i$ ( $i=1, ..., p$ ) is written as 
 
