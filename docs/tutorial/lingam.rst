@@ -14,11 +14,12 @@ The basic LiNGAM model makes the following assumptions.
 #. Acyclicity
 #. No hidden common causes
 
-:math:`\rho_1=x^2` とする
+.. math::
 
-..  math::
-x_i = \sum_{j \in \mathrm{pa}(x_i)} b_{ij} x_j + e_i 
+    \sum_{n=1}^\infty \frac{1}{n^2} = \frac{\pi^2}{6}
 
+    \bm{a} = \begin{pmatrix} a_1 \\ a_2 \\ a_3 \end{pmatrix}
+    
 Mathematically, the model for observed variables $x_i$ ($i=1$, $\ldots$, $p$) is written as 
 \begin{eqnarray}
 x_i = \sum_{j \in \mathrm{pa}(x_i)} b_{ij} x_j + e_i \hspace{5mm} (i=1, \ldots, p), \label{eq:lingam1}
