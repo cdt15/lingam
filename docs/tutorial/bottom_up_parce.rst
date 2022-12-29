@@ -22,7 +22,7 @@ However, this kind of causal graph structures are often assumed in the classic s
 Denote observed variables by $x_i$ and error variables by $e_i$ ( $i=1, ..., p$ ) and coefficients or connection strengths $b_{ij}$ ( $i,j=1, ..., p$ ). 
 Collect them in vectors $x$ and $e$ and a matrix $B$, respectivelly. 
 Due to the acyclicity assumption, the adjacency matrix $B$ can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
-The error variables $e_i$ except those corresponding to exogenous observed variables are independent due to the assumption that Only exogenous observed variables may share hidden common causes. 
+The error variables $e_i$ except those corresponding to exogenous observed variables are independent due to the assumption that only exogenous observed variables may share hidden common causes. 
 
 Then, mathematically, the model for observed variable vector $x$ is written as 
 
