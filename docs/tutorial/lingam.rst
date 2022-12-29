@@ -20,8 +20,7 @@ $x_i = \sum_{j \in \mathrm{pa}(x_i)} b_{ij} x_j + e_i \hspace{5mm} (i=1, \ldots,
 
 
 .. math::
-
-x_i = \sum_{j \in \mathrm{pa}(x_i)} b_{ij} x_j + e_i \hspace{5mm} (i=1, \ldots, p)
+    x_i = \sum_{j \in \mathrm{pa}(x_i)} b_{ij} x_j + e_i \hspace{5mm} (i=1, \ldots, p)
 
 
 .. math::
