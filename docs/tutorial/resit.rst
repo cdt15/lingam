@@ -17,7 +17,9 @@ Denote observed variables by $x_i$ and error variables by $e_i$ ( $i=1, ..., p$ 
 The error variables $e_i$ ( $i=1, ..., p$ ) are independent due to the assumption of no hidden common causes. 
 Then, mathematically, the model for observed variables $x_i$ ( $i=1, ..., p$ ) is written as 
 
-$$ x_i = f_i (pa(x_i))+e_i. $$
+$$ x_i = f_i (pa(x_i))+e_i, $$
+
+where $pa(x_i)$ are the parents of $x_i$ ( $i=1, ..., p$ ).
 
 References
 
