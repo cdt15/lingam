@@ -7,6 +7,33 @@ Model
 Linear Mixed (LiM) causal discovery algorithm [1]_ extends LiNGAM to handle the mixed data that consists of both continuous and discrete variables. 
 The estimation is performed by first globally optimizing the log-likelihood function on the joint distribution of data with the acyclicity constraint, and then applying a local combinatorial search to output a causal graph.
 
+This method is based on the LiM model as shown below, 
+
+i) As for the continuous variable, its value assigned to each of :math:`x_i` is a linear function of its parent variables denoted 
+by :math:`x_{\mathrm{pa}(i)}` plus a non-Gaussian error term :math:`e_i`, that is, 
+
+.. math::
+    
+    x_i = e_i + c_i + \sum_{j \in \mathrm{pa}(i) }{b_{ij} x_j}, \quad e_i \sim Non-Gaussian(\cdot),
+
+where the error terms :math:`e_i` are continuous random variables with non-Gaussian densities, and the error variables :math:`e_i` are independent of 
+each other. The coefficients :math:`b_{ij}` and intercepts :math:`c_i` are constants.
+
+ii) As for the discrete variable, its value equals 1 if the linear function of its parent variables :math:`x_{\mathrm{pa}(i)}` plus a Logistic error 
+term :math:`e_i` is larger than 0, otherwise, its value equals 0. That is, 
+
+.. math::
+   :nowrap:
+
+   \begin{eqnarray}
+          x_i = \begin{cases}
+     1, & e_i + c_i + \sum_{j \in \mathrm{pa}(i) }{b_{ij} x_j}>0 \\
+     0, & \mathrm{otherwise}
+    \end{cases}, \quad e_i \sim Logistic(0,1),
+   \end{eqnarray}
+
+where the error terms :math:`e_i` follow the Logistic distribution, while the other notations are identical to those in continuous variables. 
+
 This method makes the following assumptions. 
 
 #. Continous variables and binary variables.
