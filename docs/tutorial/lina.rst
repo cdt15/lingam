@@ -7,6 +7,19 @@ Model
 LiNA [1]_ allows to locate the latent factors as well as uncover the causal structure between such latent factors of interests. 
 Causal structure between latent factors can be ubiquitous in real-world applications, e.g., relations bewteen anxiety, depression, and coping in psychology [2]_ [3]_ , etc.
 
+This method is based on the LiNA model as shown below, 
+
+.. math::
+    
+    {f}^{(m)}&= {B}^{(m)} {f}^{(m)}+{\varepsilon}^{(m)}, \\
+    {x}^{(m)}&={G}^{(m)}{f}^{(m)}+{e}^{(m)},
+
+where :math:`{\varepsilon}^{(m)}` and :math:`{e}^{(m)}` are random vectors that collect external influences, and errors, respectively, 
+and they are independent with each other. :math:`{f}^{(m)}` and :math:`{x}^{(m)}` are random vectors that collect latent factors, and observed data, respectively.
+:math:`{B}^{(m)}` is a matrix that collects causal effects :math:`b_{ij}^{(m)}` between :math:`{f}_i^{(m)}` and :math:`{f}_j^{(m)}`, 
+while :math:`{G}^{(m)}` collects factor loadings :math:`g_{ij}^{(m)}` between :math:`{f}_j^{(m)}` and :math:`{x}_i^{(m)}`. :math:`m`
+stands for the :math:`m^{th}` domain.
+
 This method makes the following assumptions. 
 
 #. Linearity
