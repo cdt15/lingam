@@ -27,7 +27,7 @@ setuptools.setup(
         'pygam',
     ],
     url='https://github.com/cdt15/lingam',
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=['tests']),
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
