@@ -15,7 +15,7 @@ setuptools.setup(
     long_description=README,
     long_description_content_type='text/markdown',
     install_requires=[
-        'numpy',
+        'numpy<1.23.5',
         'scipy',
         'scikit-learn',
         'graphviz',
@@ -27,11 +27,11 @@ setuptools.setup(
         'pygam',
     ],
     url='https://github.com/cdt15/lingam',
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=['tests']),
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
 )
