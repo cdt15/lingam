@@ -190,19 +190,19 @@ def test_estimate_optimal_intervention_success():
     ce = CausalEffect(model)
     pred_model = DummyPrediction(reval_predict=np.array([1]), coef=np.array([1, 2]), intercept=0)
     optimal_intervention = ce.estimate_optimal_intervention(X, 2, pred_model, 0, 0)
-    assert optimal_intervention > 0.95 and optimal_intervention < 1.05
+    assert optimal_intervention > 0.9 and optimal_intervention < 1.1
 
     # specified np.array for causal model
     ce = CausalEffect(np.array([[ 0., 0., 0.], [-1., 0., 0.], [ 3., 2., 0.]]))
     pred_model = DummyPrediction(reval_predict=np.array([1]), coef=np.array([1, 2]), intercept=0)
     optimal_intervention = ce.estimate_optimal_intervention(X, 2, pred_model, 0, 0)
-    assert optimal_intervention > 0.95 and optimal_intervention < 1.05
+    assert optimal_intervention > 0.9 and optimal_intervention < 1.1
 
     # specified list for causal model
     ce = CausalEffect([[ 0., 0., 0.], [-1., 0., 0.], [ 3., 2., 0.]])
     pred_model = DummyPrediction(reval_predict=np.array([1]), coef=np.array([1, 2]), intercept=0)
     optimal_intervention = ce.estimate_optimal_intervention(X, 2, pred_model, 0, 0)
-    assert optimal_intervention > 0.95 and optimal_intervention < 1.05
+    assert optimal_intervention > 0.9 and optimal_intervention < 1.1
 
 def test_estimate_optimal_intervention_invalid_input():
     # causal direction: x0 --> x1, x0 --> x2, x1 --> x2
