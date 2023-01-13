@@ -13,14 +13,14 @@ This VARLiNGAM makes the following assumptions similarly to the basic LiNGAM mod
 #. Acyclicity of contemporaneous causal relations
 #. No hidden common causes
 
-Denote observed variables at time point $t$ by $x_i (t)$ and error variables by $e_i (t)$ ( $i=1, ..., p$, $t=1,...,T$ ). 
+Denote observed variables at time point $t$ by :math:`{x}_{i}(t)` and error variables by :math:`{e}_{i}(t)`. 
 Collect them in vectors $x(t)$ and $e(t)$ ( $t=1,...,T$ ), respectivelly. 
-Further, denote by matrices $B_{\\tau}$ adjacency matrices with time lag $\\tau$ ( $\\tau = 1, ..., k$ ).
+Further, denote by matrices :math:`{B}_{\\tau}` adjacency matrices with time lag :math:`{\\tau}`.
 
 Due to the acyclicity assumption of contemporaneous causal relations, the coefficient matrix $B_0$ can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
-The error variables $e_i (t)$ ( $i=1, ..., p$, $t=1,...,T$ ) are independent due to the assumption of no hidden common causes. 
+The error variables :math:`{e}_{i}(t)` are independent due to the assumption of no hidden common causes. 
 
-Then, mathematically, the model for observed variable vector $x(t)$ is written as 
+Then, mathematically, the model for observed variable vector :math:`{x}(t)` is written as 
 
 $$ x(t) = \\sum_{ \\tau = 0}^k B_{ \\tau } x(t - \\tau) + e(t).$$
 
