@@ -19,12 +19,12 @@ This is a simpler version of the latent variable LiNGAM [2]_ that extends the ba
 Note that the latent variable LiNGAM [2]_ allows the existence of hidden common causes between any observed variables. 
 However, this kind of causal graph structures are often assumed in the classic structural equation modelling [4]_. 
 
-Denote observed variables by $x_i$ and error variables by $e_i$ ( $i=1, ..., p$ ) and coefficients or connection strengths $b_{ij}$ ( $i,j=1, ..., p$ ). 
-Collect them in vectors $x$ and $e$ and a matrix $B$, respectivelly. 
+Denote observed variables by :math:`{x}_{i}` and error variables by :math:`{e}_{i}` and coefficients or connection strengths :math:`{b}_{ij}`. 
+Collect them in vectors :math:`{x}` and :math:`{e}` and a matrix :math:`{B}`, respectivelly. 
 Due to the acyclicity assumption, the adjacency matrix $B$ can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
 The error variables $e_i$ except those corresponding to exogenous observed variables are independent due to the assumption that only exogenous observed variables may share hidden common causes. 
 
-Then, mathematically, the model for observed variable vector $x$ is written as 
+Then, mathematically, the model for observed variable vector :math:`{x}` is written as 
 
 $$ x = Bx + e. $$
 
