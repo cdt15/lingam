@@ -19,6 +19,8 @@ Collect them in vectors $x$ and $e$ and a matrix $B$, respectivelly.
 Due to the acyclicity assumption, the adjacency matrix $B$ can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
 The error variables $e_i$ ( $i=1, ..., p$ ) are independent due to the assumption of no hidden common causes. 
 
+:math:`{f}_i^{(m)}` 
+
 Then, mathematically, the model for observed variable vector $x$ is written as 
 
 $$ x = Bx + e. $$
