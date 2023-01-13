@@ -8,16 +8,17 @@ VARLiNGAM [2]_ is an extension of the basic LiNGAM model [1]_ to time series cas
 It combines the basic LiNGAM model with the classic vector autoregressive models (VAR). 
 It enables analyzing both lagged and contemporaneous (instantaneous) causal relations, whereas the classic VAR only analyzes lagged causal relations. 
 This VARLiNGAM makes the following assumptions similarly to the basic LiNGAM model [1]_:
+
 #. Linearity
 #. Non-Gaussian continuous error variables (except at most one)
 #. Acyclicity of contemporaneous causal relations
 #. No hidden common causes
 
-Denote observed variables at time point $t$ by :math:`{x}_{i}(t)` and error variables by :math:`{e}_{i}(t)`. 
-Collect them in vectors $x(t)$ and $e(t)$ ( $t=1,...,T$ ), respectivelly. 
-Further, denote by matrices :math:`{B}_{\\tau}` adjacency matrices with time lag :math:`{\\tau}`.
+Denote observed variables at time point :math:`{t}` by :math:`{x}_{i}(t)` and error variables by :math:`{e}_{i}(t)`. 
+Collect them in vectors :math:`{x}(t)` and :math:`{e}(t)`, respectivelly. 
+Further, denote by matrices :math:`{B}_{\tau}` adjacency matrices with time lag :math:`{\tau}`.
 
-Due to the acyclicity assumption of contemporaneous causal relations, the coefficient matrix $B_0$ can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
+Due to the acyclicity assumption of contemporaneous causal relations, the coefficient matrix :math:`{B}_{0}` can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
 The error variables :math:`{e}_{i}(t)` are independent due to the assumption of no hidden common causes. 
 
 Then, mathematically, the model for observed variable vector :math:`{x}(t)` is written as 

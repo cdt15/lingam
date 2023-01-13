@@ -13,14 +13,13 @@ Similarly to the basic LiNGAM model [1]_, this method makes the following assump
 #. Acyclicity
 #. No hidden common causes
 
-Denote observed variables and error variables of $m$-the sample at time point $t$ 
+Denote observed variables and error variables of :math:`{m}`-the sample at time point :math:`{m}`
 by :math:`{x}_{i}^{m}(t)` and :math:`{e}_{i}^{m}(t)`. 
 Collect them from variables in vectors :math:`{x}^{m}(t)` and :math:`{e}^{m}(t)`. 
 Further, collect them from samples in matrices :math:`{X}(t)` and :math:`{E}(t)`. 
-Further, denote by :math:`{B}(t,t-\\tau)` adjacency matrices with time lag :math:`\\tau`.
+Further, denote by :math:`{B}(t,t-\tau)` adjacency matrices with time lag :math:`\tau`.
 
-Due to the assumptions of acyclicity, the adjacency matrix :math:`{B}(t,t) 
-can be permuted to be strictly lower-triangular by a simultaneous row and column permutation. 
+Due to the assumptions of acyclicity, the adjacency matrix :math:`{B}(t,t)` can be permuted to be strictly lower-triangular by a simultaneous row and column permutation. 
 The error variables :math:`{e}_{i}^{m}(t)` are independent due to the assumption of no hidden common causes. 
 
 Then, mathematically, the model for observed variable matrix :math:`{X}(t)` is written as 

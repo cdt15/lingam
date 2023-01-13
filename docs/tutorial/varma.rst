@@ -15,9 +15,9 @@ This VARMALiNGAM makes the following assumptions similarly to the basic LiNGAM m
 #. Acyclicity of contemporaneous causal relations
 #. No hidden common causes between contempraneous error variables
 
-Denote observed variables at time point $t$ by :math:`{x}_{i}(t)` and error variables by :math:`{e}_{i}(t)`. 
+Denote observed variables at time point :math:`{t}` by :math:`{x}_{i}(t)` and error variables by :math:`{e}_{i}(t)`. 
 Collect them in vectors :math:`{x}(t)` and :math:`{e}(t)`, respectivelly. 
-Further, denote by matrices :math:`{B}_{\\tau}` and :math:`{\\Omega}_{\\omega}` coefficient matrices with time lags :math:`{\\tau}` and :math:`{\\omega}`, respectivelly.
+Further, denote by matrices :math:`{B}_{\tau}` and :math:`{\Omega}_{\omega}` coefficient matrices with time lags :math:`{\tau}` and :math:`{\omega}`, respectivelly.
 
 
 Due to the acyclicity assumption of contemporaneous causal relations, the adjacency matrix $B_0$ can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
@@ -25,7 +25,7 @@ The error variables :math:`{e}_{i}(t)` are independent due to the assumption of 
 
 Then, mathematically, the model for observed variable vector :math:`{x}(t)` is written as 
 
-$$ x(t) = \\sum_{ \\tau = 0}^k B_{ \\tau } x(t - \\tau) + e(t) - \\sum_{ \\omega = 1}^{\\ell} \\Omega_{ \\omega } ( \\omega ) e(t- \\omega).$$
+$$ x(t) = \\sum_{ \\tau = 0}^k B_{ \\tau } x(t - \\tau) + e(t) - \\sum_{ \\omega = 1}^{\\ell} \\Omega_{ \\omega } e(t- \\omega).$$
 
 Example applications are found `here <https://www.shimizulab.org/lingam/lingampapers/applications-and-tailor-made-methods>`__, especially in Section. Economics/Finance/Marketing. 
 For example, [3]_ uses the VARLiNGAM model to to study the processes of firm growth and firm performance using microeconomic data 
