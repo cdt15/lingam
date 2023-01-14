@@ -23,7 +23,7 @@ References
        CAM: Causal additive models, high-dimensional order search and penalized regression.
        Annals of Statistics, 42(6):2526–2556, 2014.
     .. [2] T. N. Maeda and S. Shimizu. Causal additive models with unobserved variables.
-    In Proc. 27th Conference on Uncertainty in Artificial Intelligence (UAI2021), PMLR 161:97-106, 2021.
+       In Proc. 27th Conference on Uncertainty in Artificial Intelligence (UAI2021), PMLR 161:97-106, 2021.
 
 
 Import and settings

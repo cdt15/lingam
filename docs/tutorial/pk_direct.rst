@@ -197,11 +197,11 @@ Make Prior Knowledge Matrix
 
 We create prior knowledge so that x0, x1 and x4 are sink variables.
 
-The elements of prior knowledge matrix are defined as follows: \* ``0``
-: :math:``x_i`` does not have a directed path to :math:``x_j`` \* ``1``
-: :math:``x_i`` has a directed path to :math:``x_j`` \* ``-1`` : No
-prior knowledge is available to know if either of the two cases above (0
-or 1) is true.
+The elements of prior knowledge matrix are defined as follows:
+
+* ``0``: :math:`{x}_{i}` does not have a directed path to :math:`{x}_{j}`
+* ``1``: :math:`{x}_{i}` has a directed path to :math:`{x}_{j}`
+* ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
 
 .. code-block:: python
 
