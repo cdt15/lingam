@@ -10,6 +10,7 @@ It enables analyzing both lagged and contemporaneous (instantaneous) causal rela
 This VARMALiNGAM model also is an extension of the VARLiNGAM model [2]_. 
 It uses VARMA to analyze lagged causal relations instead of VAR. 
 This VARMALiNGAM makes the following assumptions similarly to the basic LiNGAM model [1]_:
+
 #. Linearity
 #. Non-Gaussian continuous error variables (except at most one)
 #. Acyclicity of contemporaneous causal relations

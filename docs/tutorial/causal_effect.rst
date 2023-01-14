@@ -8,7 +8,7 @@ Users can use estimated causal structures, e.g., by a LiNGAM-type method or know
 References
 
     .. [1] P. Blöbaum and S. Shimizu. Estimation of interventional effects of features on prediction. 
-    In Proc. 2017 IEEE International Workshop on Machine Learning for Signal Processing (MLSP2017), pp. 1--6, Tokyo, Japan, 2017.
+      In Proc. 2017 IEEE International Workshop on Machine Learning for Signal Processing (MLSP2017), pp. 1--6, Tokyo, Japan, 2017.
 
 
 First, we use lingam package:
