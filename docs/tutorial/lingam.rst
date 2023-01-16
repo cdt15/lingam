@@ -15,7 +15,7 @@ The basic LiNGAM model makes the following assumptions.
 #. No hidden common causes
 
 Denote observed variables by :math:`{x}_{i}` and error variables by :math:`{e}_{i}` and coefficients or connection strengths :math:`{b}_{ij}`. 
-Collect them in vectors :math:`{x}` and $e$ and a matrix :math:`{B}`, respectivelly. 
+Collect them in vectors :math:`{x}` and :math:`{e}` and a matrix :math:`{B}`, respectivelly. 
 Due to the acyclicity assumption, the adjacency matrix :math:`{B}` can be permuted to be strictly lower-triangular by a simultaneous row and column permutation.
 The error variables :math:`{e}_{i}` are independent due to the assumption of no hidden common causes. 
 
