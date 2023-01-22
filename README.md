@@ -94,6 +94,13 @@ For guidelines how to contribute to lingam package, take a look at [CONTRIBUTING
 
 ## References
 
+### Package
+
+If you find our package useful, please cite the following paper:
+
+* T. Ikeuchi, M. Ide, Y. Zeng, T. N. Maeda, S. Shimizu. **Python package for causal discovery based on LiNGAM**. *Journal of Machine Learning Research*, 24(14): 1−8, 2023. [[PDF]](https://jmlr.org/papers/v24/21-0321.html)
+
+
 ### Basic DAG model
 
 Should you use this package for performing **ICA-based LiNGAM algorithm**, we kindly request you to cite the following paper:
