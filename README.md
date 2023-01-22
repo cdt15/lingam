@@ -98,14 +98,14 @@ For guidelines how to contribute to lingam package, take a look at [CONTRIBUTING
 
 If you find our package useful, please cite the following paper:
 
-* T. Ikeuchi, M. Ide, Y. Zeng, T. N. Maeda, S. Shimizu. **Python package for causal discovery based on LiNGAM**. *Journal of Machine Learning Research*, 24(14): 1−8, 2023. [[PDF]](https://jmlr.org/papers/v24/21-0321.html)
+* T. Ikeuchi, M. Ide, Y. Zeng, T. N. Maeda, and S. Shimizu. **Python package for causal discovery based on LiNGAM**. *Journal of Machine Learning Research*, 24(14): 1−8, 2023. [[PDF]](https://jmlr.org/papers/v24/21-0321.html)
 
 
 ### Basic DAG model
 
 Should you use this package for performing **ICA-based LiNGAM algorithm**, we kindly request you to cite the following paper:
 
-* S. Shimizu, P. O. Hoyer, A. Hyvärinen and A. Kerminen. **A linear non-gaussian acyclic model for causal discovery**. *Journal of Machine Learning Research*, 7: 2003--2030, 2006. [[PDF]](http://www.jmlr.org/papers/volume7/shimizu06a/shimizu06a.pdf)
+* S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. Kerminen. **A linear non-gaussian acyclic model for causal discovery**. *Journal of Machine Learning Research*, 7: 2003--2030, 2006. [[PDF]](http://www.jmlr.org/papers/volume7/shimizu06a/shimizu06a.pdf)
 
 Should you use this package for performing **DirectLiNGAM algorithm**, we kindly request you to cite the following two papers:
 
