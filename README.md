@@ -78,6 +78,7 @@ print(model.adjacency_matrix_)
 ## Documentation
 
 [Tutorial and API reference](https://lingam.readthedocs.io/)
+
 [Tutorial slides](https://speakerdeck.com/sshimizu2006/lingam-python-package)
 
 ## Examples
