@@ -79,6 +79,8 @@ print(model.adjacency_matrix_)
 
 [Tutorial and API reference](https://lingam.readthedocs.io/)
 
+[Tutorial slides](https://speakerdeck.com/sshimizu2006/lingam-python-package)
+
 ## Examples
 
 We provide several examples of running the LiNGAM algorithm in Jupyter Notebook.
