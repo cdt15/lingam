@@ -1,4 +1,4 @@
-import pickle
+import json
 import pytest
 
 import numpy as np
@@ -16,7 +16,7 @@ from lingam.causal_based_simulator import CausalBasedSimulator, TrainResult
 
 DATA_DIR_PATH = os.path.dirname(__file__) + "/test_causal_based_simulator"
 
-ENABLE_CAPTURE = False
+ENABLE_CAPTURE = True
 if ENABLE_CAPTURE:
     if not os.path.isdir(DATA_DIR_PATH):
         os.mkdir(DATA_DIR_PATH)
@@ -685,17 +685,49 @@ def test_get_causal_order(init, test_data):
     ret = sim._get_causal_order(causal_graph)
     assert ret.tolist() == [3, 0, 2, 1, 4, 5]
 
+def _extract_model_params(train_result):
+    model_params = {c: [] for c in train_result.keys()}
+
+    for col, conds in train_result.items():
+        params = {}
+        for cond in conds:
+            if hasattr(cond["model"], "intercept_"):
+                params[] = {
+                    "coef": cond["model"].coef_.tolist(),
+                    "intercept": cond["model"].intercept_.tolist(),
+                }
+            else:
+                params[] = {
+                    "expected_value": cond["model"].expected_value_.tolist(),
+                    "classes": cond["model"].classes_.tolist(),
+                    "p": cond["model"].p_.tolist(),
+                }
+        model_params[col].append(params)
+            
+    return model_params
+
 def _read_train_result_attrs(name, sim):
-    fname = f"{DATA_DIR_PATH}/{name}.pickle"
+    get_fname = lambda x: f"{DATA_DIR_PATH}/{name}_{x}.json"
+    fname_resid = get_fname("resid")
+    fname_params = get_fname("params")
 
     if ENABLE_CAPTURE:
-        with open(fname, "wb") as f:
-            pickle.dump((sim.residual_, sim.train_result_), f)
+        residual = sim.residual_
+        with open(fname_resid, "w") as f:
+            r = residual.to_dict("list")
+            f.write(json.dumps(r))
 
-    with open(fname, "rb") as f:
-        residual_, train_result_ = pickle.load(f)
+        model_params = _extract_model_params(sim.train_result_)
+        with open(fname_params, "w") as f:
+            f.write(json.dumps(model_params))
 
-    return residual_, train_result_
+    with open(fname_resid, "r") as f:
+        residual = pd.DataFrame(json.loads(f.read()))
+
+    with open(fname_params, "r") as f:
+        model_params = json.loads(f.read())
+
+    return residual, model_params
 
 def _is_same_data(df, df2, exclude_cols=[], nan_cols=[]):
     if df.shape != df2.shape:
@@ -730,12 +762,14 @@ def _is_same_data(df, df2, exclude_cols=[], nan_cols=[]):
     if len(cat) == 0 and len(cat2) == 0:
         assert np.all(df.loc[:, cat] == df2.loc[:, cat2])
 
-def _is_same_coef_intercept(train_result, train_result2):
-    if len(set(train_result.keys()) - set(train_result2)) != 0:
+def _is_same_coef_intercept(model_params, model_params2):
+    if len(set(model_params.keys()) - set(model_params2)) != 0:
         raise AssertionError
 
-    for column in train_result.keys():
-        for cond_result, cond_result2 in zip(train_result[column], train_result2[column]):
+    for column in model_params.keys():
+
+
+        for cond_results, cond_results2 in zip(model_params[column], model_params2[column]):
             model = cond_result["model"]
             model2 = cond_result2["model"]
 
@@ -756,10 +790,13 @@ def test_train(init, test_data, test_data2, test_data3):
     sim = CausalBasedSimulator()
     sim.train(X, causal_graph)
 
-    residual_, train_result_ = _read_train_result_attrs("test_train", sim)
+    residual_, model_params_ = _read_train_result_attrs("test_train", sim)
+    model_params2 = _extract_model_params(sim.train_result_)
 
+    print("*************")
     _is_same_data(residual_, sim.residual_, nan_cols=["x3"])
-    _is_same_coef_intercept(train_result_, sim.train_result_)
+    _is_same_coef_intercept(model_params_, model_params2)
+    print("*************@")
 
     # Normal2
     sim = CausalBasedSimulator()
