@@ -690,7 +690,7 @@ def _read_train_result_attrs(name, sim):
 
     if ENABLE_CAPTURE:
         with open(fname, "wb") as f:
-            pickle.dump((sim.residual_, sim.train_result_), f)
+            pickle.dump((sim.residual_, sim.train_result_), f, protocol=3)
 
     with open(fname, "rb") as f:
         residual_, train_result_ = pickle.load(f)
