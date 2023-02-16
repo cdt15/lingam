@@ -18,6 +18,7 @@ from .lina import LiNA
 from .lina import MDLiNA
 from .resit import RESIT
 from .lim import LiM
+from .causal_based_simulator import CausalBasedSimulator
 __all__ = [
     "ICALiNGAM",
     "DirectLiNGAM",
@@ -36,7 +37,8 @@ __all__ = [
     "LiNA",
     "MDLiNA",
     "RESIT",
-    "LiM"
+    "LiM",
+    "CausalBasedSimulator",
 ]
 
-__version__ = "1.7.1"
+__version__ = "1.7.0"
