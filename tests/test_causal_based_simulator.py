@@ -13,10 +13,11 @@ from scipy.special import expit
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lingam.causal_based_simulator import CausalBasedSimulator, TrainResult
+from lingam.causal_based_simulator import CbsExpectedValueRegressor, CbsCategoricalClassifier
 
 DATA_DIR_PATH = os.path.dirname(__file__) + "/test_causal_based_simulator"
 
-ENABLE_CAPTURE = True
+ENABLE_CAPTURE = False
 if ENABLE_CAPTURE:
     if not os.path.isdir(DATA_DIR_PATH):
         os.mkdir(DATA_DIR_PATH)
@@ -686,23 +687,30 @@ def test_get_causal_order(init, test_data):
     assert ret.tolist() == [3, 0, 2, 1, 4, 5]
 
 def _extract_model_params(train_result):
-    model_params = {c: [] for c in train_result.keys()}
+    model_params = {c: {} for c in train_result.keys()}
 
     for col, conds in train_result.items():
-        params = {}
         for cond in conds:
+            condition = str(cond["condition"])
+
             if hasattr(cond["model"], "intercept_"):
-                params[] = {
+                params = {
                     "coef": cond["model"].coef_.tolist(),
                     "intercept": cond["model"].intercept_.tolist(),
                 }
-            else:
-                params[] = {
+            elif isinstance(cond["model"], CbsExpectedValueRegressor):
+                params = {
                     "expected_value": cond["model"].expected_value_.tolist(),
+                }
+            elif isinstance(cond["model"], CbsCategoricalClassifier):
+                params = {
                     "classes": cond["model"].classes_.tolist(),
                     "p": cond["model"].p_.tolist(),
                 }
-        model_params[col].append(params)
+            else:
+                raise AssertionError
+
+            model_params[col][condition] = params
             
     return model_params
 
@@ -767,17 +775,13 @@ def _is_same_coef_intercept(model_params, model_params2):
         raise AssertionError
 
     for column in model_params.keys():
+        for cond, result in model_params[column].items():
+            result2 = model_params[column][cond]
+            coef, intercept = result["coef"], result["intercept"]
+            coef2, intercept2 = result2["coef"], result2["intercept"]
 
-
-        for cond_results, cond_results2 in zip(model_params[column], model_params2[column]):
-            model = cond_result["model"]
-            model2 = cond_result2["model"]
-
-            if model is None and model2 is None:
-                continue
-
-            assert np.isclose(model.coef_, model2.coef_).all()
-            assert np.isclose(model.intercept_, model2.intercept_).all()
+            assert np.isclose(coef, coef2).all()
+            assert np.isclose(intercept, intercept2).all()
 
 def test_train(init, test_data, test_data2, test_data3):
     init()
@@ -790,13 +794,11 @@ def test_train(init, test_data, test_data2, test_data3):
     sim = CausalBasedSimulator()
     sim.train(X, causal_graph)
 
-    residual_, model_params_ = _read_train_result_attrs("test_train", sim)
+    residual, model_params = _read_train_result_attrs("test_train", sim)
     model_params2 = _extract_model_params(sim.train_result_)
 
-    print("*************")
-    _is_same_data(residual_, sim.residual_, nan_cols=["x3"])
-    _is_same_coef_intercept(model_params_, model_params2)
-    print("*************@")
+    _is_same_data(residual, sim.residual_, nan_cols=["x3"])
+    _is_same_coef_intercept(model_params, model_params2)
 
     # Normal2
     sim = CausalBasedSimulator()
@@ -807,34 +809,35 @@ def test_train(init, test_data, test_data2, test_data3):
     }
     sim.train(X, causal_graph, models=models)
 
-    residual_, train_result_ = _read_train_result_attrs("test_train2", sim)
+    residual, model_params = _read_train_result_attrs("test_train2", sim)
+    model_params2 = _extract_model_params(sim.train_result_)
 
-    _is_same_data(residual_, sim.residual_, nan_cols=["x3"])
-    _is_same_coef_intercept(train_result_, sim.train_result_)
+    _is_same_data(residual, sim.residual_, nan_cols=["x3"])
+    _is_same_coef_intercept(model_params, model_params2)
 
     # Normal3
     sim = CausalBasedSimulator()
     sim.train(X2, causal_graph2)
 
-    residual_, train_result_ = _read_train_result_attrs("test_train3", sim)
+    residual, model_params = _read_train_result_attrs("test_train3", sim)
+    model_params2 = _extract_model_params(sim.train_result_)
 
-    _is_same_data(residual_, sim.residual_, nan_cols=["x2", "x3"])
-    _is_same_coef_intercept(train_result_, sim.train_result_)
+    _is_same_data(residual, sim.residual_, nan_cols=["x2", "x3"])
+    _is_same_coef_intercept(model_params, model_params2)
 
     # Normal4
     sim = CausalBasedSimulator()
     sim.train(X3, causal_graph3)
 
-    residual_, train_result_ = _read_train_result_attrs("test_train4", sim)
+    residual, model_params = _read_train_result_attrs("test_train4", sim)
+    model_params2 = _extract_model_params(sim.train_result_)
 
-    _is_same_data(residual_, sim.residual_, nan_cols=["x0", "x2"])
-
-    assert train_result_["x1"][0]["model"].expected_value_ ==  sim.train_result_["x1"][0]["model"].expected_value_
-    assert train_result_["x1"][1]["model"].expected_value_ ==  sim.train_result_["x1"][1]["model"].expected_value_
-    assert list(train_result_["x2"][0]["model"].classes_) == list(sim.train_result_["x2"][0]["model"].classes_)
-    assert list(train_result_["x2"][1]["model"].classes_) == list(sim.train_result_["x2"][1]["model"].classes_)
-    assert list(train_result_["x2"][0]["model"].p_) == list(sim.train_result_["x2"][0]["model"].p_)
-    assert list(train_result_["x2"][1]["model"].p_) == list(sim.train_result_["x2"][1]["model"].p_)
+    _is_same_data(residual, sim.residual_, nan_cols=["x0", "x2"])
+    for cond in model_params2["x1"]:
+        assert np.isclose(model_params["x1"][cond]["expected_value"], model_params2["x1"][cond]["expected_value"])
+    for cond in model_params2["x2"]:
+        assert np.all(model_params["x2"][cond]["classes"] == model_params2["x2"][cond]["classes"])
+        assert np.all(np.isclose(model_params["x2"][cond]["p"], model_params2["x2"][cond]["p"]))
 
 def test_run(init, test_data, test_data2, test_data3):
     init()
