@@ -585,7 +585,7 @@ class CbsCategoricalClassifier(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y):
         values, counts = np.unique(y, return_counts=True)
-        p = [c / y.shape[0] for c in counts]
+        p = np.array([c / y.shape[0] for c in counts])
 
         self.p_ = p
         self.classes_ = values
