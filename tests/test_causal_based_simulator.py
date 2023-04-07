@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.dummy import DummyRegressor, DummyClassifier
 from sklearn.svm import SVR, SVC
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -13,7 +14,6 @@ from scipy.special import expit
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lingam.causal_based_simulator import CausalBasedSimulator, TrainResult
-from lingam.causal_based_simulator import CbsExpectedValueRegressor, CbsCategoricalClassifier
 
 DATA_DIR_PATH = os.path.dirname(__file__) + "/test_causal_based_simulator"
 
@@ -246,7 +246,7 @@ def test_check_models(init, test_data2):
     else:
         pass
 
-    # Normal：GridSearchCV
+    # Normal: GridSearchCV
     sim = CausalBasedSimulator()
     models = {
         "x0": GridSearchCV(SVR(kernel="linear"), {"C": [0.1**i for i in range(3)]}),
@@ -334,7 +334,7 @@ def test_check_models(init, test_data2):
     else:
         raise AssertionError
 
-    # Exception：GridSearchCV, wrong task
+    # Exception: GridSearchCV, wrong task
     sim = CausalBasedSimulator()
     models = {
         "x0": GridSearchCV(SVC(kernel="linear", probability=True), {"C": [0.1**i for i in range(3)]}),
@@ -698,14 +698,14 @@ def _extract_model_params(train_result):
                     "coef": cond["model"].coef_.tolist(),
                     "intercept": cond["model"].intercept_.tolist(),
                 }
-            elif isinstance(cond["model"], CbsExpectedValueRegressor):
+            elif isinstance(cond["model"], DummyRegressor):
                 params = {
-                    "expected_value": cond["model"].expected_value_.tolist(),
+                    "expected_value": cond["model"].constant_.tolist(),
                 }
-            elif isinstance(cond["model"], CbsCategoricalClassifier):
+            elif isinstance(cond["model"], DummyClassifier):
                 params = {
                     "classes": cond["model"].classes_.tolist(),
-                    "p": cond["model"].p_.tolist(),
+                    "p": cond["model"].class_prior_.tolist(),
                 }
             else:
                 raise AssertionError
