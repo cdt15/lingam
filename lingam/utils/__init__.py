@@ -11,6 +11,7 @@ from sklearn.utils import check_array
 import igraph as ig
 from scipy.special import expit as sigmoid
 import random
+import warnings
 
 
 __all__ = [
@@ -705,6 +706,11 @@ def predict_adaptive_lasso(X, predictors, target, gamma=1.0):
     lr = LinearRegression()
     lr.fit(X[:, predictors], X[:, target])
     weight = np.power(np.abs(lr.coef_), gamma)
+    warnings.filterwarnings(
+        "ignore",
+        category=FutureWarning,
+        module="sklearn.linear_model._base"
+    )
     reg = LassoLarsIC(criterion="bic")
     reg.fit(X[:, predictors] * weight, X[:, target])
     return reg.coef_ * weight
