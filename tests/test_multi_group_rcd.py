@@ -8,14 +8,12 @@ from lingam import MultiGroupRCD
 
 
 def test_fit_success():
-    # データ生成用関数
     def get_coef():
         coef = random.random()
         return coef if coef >= 0.5 else coef - 1.0
 
     get_external_effect = lambda n: np.random.normal(0.0, 0.5, n) ** 3
 
-    # 係数設定
     B1 = np.array(
         [
             [0.0, 0.0, 0.0, 0.0, 0.0, get_coef(), 0.0],
@@ -28,7 +26,6 @@ def test_fit_success():
         ]
     )
 
-    # データ設定
     samples = 500
     x5 = get_external_effect(samples)
     x6 = get_external_effect(samples)
@@ -44,7 +41,6 @@ def test_fit_success():
         columns=["x0", "x1", "x2", "x3", "x4", "x5"],
     )
 
-    # 係数設定
     B2 = np.array(
         [
             [0.0, 0.0, 0.0, 0.0, 0.0, get_coef(), 0.0],
@@ -57,7 +53,6 @@ def test_fit_success():
         ]
     )
 
-    # データ設定
     samples = 1000
     x5 = get_external_effect(samples)
     x6 = get_external_effect(samples)
@@ -90,14 +85,12 @@ def test_fit_success():
     p_values = model.get_error_independence_p_values(X_list)
 
 def test_fit_invalid_data():
-    # データ生成用関数
     def get_coef():
         coef = random.random()
         return coef if coef >= 0.5 else coef - 1.0
 
     get_external_effect = lambda n: np.random.normal(0.0, 0.5, n) ** 3
 
-    # 係数設定
     B1 = np.array(
         [
             [0.0, 0.0, 0.0, 0.0, 0.0, get_coef(), 0.0],
@@ -110,7 +103,6 @@ def test_fit_invalid_data():
         ]
     )
 
-    # データ設定
     samples = 500
     x5 = get_external_effect(samples)
     x6 = get_external_effect(samples)
@@ -126,7 +118,6 @@ def test_fit_invalid_data():
         columns=["x0", "x1", "x2", "x3", "x4", "x5"],
     )
 
-    # 係数設定
     B2 = np.array(
         [
             [0.0, 0.0, 0.0, 0.0, 0.0, get_coef(), 0.0],
@@ -139,7 +130,6 @@ def test_fit_invalid_data():
         ]
     )
 
-    # データ設定
     samples = 500
     x5 = get_external_effect(samples)
     x6 = get_external_effect(samples)
@@ -214,14 +204,12 @@ def test_fit_invalid_data():
 
 
 def test_bootstrap_success():
-    # データ生成用関数
     def get_coef():
         coef = random.random()
         return coef if coef >= 0.5 else coef - 1.0
 
     get_external_effect = lambda n: np.random.normal(0.0, 0.5, n) ** 3
 
-    # 係数設定
     B1 = np.array(
         [
             [0.0, 0.0, 0.0, 0.0, 0.0, get_coef(), 0.0],
@@ -234,7 +222,6 @@ def test_bootstrap_success():
         ]
     )
 
-    # データ設定
     samples = 500
     x5 = get_external_effect(samples)
     x6 = get_external_effect(samples)
@@ -250,7 +237,6 @@ def test_bootstrap_success():
         columns=["x0", "x1", "x2", "x3", "x4", "x5"],
     )
 
-    # 係数設定
     B2 = np.array(
         [
             [0.0, 0.0, 0.0, 0.0, 0.0, get_coef(), 0.0],
@@ -263,7 +249,6 @@ def test_bootstrap_success():
         ]
     )
 
-    # データ設定
     samples = 500
     x5 = get_external_effect(samples)
     x6 = get_external_effect(samples)
