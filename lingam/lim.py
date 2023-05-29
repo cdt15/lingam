@@ -3,18 +3,16 @@ Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 """
 
+from itertools import product
+
+import networkx as nx
 import numpy as np
+import pandas as pd
 import scipy.optimize as sopt
 from scipy.special import expit as sigmoid
-# import time
-import pandas as pd
-import networkx as nx
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import log_loss
-# from Combining import likelihood
-# import random
-# import itertools
-from itertools import product # , combinations, chain
+
 import lingam.utils as ut
 
 
@@ -29,13 +27,13 @@ class LiM:
     """
 
     def __init__(
-            self,
-            lambda1=0.1,
-            loss_type='mixed',
-            max_iter=150,
-            h_tol=1e-8,
-            rho_max=1e+16,
-            w_threshold=0.1,
+        self,
+        lambda1=0.1,
+        loss_type="mixed",
+        max_iter=150,
+        h_tol=1e-8,
+        rho_max=1e16,
+        w_threshold=0.1,
     ):
         """Construct a LiM model.
 
@@ -90,17 +88,19 @@ class LiM:
         def _loss(W):
             """Evaluate value and gradient of loss."""
             M = X @ W
-            if self._loss_type == 'logistic':
+            if self._loss_type == "logistic":
                 loss = 1.0 / X.shape[0] * (np.logaddexp(0, M) - X * M).sum()
                 G_loss = 1.0 / X.shape[0] * X.T @ (sigmoid(M) - X)
-            elif self._loss_type == 'laplace':
+            elif self._loss_type == "laplace":
                 R = X - M
-                loss = - 1.0 / X.shape[0] * np.sum(- np.log(np.cosh(R)))
+                loss = -1.0 / X.shape[0] * np.sum(-np.log(np.cosh(R)))
                 G_loss = 1.0 / X.shape[0] * X.T @ np.tanh(R)
-            elif self._loss_type == 'mixed':
+            elif self._loss_type == "mixed":
                 R = X - M
                 a1, a2 = 1, 1
-                loss_dis = ((np.logaddexp(0, M) - X * M) * np.absolute(dis_con - 1)).sum()
+                loss_dis = (
+                    (np.logaddexp(0, M) - X * M) * np.absolute(dis_con - 1)
+                ).sum()
                 loss_con = np.sum(-np.log(np.cosh(R)) * dis_con)
                 loss = -1.0 / X.shape[0] * (a1 * loss_dis + a2 * loss_con)
                 W_dis = np.zeros([d, d])
@@ -112,19 +112,21 @@ class LiM:
                     W_con[[jj], :] = 1
                     W_con[:, [jj]] = 1
                 G_dis = X.T @ (sigmoid(M) - X) * W_dis
-                G_con = - X.T @ np.tanh(R) * W_con
+                G_con = -X.T @ np.tanh(R) * W_con
                 G_loss = 1.0 / X.shape[0] * (G_dis + G_con)
-            elif self._loss_type == 'mixed_dag':
+            elif self._loss_type == "mixed_dag":
                 dag = nx.DiGraph(W)
                 lingam_data = np.transpose(X)
                 df = pd.DataFrame(X)
                 is_continuous = dis_con[0, :].astype(bool)
                 is_discrete = np.invert(is_continuous)
-                loss = - _bic_scoring(dag, is_discrete, df, lingam_data)  # lingam_data:dims*samples
+                loss = -_bic_scoring(
+                    dag, is_discrete, df, lingam_data
+                )  # lingam_data:dims*samples
                 R = X - M
                 G_loss = 1.0 / X.shape[0] * (X.T @ (sigmoid(M) - X) - X.T @ np.tanh(R))
             else:
-                raise ValueError('unknown loss type')
+                raise ValueError("unknown loss type")
             return loss, G_loss
 
         def _bic_scoring(dag: nx.DiGraph, is_discrete, df, lingam_data):
@@ -145,19 +147,25 @@ class LiM:
                         frequency_table = df[i].value_counts()
                         likekihood_bernoulli = 0.0
                         for count_k in frequency_table:
-                            likekihood_bernoulli += count_k * (np.log(count_k) - np.log(frequency_table.sum()))
+                            likekihood_bernoulli += count_k * (
+                                np.log(count_k) - np.log(frequency_table.sum())
+                            )
                         total_score += likekihood_bernoulli
 
                     elif parents_i:
                         # Logistic binary variable, likelihood using logistic regression model.
                         X = df[parents_i]
                         y = df[i]
-                        logistic = LogisticRegression(solver='lbfgs')  # or solver='liblinear'
+                        logistic = LogisticRegression(
+                            solver="lbfgs"
+                        )  # or solver='liblinear'
                         logistic.fit(X, y)
                         predict_prob = logistic.predict_proba(X)
 
                         # Negative cross-entropy loss a.k.a log-likelihood
-                        likekihood_logistic = -log_loss(y_true=y, y_pred=predict_prob, normalize=False)
+                        likekihood_logistic = -log_loss(
+                            y_true=y, y_pred=predict_prob, normalize=False
+                        )
                         total_score += likekihood_logistic
                     pass
                 # 連続
@@ -193,7 +201,7 @@ class LiM:
 
         def _adj(w):
             """Convert doubled variables ([2 d^2] array) back to original variables ([d, d] matrix)."""
-            return (w[:d * d] - w[d * d:]).reshape([d, d])
+            return (w[: d * d] - w[d * d :]).reshape([d, d])
 
         def _func(w):
             """Evaluate value and gradient of augmented Lagrangian for doubled variables ([2 d^2] array)."""
@@ -203,19 +211,33 @@ class LiM:
             obj = loss + 0.5 * rho * h * h + alpha * h + self._lambda1 * w.sum()
             # G_smooth = G_loss + (rho * h + alpha) * G_h # Zheng Xun Dag 2018
             G_smooth = G_loss + (rho * h + alpha) * G_h.T * W * 2  # 2019
-            g_obj = np.concatenate((G_smooth + self._lambda1, - G_smooth + self._lambda1), axis=None)
+            g_obj = np.concatenate(
+                (G_smooth + self._lambda1, -G_smooth + self._lambda1), axis=None
+            )
             return obj, g_obj
 
         n, d = X.shape
-        w_est, rho, alpha, h = np.random.random(2 * d * d), 1.0, 0.0, np.inf  # double w_est into (w_pos, w_neg)
-        bnds = [(0, 0) if i == j else (0, None) for _ in range(2) for i in range(d) for j in range(d)]
+        w_est, rho, alpha, h = (
+            np.random.random(2 * d * d),
+            1.0,
+            0.0,
+            np.inf,
+        )  # double w_est into (w_pos, w_neg)
+        bnds = [
+            (0, 0) if i == j else (0, None)
+            for _ in range(2)
+            for i in range(d)
+            for j in range(d)
+        ]
 
         # if self._loss_type == 'l2':
         #     X = X - np.mean(X, axis=0, keepdims=True)
         for _ in range(self._max_iter):
             w_new, h_new = None, None
             while rho < self._rho_max:
-                sol = sopt.minimize(_func, w_est, method='L-BFGS-B', jac=True, bounds=bnds)
+                sol = sopt.minimize(
+                    _func, w_est, method="L-BFGS-B", jac=True, bounds=bnds
+                )
                 # print('--- One iteration passed.....', sol.fun)
                 w_new = sol.x
                 h_new, _ = _h(_adj(w_new))
@@ -228,7 +250,7 @@ class LiM:
             # print('------- rho  is:', rho)
             if h <= self._h_tol and h != 0:
                 break
-            if rho >= self._rho_max * 1e-6 and h > 1e+05:  # avoid the full graph
+            if rho >= self._rho_max * 1e-6 and h > 1e05:  # avoid the full graph
                 w_est = np.random.random(2 * d * d)
                 rho = 1.0
             elif rho >= self._rho_max:
@@ -239,12 +261,14 @@ class LiM:
         W_est[np.abs(W_est) < self._w_threshold] = 0
         # print('W_est (without the 2nd phase) is: \n', W_est)
 
-        self._loss_type = 'mixed_dag'
+        self._loss_type = "mixed_dag"
         aa, aaa = _loss(W_est)  # loss
         I = np.where(W_est != 0)
         # check directions
         W_min_lss = np.copy(W_est)
-        candi_setting = list(product(range(2), repeat=len(I[0])))  # 1:reverse the direction； 0:unchanged
+        candi_setting = list(
+            product(range(2), repeat=len(I[0]))
+        )  # 1:reverse the direction； 0:unchanged
         for candi_setting_i in range(1, len(candi_setting)):
             W_tmp = np.copy(W_est)
             for iii in range(len(I[0])):  # transform to W_tmp
@@ -257,7 +281,7 @@ class LiM:
                 aa = lss
 
         # prune process
-        if d > 2 and len(I[0]) > (d - 1):     # > min_edge
+        if d > 2 and len(I[0]) > (d - 1):  # > min_edge
             W0 = np.copy(W_min_lss)
             I_delete = np.where(W_min_lss != 0)
             for delete_i in range(len(I_delete[0])):
@@ -268,7 +292,9 @@ class LiM:
                     W_min_lss = np.copy(W_tmp)
                     aa = lss
             #
-            if not np.all(W_est.astype(bool) == W_min_lss.astype(bool)):  # if they are different
+            if not np.all(
+                W_est.astype(bool) == W_min_lss.astype(bool)
+            ):  # if they are different
                 W0 = np.copy(W_est)
                 for delete_i in range(len(I[0])):
                     W_tmp = np.copy(W0)
@@ -290,7 +316,9 @@ class LiM:
                     W_min_lss = np.copy(W_tmp)
                     aa = lss
             #
-            if not np.all(W_est.astype(bool) == W_min_lss.astype(bool)):  # if they are different
+            if not np.all(
+                W_est.astype(bool) == W_min_lss.astype(bool)
+            ):  # if they are different
                 W0 = np.copy(W_est)
                 W_edges = W0 + W0.T + np.eye(d)
                 I_add = np.where(W_edges == 0)  # add undirected edges' indices

@@ -32,7 +32,7 @@ __all__ = [
     "set_random_seed",
     "likelihood_i",
     "log_p_super_gaussian",
-    "variance_i"
+    "variance_i",
 ]
 
 
@@ -62,6 +62,7 @@ def simulate_linear_sem(adjacency_matrix, n_samples, sem_type, noise_scale=1.0):
         Data generated from linear SEM with specified type of noise,
         where ``n_features`` is the number of variables.
     """
+
     def _simulate_single_equation(X, w):
         """Simulate samples from a single equation.
 
@@ -78,34 +79,34 @@ def simulate_linear_sem(adjacency_matrix, n_samples, sem_type, noise_scale=1.0):
         x : array-like, shape (n_samples, 1)
             Data for the specified variable.
         """
-        if sem_type == 'gauss':
+        if sem_type == "gauss":
             z = np.random.normal(scale=noise_scale, size=n_samples)
             x = X @ w + z
-        elif sem_type == 'exp':
+        elif sem_type == "exp":
             z = np.random.exponential(scale=noise_scale, size=n_samples)
             x = X @ w + z
-        elif sem_type == 'gumbel':
+        elif sem_type == "gumbel":
             z = np.random.gumbel(scale=noise_scale, size=n_samples)
             x = X @ w + z
-        elif sem_type == 'logistic':
+        elif sem_type == "logistic":
             x = np.random.binomial(1, sigmoid(X @ w)) * 1.0
-        elif sem_type == 'poisson':
+        elif sem_type == "poisson":
             x = np.random.poisson(np.exp(X @ w)) * 1.0
-        elif sem_type == 'subGaussian':
+        elif sem_type == "subGaussian":
             z = np.random.normal(scale=noise_scale, size=n_samples)
             q = 0.5 + 0.3 * np.random.rand(1)  # sub-Gaussian
             z = np.sign(z) * pow(np.abs(z), q)
             z = z - np.mean(z)
             z = z / np.std(z)
             x = X @ w + z
-        elif sem_type == 'supGaussian':
+        elif sem_type == "supGaussian":
             z = np.random.normal(scale=noise_scale, size=n_samples)
             q = 1.2 + 0.8 * np.random.rand(1)  # super-Gaussian
             z = np.sign(z) * pow(np.abs(z), q)
             z = z - np.mean(z)
             z = z / np.std(z)
             x = X @ w + z
-        elif sem_type == 'nonGaussian':
+        elif sem_type == "nonGaussian":
             z = np.random.normal(scale=noise_scale, size=n_samples)
             qq = -1
             if qq == 1:
@@ -116,31 +117,35 @@ def simulate_linear_sem(adjacency_matrix, n_samples, sem_type, noise_scale=1.0):
             z = z - np.mean(z)
             z = z / np.std(z)
             x = X @ w + z
-        elif sem_type == 'uniform':
+        elif sem_type == "uniform":
             z = np.random.uniform(0, 1, n_samples)
             z = z - np.mean(z)
             z = z / np.std(z)
             x = X @ w + z
-        elif sem_type == 'gamma':
+        elif sem_type == "gamma":
             z = np.random.gamma(2, 2, n_samples)
             z = z - np.mean(z)
             z = z / np.std(z)
             x = X @ w + z
-        elif sem_type == 'laplace':
+        elif sem_type == "laplace":
             z = np.random.laplace(0, scale=noise_scale, size=n_samples)
             x = X @ w + z
         else:
-            raise ValueError('unknown sem type')
+            raise ValueError("unknown sem type")
         return x
 
     n_features = adjacency_matrix.shape[0]
     if np.isinf(n_samples):
-        if sem_type == 'gauss':
+        if sem_type == "gauss":
             # make 1/n_features X'X = true cov
-            X = np.sqrt(n_features) * noise_scale * np.linalg.pinv(np.eye(n_features) - adjacency_matrix)
+            X = (
+                np.sqrt(n_features)
+                * noise_scale
+                * np.linalg.pinv(np.eye(n_features) - adjacency_matrix)
+            )
             return X
         else:
-            raise ValueError('population risk not available')
+            raise ValueError("population risk not available")
     X = np.zeros([n_samples, n_features])
 
     G = ig.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
@@ -153,7 +158,9 @@ def simulate_linear_sem(adjacency_matrix, n_samples, sem_type, noise_scale=1.0):
     return X
 
 
-def simulate_linear_mixed_sem(adjacency_matrix, n_samples, sem_type, dis_con, noise_scale=None):
+def simulate_linear_mixed_sem(
+    adjacency_matrix, n_samples, sem_type, dis_con, noise_scale=None
+):
     """Simulate mixed samples from linear SEM with specified type of noise.
 
     Parameters
@@ -178,6 +185,7 @@ def simulate_linear_mixed_sem(adjacency_matrix, n_samples, sem_type, dis_con, no
         Data generated from linear SEM with specified type of noise,
         where ``n_features`` is the number of variables.
     """
+
     def _simulate_single_equation(X, w, scale, dis_con_j):
         """Simulate samples from a single equation.
 
@@ -196,18 +204,18 @@ def simulate_linear_mixed_sem(adjacency_matrix, n_samples, sem_type, dis_con, no
         x : array-like, shape (n_samples, 1)
                     Data for the specified variable.
         """
-        if sem_type == 'gauss':
+        if sem_type == "gauss":
             z = np.random.normal(scale=scale, size=n_samples)
             x = X @ w + z
-        elif sem_type == 'mixed_random_i_dis':
+        elif sem_type == "mixed_random_i_dis":
             # randomly generated with fixed number of discrete variables.
             if dis_con_j:  # 1:continuous;   0:discrete
-                z = np.random.laplace(0,scale=scale, size=n_samples)
+                z = np.random.laplace(0, scale=scale, size=n_samples)
                 x = X @ w + z
             else:
                 x = np.random.binomial(1, sigmoid(X @ w)) * 1.0
         else:
-            raise ValueError('unknown sem type')
+            raise ValueError("unknown sem type")
         return x
 
     n_features = adjacency_matrix.shape[0]
@@ -217,17 +225,21 @@ def simulate_linear_mixed_sem(adjacency_matrix, n_samples, sem_type, dis_con, no
         scale_vec = noise_scale * np.ones(n_features)
     else:
         if len(noise_scale) != n_features:
-            raise ValueError('noise scale must be a scalar or has length n_features')
+            raise ValueError("noise scale must be a scalar or has length n_features")
         scale_vec = noise_scale
     if not is_dag(adjacency_matrix):
-        raise ValueError('adjacency_matrix must be a DAG')
+        raise ValueError("adjacency_matrix must be a DAG")
     if np.isinf(n_samples):  # population risk for linear gauss SEM
-        if sem_type == 'gauss':
+        if sem_type == "gauss":
             # make 1/n_features X'X = true cov
-            X = np.sqrt(n_features) * np.diag(scale_vec) @ np.linalg.inv(np.eye(n_features) - adjacency_matrix)
+            X = (
+                np.sqrt(n_features)
+                * np.diag(scale_vec)
+                @ np.linalg.inv(np.eye(n_features) - adjacency_matrix)
+            )
             return X
         else:
-            raise ValueError('population risk not available')
+            raise ValueError("population risk not available")
     # empirical risk
     G = ig.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
     ordered_vertices = G.topological_sorting()
@@ -236,7 +248,9 @@ def simulate_linear_mixed_sem(adjacency_matrix, n_samples, sem_type, dis_con, no
     for j in ordered_vertices:
         parents = G.neighbors(j, mode=ig.IN)
         # X[:, j] = _simulate_single_equation(X[:, parents], adjacency_matrix[parents, j], scale_vec[j])
-        X[:, j] = _simulate_single_equation(X[:, parents], adjacency_matrix[parents, j], scale_vec[j], dis_con[0, j])
+        X[:, j] = _simulate_single_equation(
+            X[:, parents], adjacency_matrix[parents, j], scale_vec[j], dis_con[0, j]
+        )
     return X
 
 
@@ -280,8 +294,8 @@ def count_accuracy(W_true, W, W_und=None):
         (true positive) / (true positive + false positive).
     """
     # convert to binary adjacency matrix
-    B_true = (W_true != 0)
-    B = (W != 0)
+    B_true = W_true != 0
+    B = W != 0
     B_und = None if W_und is None else (W_und != 0)
     # linear index of nonzeros
     pred_und = None
@@ -361,6 +375,7 @@ def simulate_dag(n_features, n_edges, graph_type):
     B : array-like, shape (n_features, n_features)
         binary adjacency matrix of DAG.
     """
+
     def _random_permutation(M):
         # np.random.permutation permutes first axis only
         P = np.random.permutation(np.eye(M.shape[0]))
@@ -372,22 +387,26 @@ def simulate_dag(n_features, n_edges, graph_type):
     def _graph_to_adjmat(G):
         return np.array(G.get_adjacency().data)
 
-    if graph_type == 'ER':
+    if graph_type == "ER":
         # Erdos-Renyi
         G_und = ig.Graph.Erdos_Renyi(n=n_features, m=n_edges)
         B_und = _graph_to_adjmat(G_und)
         B = _random_acyclic_orientation(B_und)
-    elif graph_type == 'SF':
+    elif graph_type == "SF":
         # Scale-free, Barabasi-Albert
-        G = ig.Graph.Barabasi(n=n_features, m=int(round(n_edges / n_features)), directed=True)
+        G = ig.Graph.Barabasi(
+            n=n_features, m=int(round(n_edges / n_features)), directed=True
+        )
         B = _graph_to_adjmat(G)
-    elif graph_type == 'BP':
+    elif graph_type == "BP":
         # Bipartite, Sec 4.1 of (Gu, Fu, Zhou, 2018)
         top = int(0.2 * n_features)
-        G = ig.Graph.Random_Bipartite(top, n_features - top, m=n_edges, directed=True, neimode=ig.OUT)
+        G = ig.Graph.Random_Bipartite(
+            top, n_features - top, m=n_edges, directed=True, neimode=ig.OUT
+        )
         B = _graph_to_adjmat(G)
     else:
-        raise ValueError('unknown graph type')
+        raise ValueError("unknown graph type")
     B_perm = _random_permutation(B)
     assert ig.Graph.Adjacency(B_perm.tolist()).is_dag()
     return B_perm
@@ -432,7 +451,9 @@ def print_dagc(dagc, n_sampling, labels=None):
     for i, (dag, co) in enumerate(zip(dagc["dag"], dagc["count"])):
         print(f"DAG[{i}]: {100*co/n_sampling:.1f}%")
         for j, (fr, to) in enumerate(zip(dag["from"], dag["to"])):
-            sign = "" if "sign" not in dag else "(b>0)" if dag["sign"][j] > 0 else "(b<0)"
+            sign = (
+                "" if "sign" not in dag else "(b>0)" if dag["sign"][j] > 0 else "(b<0)"
+            )
             if labels:
                 print("\t" + f"{labels[to]} <--- {labels[fr]} {sign}")
             else:
@@ -829,7 +850,6 @@ def log_p_super_gaussian(s):
     return -np.sqrt(2.0) * np.absolute(s) + const
 
 
-
 def variance_i(X, i, b_i):
     """Compute empirical variance of component i.
 
@@ -849,7 +869,7 @@ def variance_i(X, i, b_i):
         Empirical variance of component i.
     """
     # T = X.shape[1]  # sample size
-    estimated_disturbance = (X[i] - np.dot(b_i, X))
+    estimated_disturbance = X[i] - np.dot(b_i, X)
     # variance = np.sum(estimated_disturbance ** 2) / T  # JMLR paper assumes zero mean
     variance = np.var(estimated_disturbance)  # stable version, even not zero mean.
 
