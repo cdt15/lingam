@@ -12,6 +12,8 @@ import igraph as ig
 from scipy.special import expit as sigmoid
 import random
 
+from ._rcd import extract_ancestors
+
 
 __all__ = [
     "print_causal_directions",
@@ -33,6 +35,7 @@ __all__ = [
     "likelihood_i",
     "log_p_super_gaussian",
     "variance_i",
+    "extract_ancestors",
 ]
 
 
