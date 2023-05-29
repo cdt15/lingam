@@ -9,6 +9,8 @@ from statsmodels.nonparametric import bandwidths
 
 __all__ = ["get_kernel_width", "get_gram_matrix", "hsic_teststat", "hsic_test_gamma"]
 
+# Modify hsic with reference to causal-learn:
+# causallearn/search/FCMBased/lingam/hsic.py
 
 def get_kernel_width(X):
     """Calculate the bandwidth to median distance between points.
