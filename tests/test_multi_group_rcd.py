@@ -83,6 +83,9 @@ def test_fit_success():
 
     effects = model.estimate_total_effect(X_list, from_index=2, to_index=4)
     p_values = model.get_error_independence_p_values(X_list)
+    model.adjacency_matrices_
+    model.ancestors_list_
+
 
 def test_fit_invalid_data():
     def get_coef():
@@ -146,7 +149,7 @@ def test_fit_invalid_data():
     )
 
     X_list = [X1, X2]
-    
+
     # Not array data
     X = 1
     try:
@@ -195,7 +198,7 @@ def test_fit_invalid_data():
 
     # Invalid value: bw_method
     try:
-        model = MultiGroupRCD(bw_method='X')
+        model = MultiGroupRCD(bw_method="X")
         model.fit(X_list)
     except ValueError:
         pass

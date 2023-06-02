@@ -232,7 +232,9 @@ class MultiGroupRCD:
         adjacency_matrices_list = np.zeros(
             [len(X_list), n_sampling, self._n_features, self._n_features]
         )
-        total_effects_list = np.zeros([len(X_list), n_sampling, self._n_features, self._n_features])
+        total_effects_list = np.zeros(
+            [len(X_list), n_sampling, self._n_features, self._n_features]
+        )
         for n in range(n_sampling):
             resampled_X_list = [resample(X) for X in X_list]
             self.fit(resampled_X_list)
@@ -341,13 +343,15 @@ class MultiGroupRCD:
         resid_list = []
         for Y in Y_list:
             resid, _ = self._get_resid_and_coef(Y, xi, xj_list)
-            resid_list.append(resid)            
+            resid_list.append(resid)
 
         is_all_independent = True
         for xj in xj_list:
             fisher_stat = 0
             for i, Y in enumerate(Y_list):
-                _, hsic_p = hsic_test_gamma(resid_list[i], Y[:, xj], bw_method=self._bw_method)
+                _, hsic_p = hsic_test_gamma(
+                    resid_list[i], Y[:, xj], bw_method=self._bw_method
+                )
                 fisher_stat += np.inf if hsic_p == 0 else -2 * np.log(hsic_p)
             fisher_p = 1 - chi2.cdf(fisher_stat, df=2 * self._k)
             if fisher_p <= self._ind_alpha:
@@ -369,7 +373,9 @@ class MultiGroupRCD:
         for xj in xj_list:
             fisher_stat = 0
             for i, Y in enumerate(Y_list):
-                _, hsic_p = hsic_test_gamma(resid_list[i], Y[:, xj], bw_method=self._bw_method)
+                _, hsic_p = hsic_test_gamma(
+                    resid_list[i], Y[:, xj], bw_method=self._bw_method
+                )
                 fisher_stat += np.inf if hsic_p == 0 else -2 * np.log(hsic_p)
             fisher_p = 1 - chi2.cdf(fisher_stat, df=2 * self._k)
             if fisher_p <= self._ind_alpha:
@@ -564,3 +570,28 @@ class MultiGroupRCD:
                 B[xi, xj] = np.nan
 
         return B
+
+    @property
+    def adjacency_matrices_(self):
+        """Estimated adjacency matrices.
+
+        Returns
+        -------
+        adjacency_matrices_ : array-like, shape (B, ...)
+            The list of adjacency matrix B for multiple datasets.
+            The shape of B is (n_features, n_features), where
+            n_features is the number of features.
+        """
+        return self._adjacency_matrices
+
+    @property
+    def ancestors_list_(self):
+        """Estimated ancestors list.
+
+        Returns
+        -------
+        ancestors_list_ : array-like, shape (n_features)
+            The list of causal ancestors sets, where
+            n_features is the number of features.
+        """
+        return self._ancestors_list
