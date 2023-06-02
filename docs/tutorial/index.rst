@@ -32,3 +32,4 @@ Contents:
     resit
     lim
     camuv
+    multi_group_rcd
