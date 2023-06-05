@@ -28,7 +28,7 @@ class MultiGroupRCD:
         cor_alpha=0.01,
         ind_alpha=0.01,
         shapiro_alpha=0.01,
-        MLHSICR=False,
+        MLHSICR=True,
         bw_method="mdbs",
     ):
         """Construct a model.
@@ -43,7 +43,7 @@ class MultiGroupRCD:
              Alpha level for HSIC.
          shapiro_alpha : float, optional (default=0.01)
              Alpha level for Shapiro-Wilk test.
-         MLHSICR : bool, optional (default=False)
+         MLHSICR : bool, optional (default=True)
              If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
          bw_method : str, optional (default=``mdbs``)
                  The method used to calculate the bandwidth of the HSIC.
@@ -305,7 +305,7 @@ class MultiGroupRCD:
                 shapiro_p = shapiro(Y[:, xj])[1]
                 fisher_stat += np.inf if shapiro_p == 0 else -2 * np.log(shapiro_p)
 
-            fisher_p = 1 - chi2.cdf(fisher_stat, df=2 * self._k)
+            fisher_p = chi2.sf(fisher_stat, df=2 * self._k)
 
             if fisher_p > self._shapiro_alpha:
                 return False
@@ -319,7 +319,8 @@ class MultiGroupRCD:
             for Y in Y_list:
                 corr_p = pearsonr(Y[:, xi], Y[:, xj])[1]
                 fisher_stat += np.inf if corr_p == 0 else -2 * np.log(corr_p)
-            fisher_p = 1 - chi2.cdf(fisher_stat, df=2 * self._k)
+
+            fisher_p = chi2.sf(fisher_stat, df=2 * self._k)
 
             if fisher_p >= self._cor_alpha:
                 return False
@@ -353,7 +354,9 @@ class MultiGroupRCD:
                     resid_list[i], Y[:, xj], bw_method=self._bw_method
                 )
                 fisher_stat += np.inf if hsic_p == 0 else -2 * np.log(hsic_p)
-            fisher_p = 1 - chi2.cdf(fisher_stat, df=2 * self._k)
+
+            fisher_p = chi2.sf(fisher_stat, df=2 * self._k)
+
             if fisher_p <= self._ind_alpha:
                 is_all_independent = False
                 break
@@ -377,7 +380,9 @@ class MultiGroupRCD:
                     resid_list[i], Y[:, xj], bw_method=self._bw_method
                 )
                 fisher_stat += np.inf if hsic_p == 0 else -2 * np.log(hsic_p)
-            fisher_p = 1 - chi2.cdf(fisher_stat, df=2 * self._k)
+
+            fisher_p = chi2.sf(fisher_stat, df=2 * self._k)
+
             if fisher_p <= self._ind_alpha:
                 return False
 
@@ -512,7 +517,8 @@ class MultiGroupRCD:
 
             corr_p = pearsonr(wj, zi)[1]
             fisher_stat += np.inf if corr_p == 0 else -2 * np.log(corr_p)
-        fisher_p = 1 - chi2.cdf(fisher_stat, df=2 * self._k)
+
+        fisher_p = chi2.sf(fisher_stat, df=2 * self._k)
 
         return fisher_p < self._cor_alpha
 
@@ -538,7 +544,7 @@ class MultiGroupRCD:
                 corr_p = pearsonr(resid_xi, resid_xj)[1]
                 fisher_stat += np.inf if corr_p == 0 else -2 * np.log(corr_p)
 
-            fisher_p = 1 - chi2.cdf(fisher_stat, df=2 * self._k)
+            fisher_p = chi2.sf(fisher_stat, df=2 * self._k)
 
             if fisher_p < self._cor_alpha:
                 C[i].add(j)

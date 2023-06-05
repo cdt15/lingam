@@ -160,6 +160,6 @@ def hsic_test_gamma(X, Y, bw_method="mdbs"):
     alpha = mean**2 / var
     # threshold for hsicArr*m
     beta = var * n / mean
-    p = 1 - gamma.cdf(test_stat, alpha, scale=beta)
+    p = gamma.sf(test_stat, alpha, scale=beta)
 
     return test_stat, p
