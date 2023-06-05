@@ -9,8 +9,7 @@ import warnings
 
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
-from scipy.stats import pearsonr, shapiro
-from scipy.stats.distributions import chi2
+from scipy.stats import pearsonr, shapiro, chi2
 from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array, resample
 
