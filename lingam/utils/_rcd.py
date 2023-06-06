@@ -11,7 +11,6 @@ from ..hsic import get_gram_matrix, get_kernel_width, hsic_test_gamma, hsic_test
 
 def extract_ancestors(
     X,
-    var_index,
     max_explanatory_num=2,
     cor_alpha=0.01,
     ind_alpha=0.01,
@@ -34,8 +33,6 @@ def extract_ancestors(
         X : array-like, shape (n_samples, n_features)
             Training data, where ``n_samples`` is the number of samples
             and ``n_features`` is the number of features.
-        var_index : int
-            Index of variable.
         max_explanatory_num : int, optional (default=2)
             Maximum number of explanatory variables.
         cor_alpha : float, optional (default=0.01)
@@ -117,7 +114,7 @@ def extract_ancestors(
         else:
             break
 
-    return list(M[var_index])
+    return M
 
 
 def get_common_ancestors(M, U):
