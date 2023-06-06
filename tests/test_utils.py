@@ -232,4 +232,4 @@ def test_extract_ancestors():
     X = pd.DataFrame(np.array([x0, x1, x2, x3]).T, columns=["x0", "x1", "x2", "x3"])
 
     # Extract a set of ancestors of each variable
-    extract_ancestors(X, var_index=3)
+    extract_ancestors(X)
