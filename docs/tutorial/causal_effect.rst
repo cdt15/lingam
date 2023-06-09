@@ -2,7 +2,7 @@ Causal Effect on predicted variables
 =============
 
 The following demonstrates a method [1]_ that analyzes the prediction mechanisms of constructed predictive models based on causality.
-This method estimates causal effects, i.e., intervention effects of features or explnatory variables used in constructed predictive models on the predicted variables. 
+This method estimates causal effects, i.e., intervention effects of features or explanatory variables used in constructed predictive models on the predicted variables. 
 Users can use estimated causal structures, e.g., by a LiNGAM-type method or known causal structures based on domain knowledge. 
 
 References
