@@ -21,34 +21,34 @@ def extract_ancestors(
     """Extract a set of ancestors of each variable
     Implementation of RCD Algorithm1 [1]_
 
-        References
-        ----------
-        .. [1] T.N.Maeda and S.Shimizu. RCD: Repetitive causal discovery of
+    References
+    ----------
+    .. [1] T.N.Maeda and S.Shimizu. RCD: Repetitive causal discovery of
         linear non-Gaussian acyclic models with latent confounders.
         In Proc. 23rd International Conference on Artificial Intelligence and
         Statistics (AISTATS2020), Palermo, Sicily, Italy. PMLR  108:735-745, 2020.
 
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            Training data, where ``n_samples`` is the number of samples
-            and ``n_features`` is the number of features.
-        max_explanatory_num : int, optional (default=2)
-            Maximum number of explanatory variables.
-        cor_alpha : float, optional (default=0.01)
-            Alpha level for pearson correlation.
-        ind_alpha : float, optional (default=0.01)
-            Alpha level for HSIC.
-        shapiro_alpha : float, optional (default=0.01)
-            Alpha level for Shapiro-Wilk test.
-        MLHSICR : bool, optional (default=False)
-            If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
-        bw_method : str, optional (default=``mdbs``)
-                The method used to calculate the bandwidth of the HSIC.
+    Parameters
+    ----------
+    X : array-like, shape (n_samples, n_features)
+        Training data, where ``n_samples`` is the number of samples
+        and ``n_features`` is the number of features.
+    max_explanatory_num : int, optional (default=2)
+        Maximum number of explanatory variables.
+    cor_alpha : float, optional (default=0.01)
+        Alpha level for pearson correlation.
+    ind_alpha : float, optional (default=0.01)
+        Alpha level for HSIC.
+    shapiro_alpha : float, optional (default=0.01)
+        Alpha level for Shapiro-Wilk test.
+    MLHSICR : bool, optional (default=False)
+        If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
+    bw_method : str, optional (default=``mdbs``)
+            The method used to calculate the bandwidth of the HSIC.
 
-            * ``mdbs`` : Median distance between samples.
-            * ``scott`` : Scott's Rule of Thumb.
-            * ``silverman`` : Silverman's Rule of Thumb.
+        * ``mdbs`` : Median distance between samples.
+        * ``scott`` : Scott's Rule of Thumb.
+        * ``silverman`` : Silverman's Rule of Thumb.
     """
     n_features = X.shape[1]
     M = [set() for i in range(n_features)]
