@@ -4,12 +4,14 @@ The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 """
 
 
-from .hsic import hsic_test_gamma
-import numpy as np
-import itertools
-from pygam import LinearGAM
 import copy
+import itertools
+
+import numpy as np
+from pygam import LinearGAM
 from sklearn.utils import check_array
+
+from .hsic import hsic_test_gamma
 
 
 class CAMUV:
@@ -21,12 +23,7 @@ class CAMUV:
        In Proc. Thirty-Seventh Conference on Uncertainty in Artificial Intelligence (UAI). PMLR  161:97-106, 2021.
     """
 
-    def __init__(
-            self,
-            alpha=0.01,
-            num_explanatory_vals=2
-    ):
-
+    def __init__(self, alpha=0.01, num_explanatory_vals=2):
         """Construct a CAM-UV model.
 
         Parameters
@@ -58,7 +55,7 @@ class CAMUV:
         U = []
 
         for i in range(d):
-            for j in range(d)[i+1:]:
+            for j in range(d)[i + 1 :]:
                 if (i in P[j]) or (j in P[i]):
                     continue
                 if (i not in N[j]) or (j not in N[i]):
@@ -75,7 +72,6 @@ class CAMUV:
         return self._estimate_adjacency_matrix(X, P, U)
 
     def _get_residual(self, X, explained_i, explanatory_ids):
-
         explanatory_ids = list(explanatory_ids)
 
         if len(explanatory_ids) == 0:
@@ -90,7 +86,7 @@ class CAMUV:
         d = X.shape[1]
         N = [set() for i in range(d)]
         for i in range(d):
-            for j in range(d)[i+1:]:
+            for j in range(d)[i + 1 :]:
                 in_X = np.reshape(X[:, i], [n, 1])
                 in_Y = np.reshape(X[:, j], [n, 1])
                 independence = hsic_test_gamma(X=in_X, Y=in_Y)[1]
@@ -106,7 +102,7 @@ class CAMUV:
         t = 2
         Y = copy.deepcopy(X)
 
-        while (True):
+        while True:
             changed = False
             variables_set_list = list(itertools.combinations(set(range(d)), t))
             for variables_set in variables_set_list:
@@ -115,12 +111,16 @@ class CAMUV:
                 if not self._check_identified_causality(variables_set, P):
                     continue
 
-                child, independence_with_K = self._get_child(X, variables_set, P, N, Y, alpha)
+                child, independence_with_K = self._get_child(
+                    X, variables_set, P, N, Y, alpha
+                )
                 if not independence_with_K > alpha:
                     continue
 
-                parents = variables_set-{child}
-                if not self._check_independence_withou_K(parents, child, P, N, Y, alpha):
+                parents = variables_set - {child}
+                if not self._check_independence_withou_K(
+                    parents, child, P, N, Y, alpha
+                ):
                     continue
 
                 for parent in parents:
@@ -138,7 +138,7 @@ class CAMUV:
         for i in range(d):
             non_parents = set()
             for j in P[i]:
-                residual_i = self._get_residual(X, i, P[i]-{j})
+                residual_i = self._get_residual(X, i, P[i] - {j})
                 residual_j = self._get_residual(X, j, P[j])
                 in_X = np.reshape(residual_i, [n, 1])
                 in_Y = np.reshape(residual_j, [n, 1])
@@ -150,7 +150,6 @@ class CAMUV:
         return P
 
     def _get_residuals_matrix(self, X, Y_old, P, child):
-
         Y = copy.deepcopy(Y_old)
         Y[:, child] = self._get_residual(X, child, P[child])
         return Y
@@ -190,7 +189,7 @@ class CAMUV:
     def _check_identified_causality(self, variables_set, P):
         variables_list = list(variables_set)
         for i in variables_list:
-            for j in variables_list[variables_list.index(i)+1:]:
+            for j in variables_list[variables_list.index(i) + 1 :]:
                 if (j in P[i]) or (i in P[j]):
                     return False
         return True
