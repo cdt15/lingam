@@ -21,3 +21,4 @@ utils
 .. autofunction:: likelihood_i
 .. autofunction:: log_p_super_gaussian
 .. autofunction:: variance_i
+.. autofunction:: extract_ancestors
