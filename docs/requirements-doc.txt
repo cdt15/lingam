@@ -9,5 +9,4 @@ networkx
 pandas
 pygam
 sphinx
-sphinxcontrib-napoleon
 sphinx_rtd_theme
