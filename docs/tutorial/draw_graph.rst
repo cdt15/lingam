@@ -183,3 +183,124 @@ to draw the importance of the prediction model as an edge label.
 .. image:: ../image/draw_graph5.svg
 
 
+Highlight paths between specified nodes
+---------------------------------------
+
+make_dot highlights the path specified by the path argument.
+
+
+.. code-block:: python
+
+    make_dot(model.adjacency_matrix_, path=(3, 1))
+
+
+.. image:: ../image/draw_graph13.svg
+
+
+If detect_cycles is True, simple cycles are displayed with a dashed edge.
+
+
+.. code-block:: python
+
+    result = model.adjacency_matrix_.copy()
+    result[0, 1] = 100
+    result[3, 1] = 100
+    
+    make_dot(result, path=(3, 1), path_color="red", detect_cycle=True)
+
+
+.. image:: ../image/draw_graph14.svg
+
+
+
+Draw the result of LiNGAM with emphasis on descendants and ancestors
+--------------------------------------------------------------------
+
+``make_dot_highlight`` highlights descendants or ancestors of the graph.
+
+The first argument is the result and the second argument is the index of the target variable. There are four types of cluster names: target, ancestor, descendant, and others. target contains only the node specified in the second argument. Nodes that are ancestors or descendants of target belong to ancestor or descendant. The number appended to the cluster name is the distance from target. Other nodes belong to others.
+
+
+.. code-block:: python
+
+    make_dot_highlight(model.adjacency_matrix_, 0)
+
+
+.. image:: ../image/draw_graph6.svg
+
+
+It is also possible to disable the display of clusters of ancestors and descendants.
+
+
+.. code-block:: python
+
+    make_dot_highlight(model.adjacency_matrix_, 0, max_dsc=0, max_anc=None)
+
+
+.. image:: ../image/draw_graph7.svg
+
+
+It is also possible to suppress the display of the others cluster.
+
+
+.. code-block:: python
+
+    make_dot_highlight(model.adjacency_matrix_, 0, max_dsc=0, max_anc=None, draw_others=False)
+
+
+.. image:: ../image/draw_graph8.svg
+
+
+Draw the result of Bootstrap with emphasis on descendants and ancestors
+-----------------------------------------------------------------------
+
+
+It is possible to visualize results that include the cyclic portion, such as the result of a bootstrap.
+
+
+.. code-block:: python
+
+    result = model.bootstrap(X, n_sampling=100)
+
+
+.. code-block:: python
+
+    median = np.median(result.adjacency_matrices_, axis=0)
+    make_dot(median, lower_limit=0)
+
+
+.. image:: ../image/draw_graph9.svg
+
+
+Applying ``make_dot_highlight`` to this graph draws the following graph. Dashed edges indicate simple cycles.
+
+
+.. code-block:: python
+
+    make_dot_highlight(median, 0, detect_cycle=True)
+
+
+.. image:: ../image/draw_graph10.svg
+
+
+You can reduce the edges by setting lower_limit.
+
+
+.. code-block:: python
+
+    make_dot_highlight(median, 0, detect_cycle=True, lower_limit=0.1)
+
+
+.. image:: ../image/draw_graph11.svg
+
+
+You can also set the color map and the spacing of the nodes.
+
+
+.. code-block:: python
+
+    make_dot_highlight(median, 0, lower_limit=0.001, cmap="cool", vmargin=3, hmargin=3)
+
+
+.. image:: ../image/draw_graph12.svg
+
