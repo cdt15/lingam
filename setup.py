@@ -25,6 +25,7 @@ setuptools.setup(
         'networkx',
         'pandas',
         'pygam',
+        'matplotlib',
     ],
     url='https://github.com/cdt15/lingam',
     packages=setuptools.find_packages(exclude=['tests']),
