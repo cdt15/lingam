@@ -9,6 +9,8 @@ from statsmodels.nonparametric import bandwidths
 
 __all__ = ["get_kernel_width", "get_gram_matrix", "hsic_teststat", "hsic_test_gamma"]
 
+# Modify hsic with reference to causal-learn:
+# causallearn/search/FCMBased/lingam/hsic.py
 
 def get_kernel_width(X):
     """Calculate the bandwidth to median distance between points.
@@ -34,28 +36,18 @@ def get_kernel_width(X):
         X_med = X
 
     G = np.sum(X_med * X_med, 1).reshape(n_samples, 1)
-    Q = np.tile(G, (1, n_samples))
-    R = np.tile(G.T, (n_samples, 1))
-
-    dists = Q + R - 2 * np.dot(X_med, X_med.T)
+    dists = G + G.T - 2 * np.dot(X_med, X_med.T)
     dists = dists - np.tril(dists)
-    dists = dists.reshape(n_samples ** 2, 1)
+    dists = dists.reshape(n_samples**2, 1)
 
     return np.sqrt(0.5 * np.median(dists[dists > 0]))
 
 
-def _rbf_dot(X, Y, width):
-    """Compute the inner product of radial basis functions."""
-    n_samples_X = X.shape[0]
-    n_samples_Y = Y.shape[0]
-
-    G = np.sum(X * X, 1).reshape(n_samples_X, 1)
-    H = np.sum(Y * Y, 1).reshape(n_samples_Y, 1)
-    Q = np.tile(G, (1, n_samples_Y))
-    R = np.tile(H.T, (n_samples_X, 1))
-    H = Q + R - 2 * np.dot(X, Y.T)
-
-    return np.exp(-H / 2 / (width ** 2))
+def _rbf_dot(X, width):
+    """rbf dot, in special case with X dot X"""
+    G = np.sum(X * X, axis=1)
+    H = G[None, :] + G[:, None] - 2 * np.dot(X, X.T)
+    return np.exp(-H / 2 / (width**2))
 
 
 def get_gram_matrix(X, width):
@@ -76,11 +68,12 @@ def get_gram_matrix(X, width):
         the centered gram matrices.
     """
     n = X.shape[0]
-    H = np.eye(n) - 1 / n * np.ones((n, n))
 
-    K = _rbf_dot(X, X, width)
-    Kc = np.dot(np.dot(H, K), H)
-
+    K = _rbf_dot(X, width)
+    K_colsums = K.sum(axis=0)
+    K_rowsums = K.sum(axis=1)
+    K_allsum = K_rowsums.sum()
+    Kc = K - (K_colsums[None, :] + K_rowsums[:, None]) / n + (K_allsum / n**2)
     return K, Kc
 
 
@@ -101,7 +94,7 @@ def hsic_teststat(Kc, Lc, n):
         the HSIC statistic.
     """
     # test statistic m*HSICb under H1
-    return 1 / n * np.sum(np.sum(Kc.T * Lc))
+    return 1 / n * np.sum(Kc.T * Lc)
 
 
 def hsic_test_gamma(X, Y, bw_method="mdbs"):
@@ -153,20 +146,20 @@ def hsic_test_gamma(X, Y, bw_method="mdbs"):
 
     var = (1 / 6 * Kc * Lc) ** 2
     # second subtracted term is bias correction
-    var = 1 / n / (n - 1) * (np.sum(np.sum(var)) - np.sum(np.diag(var)))
+    var = 1 / n / (n - 1) * (np.sum(var) - np.trace(var))
     # variance under H0
     var = 72 * (n - 4) * (n - 5) / n / (n - 1) / (n - 2) / (n - 3) * var
 
-    K = K - np.diag(np.diag(K))
-    L = L - np.diag(np.diag(L))
-    mu_X = 1 / n / (n - 1) * np.dot(bone.T, np.dot(K, bone))
-    mu_Y = 1 / n / (n - 1) * np.dot(bone.T, np.dot(L, bone))
+    K[np.diag_indices(n)] = 0
+    L[np.diag_indices(n)] = 0
+    mu_X = 1 / n / (n - 1) * K.sum()
+    mu_Y = 1 / n / (n - 1) * L.sum()
     # mean under H0
     mean = 1 / n * (1 + mu_X * mu_Y - mu_X - mu_Y)
 
-    alpha = mean ** 2 / var
+    alpha = mean**2 / var
     # threshold for hsicArr*m
-    beta = np.dot(var, n) / mean
-    p = 1 - gamma.cdf(test_stat, alpha, scale=beta)[0][0]
+    beta = var * n / mean
+    p = gamma.sf(test_stat, alpha, scale=beta)
 
     return test_stat, p

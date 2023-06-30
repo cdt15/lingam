@@ -9,3 +9,5 @@ networkx
 pandas
 pygam
 matplotlib
+sphinx
+sphinx_rtd_theme

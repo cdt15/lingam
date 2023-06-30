@@ -5,20 +5,21 @@ The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 
 from .bootstrap import BootstrapResult
 from .bottom_up_parce_lingam import BottomUpParceLiNGAM
+from .camuv import CAMUV
+from .causal_based_simulator import CausalBasedSimulator
 from .causal_effect import CausalEffect
 from .direct_lingam import DirectLiNGAM
 from .ica_lingam import ICALiNGAM
-from .longitudinal_lingam import LongitudinalLiNGAM, LongitudinalBootstrapResult
-from .multi_group_direct_lingam import MultiGroupDirectLiNGAM
-from .rcd import RCD
-from .camuv import CAMUV
-from .var_lingam import VARLiNGAM, VARBootstrapResult
-from .varma_lingam import VARMALiNGAM, VARMABootstrapResult
-from .lina import LiNA
-from .lina import MDLiNA
-from .resit import RESIT
 from .lim import LiM
-from .causal_based_simulator import CausalBasedSimulator
+from .lina import LiNA, MDLiNA
+from .longitudinal_lingam import LongitudinalBootstrapResult, LongitudinalLiNGAM
+from .multi_group_direct_lingam import MultiGroupDirectLiNGAM
+from .multi_group_rcd import MultiGroupRCD
+from .rcd import RCD
+from .resit import RESIT
+from .var_lingam import VARBootstrapResult, VARLiNGAM
+from .varma_lingam import VARMABootstrapResult, VARMALiNGAM
+
 __all__ = [
     "ICALiNGAM",
     "DirectLiNGAM",
@@ -39,6 +40,7 @@ __all__ = [
     "RESIT",
     "LiM",
     "CausalBasedSimulator",
+    "MultiGroupRCD",
 ]
 
-__version__ = "1.7.1"
+__version__ = "1.8.0"

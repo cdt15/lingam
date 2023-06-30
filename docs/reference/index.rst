@@ -23,3 +23,4 @@ API Reference
     resit
     lim
     camuv
+    multi_group_rcd
