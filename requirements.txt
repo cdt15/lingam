@@ -8,3 +8,4 @@ igraph
 networkx
 pandas
 pygam
+matplotlib
