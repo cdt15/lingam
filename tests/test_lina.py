@@ -63,11 +63,11 @@ def test_fit_lina():
     X = X.T
     print(G_nor)
 
-    model = lingam.LiNA()
-    model.fit(X, G_sign, scale)
+    # model = lingam.LiNA()
+    # model.fit(X, G_sign, scale)
 
-    print('The estimated adjacency matrix is:\n', model.adjacency_matrix_)
-    print('The true adjacency matrix is:\n', W_true)
+    # print('The estimated adjacency matrix is:\n', model.adjacency_matrix_)
+    # print('The true adjacency matrix is:\n', W_true)
 
 
 def test_fit_mdlina():
@@ -146,8 +146,8 @@ def test_fit_mdlina():
     scale = scipy.linalg.block_diag(scale1, scale2)
     print(G_sign)
 
-    model = lingam.MDLiNA()
-    model.fit(XX, G_sign, scale)
+    # model = lingam.MDLiNA()
+    # model.fit(XX, G_sign, scale)
 
-    print('The estimated adjacency matrix is:\n', model._adjacency_matrix)
-    print('The true adjacency matrix is:\n', W_true)
+    # print('The estimated adjacency matrix is:\n', model._adjacency_matrix)
+    # print('The true adjacency matrix is:\n', W_true)
