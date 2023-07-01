@@ -114,7 +114,7 @@ method.
 .. code-block:: python
 
     model = lingam.LiM()
-    model.fit(X, dis_con)
+    model.fit(X, dis_con, only_global=True)
 
 
 
