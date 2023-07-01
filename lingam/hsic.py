@@ -12,6 +12,7 @@ __all__ = ["get_kernel_width", "get_gram_matrix", "hsic_teststat", "hsic_test_ga
 # Modify hsic with reference to causal-learn:
 # causallearn/search/FCMBased/lingam/hsic.py
 
+
 def get_kernel_width(X):
     """Calculate the bandwidth to median distance between points.
     Use at most 100 points (since median is only a heuristic,
@@ -141,7 +142,6 @@ def hsic_test_gamma(X, Y, bw_method="mdbs"):
 
     # test statistic m*HSICb under H1
     n = X.shape[0]
-    bone = np.ones((n, 1))
     test_stat = hsic_teststat(Kc, Lc, n)
 
     var = (1 / 6 * Kc * Lc) ** 2

@@ -662,7 +662,9 @@ def make_dot(
 
         if path_color is None:
             path_color = "black"
-        path_start = check_scalar(path[0], "path_start", int, min_val=0, max_val=B.shape[0])
+        path_start = check_scalar(
+            path[0], "path_start", int, min_val=0, max_val=B.shape[0]
+        )
         path_end = check_scalar(path[1], "path_end", int, min_val=0, max_val=B.shape[0])
 
     if detect_cycle is not None:
@@ -696,7 +698,7 @@ def make_dot(
             es = list(zip(cycle, np.roll(cycle, -1)))
             cycle_edges.append(es)
         cycle_edges = sum(cycle_edges, start=[])
-            
+
     d = graphviz.Digraph(engine="dot")
 
     # nodes
@@ -791,7 +793,7 @@ def make_dot_highlight(
     path=None,
     path_color=None,
     vmargin=2,
-    hmargin=2
+    hmargin=2,
 ):
     """Hierachical make_dot.
 
@@ -831,36 +833,47 @@ def make_dot_highlight(
         Directed graph source code in the DOT language.
         If order is unknown, draw a double-headed arrow.
     """
- 
+
     # margins for clusters
     cls_margin_l = 1.5
     cls_margin_r = 0.6
     cls_margin_t = 0.6
     cls_margin_b = 0.4
     cls_space_target_other = 0.2
-    
+
     # check arguments
-    adj = check_array(adjacency_matrix, ensure_2d=True, ensure_min_samples=2, 
-            ensure_min_features=2, copy=True)
+    adj = check_array(
+        adjacency_matrix,
+        ensure_2d=True,
+        ensure_min_samples=2,
+        ensure_min_features=2,
+        copy=True,
+    )
     if adj.shape[0] != adj.shape[1]:
         raise ValueError
-    
-    node_index = check_scalar(node_index, "node_index", int, min_val=0,
-            max_val=adj.shape[0], include_boundaries="left")
-    
+
+    node_index = check_scalar(
+        node_index,
+        "node_index",
+        int,
+        min_val=0,
+        max_val=adj.shape[0],
+        include_boundaries="left",
+    )
+
     if labels is None:
         node_names = [f"x{i}" for i in range(adj.shape[1])]
     else:
         node_names = check_array(node_names, ensure_2d=False, dtype=str)
         if len(node_names) != adj.shape[1]:
             raise ValueError
-            
+
     if max_dsc is not None:
         max_dsc = check_scalar(max_dsc, "max_dsc", int, min_val=0)
-        
+
     if max_anc is not None:
         max_anc = check_scalar(max_anc, "max_anc", int, min_val=0)
-        
+
     if lower_limit is not None:
         lower_limit = check_scalar(lower_limit, "lower_limit", (int, float))
 
@@ -876,46 +889,56 @@ def make_dot_highlight(
             raise ValueError("'path_color' should be an color name.")
         if path_color is None:
             path_color = "black"
-        path_start = check_scalar(path[0], "start", int, min_val=0, max_val=adj.shape[0])
+        path_start = check_scalar(
+            path[0], "start", int, min_val=0, max_val=adj.shape[0]
+        )
         path_end = check_scalar(path[1], "end", int, min_val=0, max_val=adj.shape[0])
-   
+
     vmargin = check_scalar(vmargin, "vmargin", (float, int), min_val=1)
     hmargin = check_scalar(hmargin, "hmargin", (float, int), min_val=1)
 
     # apply lower_limit
     if lower_limit is not None:
         adj[abs(adj) < lower_limit] = 0
-      
+
     # analyze network
     G = nx.from_numpy_array(~np.isclose(adj.T, 0), create_using=nx.DiGraph)
-    
-    dsc_path_length = nx.single_source_shortest_path_length(G, node_index, cutoff=max_dsc)
+
+    dsc_path_length = nx.single_source_shortest_path_length(
+        G, node_index, cutoff=max_dsc
+    )
     del dsc_path_length[node_index]
-    
+
     anc_path_length = nx.single_source_shortest_path_length(
-                            G.reverse(), node_index, cutoff=max_anc)
+        G.reverse(), node_index, cutoff=max_anc
+    )
     del anc_path_length[node_index]
-    
+
     # node indices
     dsc_indices = set(dsc_path_length.keys())
     anc_indices = set(anc_path_length.keys())
     isolate_indices = set(nx.isolates(G))
-    other_indices = set(np.arange(adj.shape[0])) - dsc_indices - anc_indices \
-                                                 - isolate_indices - set([node_index])
+    other_indices = (
+        set(np.arange(adj.shape[0]))
+        - dsc_indices
+        - anc_indices
+        - isolate_indices
+        - set([node_index])
+    )
 
     # clusters (distance -> list of nodes)
     clusters = {}
-    
+
     clusters[0] = [node_index]
-    
+
     clusters[None] = sorted(other_indices) + sorted(isolate_indices)
-    
+
     for node in dsc_indices:
         d = dsc_path_length[node]
         if d not in clusters.keys():
             clusters[d] = []
         clusters[d].append(node)
-        
+
     for node in anc_indices:
         d = -anc_path_length[node]
         if d not in clusters.keys():
@@ -934,37 +957,37 @@ def make_dot_highlight(
         path_nodes = [node_names[node] for node in path_nodes]
 
     # create graphviz graph
-    graph_attr = {"rankdir":"TB", "splines":"true"}
+    graph_attr = {"rankdir": "TB", "splines": "true"}
     graph = graphviz.Digraph("graph", engine="neato", graph_attr=graph_attr)
-    
+
     # colors of clusters
     ds = sorted([d for d in clusters.keys() if d is not None])
     if cmap is None:
-        cluster_colors = {d:"black" for d in ds}
+        cluster_colors = {d: "black" for d in ds}
     else:
         cmap = plt.get_cmap(cmap)
         cs = np.linspace(0, 1, len(ds) + 1)
         cluster_colors = dict(zip(ds, cmap(cs)))
     cluster_colors[None] = cluster_colors[0]
-    
+
     # distance -> y_position
-    pos_y_map = {0:0, None:0}
-    
+    pos_y_map = {0: 0, None: 0}
+
     # distance from target to descendants -> pos_y
     dsc_dists = sorted([d for d in clusters.keys() if d is not None and 0 < d])
     for i, dist in enumerate(dsc_dists):
         pos_y_map[dist] = -(i + 1) * vmargin
-    
+
     # distance from target to ascendants -> pos_y
     anc_dists = sorted([d for d in clusters.keys() if d is not None and d < 0], key=abs)
     for i, dist in enumerate(anc_dists):
         pos_y_map[dist] = (i + 1) * vmargin
-        
+
     get_cluster_name = lambda dist: f"cluster{dist}"
     get_node_id = lambda cl, node: f"{cls_name}-{node}"
-    
-    node_ids = {node:[] for node in np.arange(adj.shape[0])}
-    
+
+    node_ids = {node: [] for node in np.arange(adj.shape[0])}
+
     # add subgraphs and nodes
     for dist, nodes in clusters.items():
         # skip drawing the cluster
@@ -973,7 +996,7 @@ def make_dot_highlight(
 
         if len(nodes) == 0:
             continue
-        
+
         # attributes for the cluster and nodes
         if dist == 0:
             cls_label = "target"
@@ -981,16 +1004,25 @@ def make_dot_highlight(
         elif dist is None:
             cls_label = "others"
             offset_x = cls_margin_r + cls_margin_l + cls_space_target_other
-            nodes = sorted(nodes, key=lambda x: (x in isolate_indices, x in other_indices, x))
+            nodes = sorted(
+                nodes, key=lambda x: (x in isolate_indices, x in other_indices, x)
+            )
         else:
-            cls_label = f"ancestor {abs(dist)}" if dist < 0 else f"descendant {abs(dist)}"
+            cls_label = (
+                f"ancestor {abs(dist)}" if dist < 0 else f"descendant {abs(dist)}"
+            )
             offset_x = 0
             nodes = sorted(nodes)
         pos_y = pos_y_map[dist]
         color = mcolors.to_hex(cluster_colors[dist], keep_alpha=True)
         cls_name = get_cluster_name(dist)
 
-        graph_attr = {"style":"dashed", "label":cls_label, "labeljust":"l", "color":color}
+        graph_attr = {
+            "style": "dashed",
+            "label": cls_label,
+            "labeljust": "l",
+            "color": color,
+        }
         with graph.subgraph(name=cls_name, graph_attr=graph_attr) as c:
             # add nodes
             for i, node in enumerate(nodes):
@@ -1003,20 +1035,40 @@ def make_dot_highlight(
                         kwargs["color"] = path_color
                     if node == path_start or node == path_end:
                         kwargs["peripheries"] = "2"
-                c.node(node_id, node_names[node], pos=f"{pos_x},{pos_y}!", color=color, **kwargs)
+                c.node(
+                    node_id,
+                    node_names[node],
+                    pos=f"{pos_x},{pos_y}!",
+                    color=color,
+                    **kwargs,
+                )
                 node_ids[node].append((node_id, dist))
 
             # dummy at the upper left
             x = -cls_margin_l + offset_x
             y = pos_y + cls_margin_t
-            c.node(f"{cls_name}-dummy_upper", "", pos=f"{x},{y}!", style="invis",
-                                                    fixedsize="true", width="0", height="0")
-            
+            c.node(
+                f"{cls_name}-dummy_upper",
+                "",
+                pos=f"{x},{y}!",
+                style="invis",
+                fixedsize="true",
+                width="0",
+                height="0",
+            )
+
             # dummy at the lower right
             x = (len(nodes) - 1) * hmargin + cls_margin_r + offset_x
             y = pos_y - cls_margin_b
-            c.node(f"{cls_name}-dummy_lower", "", pos=f"{x},{y}!", style="invis",
-                                                    fixedsize="true", width="0", height="0")
+            c.node(
+                f"{cls_name}-dummy_lower",
+                "",
+                pos=f"{x},{y}!",
+                style="invis",
+                fixedsize="true",
+                width="0",
+                height="0",
+            )
 
     # cycles
     cycle_edges = []
@@ -1025,20 +1077,20 @@ def make_dot_highlight(
             es = list(zip(cycle, np.roll(cycle, -1)))
             cycle_edges.append(es)
         cycle_edges = sum(cycle_edges, start=[])
-    
+
     # indices of clusters
     other_nodes = isolate_indices | other_indices
     valid_nodes = other_nodes | dsc_indices | anc_indices | set([node_index])
-    
+
     # add edges
     edges = np.argwhere(~np.isclose(adj, 0))
     for h, t in edges:
         if draw_others is False and (t in other_nodes or h in other_nodes):
             continue
-        
+
         if t not in valid_nodes or h not in valid_nodes:
             continue
-            
+
         for tail_id, dist_t in node_ids[t]:
             for head_id, dist_h in node_ids[h]:
                 color = cluster_colors[dist_h]
