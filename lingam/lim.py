@@ -60,7 +60,7 @@ class LiM:
         self._w_threshold = w_threshold
         self._adjacency_matrix = None
 
-    def fit(self, X, dis_con):
+    def fit(self, X, dis_con, only_global=False):
         """Fit the model to X with mixed data.
 
         Parameters
@@ -72,17 +72,21 @@ class LiM:
             Indicators of discrete or continuous variables, where "1"
             indicates a continuous variable, while "0" a discrete
             variable.
+        only_global: boolean, optional (default=False)
+            If True, then the method will only perform the global optimization
+            to estimate the causal structure, without the local search phase.
+
         Returns
         -------
         self : object
             Returns the instance of self.
         """
 
-        W_min_lss = self._estimate_LiM(X, dis_con)
+        W_min_lss = self._estimate_LiM(X, dis_con, only_global)
         self._adjacency_matrix = W_min_lss
         return self._adjacency_matrix
 
-    def _estimate_LiM(self, X, dis_con):
+    def _estimate_LiM(self, X, dis_con, only_global):
         """Estimate the adjacency matrix btw. mixed variables"""
 
         def _loss(W):
@@ -261,65 +265,52 @@ class LiM:
         W_est[np.abs(W_est) < self._w_threshold] = 0
         # print('W_est (without the 2nd phase) is: \n', W_est)
 
-        self._loss_type = "mixed_dag"
-        aa, aaa = _loss(W_est)  # loss
-        I = np.where(W_est != 0)
-        # check directions
-        W_min_lss = np.copy(W_est)
-        candi_setting = list(
-            product(range(2), repeat=len(I[0]))
-        )  # 1:reverse the direction； 0:unchanged
-        for candi_setting_i in range(1, len(candi_setting)):
-            W_tmp = np.copy(W_est)
-            for iii in range(len(I[0])):  # transform to W_tmp
-                if candi_setting[candi_setting_i][iii] == 1:
-                    W_tmp[I[0][iii], I[1][iii]] = 0
-                    W_tmp[I[1][iii], I[0][iii]] = 1
-            lss, lss_G = _loss(W_tmp)
-            if lss < aa and _h(W_tmp)[0] < self._h_tol:
-                W_min_lss = np.copy(W_tmp)
-                aa = lss
-
-        # prune process
-        if d > 2 and len(I[0]) > (d - 1):  # > min_edge
-            W0 = np.copy(W_min_lss)
-            I_delete = np.where(W_min_lss != 0)
-            for delete_i in range(len(I_delete[0])):
-                W_tmp = np.copy(W0)
-                W_tmp[I_delete[0][delete_i], I_delete[1][delete_i]] = 0
+        if not only_global:
+            self._loss_type = "mixed_dag"
+            aa, aaa = _loss(W_est)  # loss
+            I = np.where(W_est != 0)
+            # check directions
+            W_min_lss = np.copy(W_est)
+            candi_setting = list(
+                product(range(2), repeat=len(I[0]))
+            )  # 1:reverse the direction； 0:unchanged
+            for candi_setting_i in range(1, len(candi_setting)):
+                W_tmp = np.copy(W_est)
+                for iii in range(len(I[0])):  # transform to W_tmp
+                    if candi_setting[candi_setting_i][iii] == 1:
+                        W_tmp[I[0][iii], I[1][iii]] = 0
+                        W_tmp[I[1][iii], I[0][iii]] = 1
                 lss, lss_G = _loss(W_tmp)
                 if lss < aa and _h(W_tmp)[0] < self._h_tol:
                     W_min_lss = np.copy(W_tmp)
                     aa = lss
-            #
-            if not np.all(
-                W_est.astype(bool) == W_min_lss.astype(bool)
-            ):  # if they are different
-                W0 = np.copy(W_est)
-                for delete_i in range(len(I[0])):
+
+            # prune process
+            if d > 2 and len(I[0]) > (d - 1):  # > min_edge
+                W0 = np.copy(W_min_lss)
+                I_delete = np.where(W_min_lss != 0)
+                for delete_i in range(len(I_delete[0])):
                     W_tmp = np.copy(W0)
-                    W_tmp[I[0][delete_i], I[1][delete_i]] = 0
+                    W_tmp[I_delete[0][delete_i], I_delete[1][delete_i]] = 0
                     lss, lss_G = _loss(W_tmp)
                     if lss < aa and _h(W_tmp)[0] < self._h_tol:
                         W_min_lss = np.copy(W_tmp)
                         aa = lss
-        # add process
-        if d > 2 and len(I[0]) < (d * (d - 1) / 2):
-            W0 = np.copy(W_min_lss)
-            W_edges = W0 + W0.T + np.eye(d)
-            I_add = np.where(W_edges == 0)  # add undirected edges' indices
-            for add_i in range(len(I_add[0])):
-                W_tmp = np.copy(W0)
-                W_tmp[I_add[0][add_i], I_add[1][add_i]] = 1
-                lss, lss_G = _loss(W_tmp)
-                if lss < aa and _h(W_tmp)[0] < self._h_tol:
-                    W_min_lss = np.copy(W_tmp)
-                    aa = lss
-            #
-            if not np.all(
-                W_est.astype(bool) == W_min_lss.astype(bool)
-            ):  # if they are different
-                W0 = np.copy(W_est)
+                #
+                if not np.all(
+                    W_est.astype(bool) == W_min_lss.astype(bool)
+                ):  # if they are different
+                    W0 = np.copy(W_est)
+                    for delete_i in range(len(I[0])):
+                        W_tmp = np.copy(W0)
+                        W_tmp[I[0][delete_i], I[1][delete_i]] = 0
+                        lss, lss_G = _loss(W_tmp)
+                        if lss < aa and _h(W_tmp)[0] < self._h_tol:
+                            W_min_lss = np.copy(W_tmp)
+                            aa = lss
+            # add process
+            if d > 2 and len(I[0]) < (d * (d - 1) / 2):
+                W0 = np.copy(W_min_lss)
                 W_edges = W0 + W0.T + np.eye(d)
                 I_add = np.where(W_edges == 0)  # add undirected edges' indices
                 for add_i in range(len(I_add[0])):
@@ -329,8 +320,26 @@ class LiM:
                     if lss < aa and _h(W_tmp)[0] < self._h_tol:
                         W_min_lss = np.copy(W_tmp)
                         aa = lss
-        # print('W_min_lss is:\n', W_min_lss)
-        # print('W_true is:\n', W_true)
+                #
+                if not np.all(
+                    W_est.astype(bool) == W_min_lss.astype(bool)
+                ):  # if they are different
+                    W0 = np.copy(W_est)
+                    W_edges = W0 + W0.T + np.eye(d)
+                    I_add = np.where(W_edges == 0)  # add undirected edges' indices
+                    for add_i in range(len(I_add[0])):
+                        W_tmp = np.copy(W0)
+                        W_tmp[I_add[0][add_i], I_add[1][add_i]] = 1
+                        lss, lss_G = _loss(W_tmp)
+                        if lss < aa and _h(W_tmp)[0] < self._h_tol:
+                            W_min_lss = np.copy(W_tmp)
+                            aa = lss
+            # print('W_min_lss is:\n', W_min_lss)
+            # print('W_true is:\n', W_true)
+
+        else:
+            W_min_lss = np.copy(W_est)
+
 
         return W_min_lss
 

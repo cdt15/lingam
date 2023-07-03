@@ -15,6 +15,8 @@ import numpy as np
 import random
 # import itertools
 # from itertools import product, combinations, permutations, chain
+import sys
+sys.path.append("..") 
 from lingam import utils as ut
 import lingam
 
@@ -46,7 +48,7 @@ def test_fit_lina():
     n_edges = np.random.randint(4,11)
     X, dis_con, W_true = generate_data(n_features, n_samples, n_edges)
     model = lingam.LiM()
-    model.fit(X, dis_con)
+    model.fit(X, dis_con, only_global=True)
 
     print('The estimated adjacency matrix is:\n', model.adjacency_matrix_)
     print('The true adjacency matrix is:\n', W_true)
