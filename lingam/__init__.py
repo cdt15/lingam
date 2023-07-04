@@ -40,6 +40,7 @@ __all__ = [
     "RESIT",
     "LiM",
     "CausalBasedSimulator",
+    "CausalDataGenerator",
     "MultiGroupRCD",
 ]
 
