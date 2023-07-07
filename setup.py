@@ -15,7 +15,7 @@ setuptools.setup(
     long_description=README,
     long_description_content_type='text/markdown',
     install_requires=[
-        'numpy<1.23.5',
+        'numpy,
         'scipy',
         'scikit-learn',
         'graphviz',
