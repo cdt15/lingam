@@ -20,8 +20,6 @@ setuptools.setup(
         'scikit-learn',
         'graphviz',
         'statsmodels',
-        'factor_analyzer',
-        'igraph',
         'networkx',
         'pandas',
         'pygam',

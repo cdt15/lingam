@@ -11,7 +11,6 @@ from .causal_effect import CausalEffect
 from .direct_lingam import DirectLiNGAM
 from .ica_lingam import ICALiNGAM
 from .lim import LiM
-from .lina import LiNA, MDLiNA
 from .longitudinal_lingam import LongitudinalBootstrapResult, LongitudinalLiNGAM
 from .multi_group_direct_lingam import MultiGroupDirectLiNGAM
 from .multi_group_rcd import MultiGroupRCD
@@ -35,8 +34,6 @@ __all__ = [
     "BottomUpParceLiNGAM",
     "RCD",
     "CAMUV",
-    "LiNA",
-    "MDLiNA",
     "RESIT",
     "LiM",
     "CausalBasedSimulator",
