@@ -9,6 +9,7 @@ from lingam.utils import (
     make_prior_knowledge,
     remove_effect,
     make_dot,
+    make_dot_highlight,
     predict_adaptive_lasso,
     get_sink_variables,
     get_exo_variables,
@@ -99,6 +100,16 @@ def test_make_dot():
     ]
     ev = make_dot(am, labels=["x0", "x1", "x2", "x3"])
 
+    am = [
+        [0, 0, 0, 1, 0, 0],
+        [1, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [1, 0, 1, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0],
+    ]
+    ev = make_dot(am, path=(3, 1), path_color="red", detect_cycle=True)
+
     # prediction
     ev = make_dot(am, prediction_feature_indices=[1, 2], prediction_coefs=[0.1, 0.1])
     ev = make_dot(
@@ -160,6 +171,25 @@ def test_make_dot():
         pass
     else:
         raise AssertionError
+
+
+def test_make_dot_highlight():
+    # default
+    am = [
+        [0, 0, 0, 1, 0, 0],
+        [1, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [1, 0, 1, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0],
+    ]
+    d = make_dot_highlight(am, 0)
+    # d = make_dot_highlight(am, 0, labels=["x0", "x1", "x2", "x3", "x4", "x5"])
+    d = make_dot_highlight(am, 0, max_dsc=0, max_anc=None)
+    d = make_dot_highlight(am, 0, max_dsc=0, max_anc=None, draw_others=False)
+    d = make_dot_highlight(am, 0, detect_cycle=True)
+    d = make_dot_highlight(am, 0, detect_cycle=True, lower_limit=0.1)
+    d = make_dot_highlight(am, 0, lower_limit=0.001, cmap="cool", vmargin=3, hmargin=3)
 
 
 def test_predict_adaptive_lasso():
