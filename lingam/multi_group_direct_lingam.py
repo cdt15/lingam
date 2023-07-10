@@ -253,7 +253,7 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
                 )
             X_list_.append(X_)
 
-        return np.array(X_list_)
+        return X_list_
 
     def _search_causal_order(self, X_list, U):
         """Search the causal ordering."""

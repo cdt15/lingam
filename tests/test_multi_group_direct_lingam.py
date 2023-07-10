@@ -15,10 +15,10 @@ def test_fit_success():
     X1 = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
                       columns=['x0', 'x1', 'x2', 'x3'])
 
-    x0 = np.random.uniform(size=1000)
-    x1 = 2.1*x0 + np.random.uniform(size=1000)
-    x2 = np.random.uniform(size=1000)
-    x3 = 4.2*x1 + np.random.uniform(size=1000)
+    x0 = np.random.uniform(size=500)
+    x1 = 2.1*x0 + np.random.uniform(size=500)
+    x2 = np.random.uniform(size=500)
+    x3 = 4.2*x1 + np.random.uniform(size=500)
     X2 = pd.DataFrame(np.array([x0, x1, x2, x3]).T,
                       columns=['x0', 'x1', 'x2', 'x3'])
 
