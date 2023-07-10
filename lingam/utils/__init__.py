@@ -476,7 +476,7 @@ def make_dot_highlight(
     if labels is None:
         node_names = [f"x{i}" for i in range(adj.shape[1])]
     else:
-        node_names = check_array(node_names, ensure_2d=False, dtype=str)
+        node_names = check_array(labels, ensure_2d=False, dtype=str)
         if len(node_names) != adj.shape[1]:
             raise ValueError
 
