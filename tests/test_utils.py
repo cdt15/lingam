@@ -184,7 +184,7 @@ def test_make_dot_highlight():
         [1, 0, 0, 0, 0, 0],
     ]
     d = make_dot_highlight(am, 0)
-    # d = make_dot_highlight(am, 0, labels=["x0", "x1", "x2", "x3", "x4", "x5"])
+    d = make_dot_highlight(am, 0, labels=["x0", "x1", "x2", "x3", "x4", "x5"])
     d = make_dot_highlight(am, 0, max_dsc=0, max_anc=None)
     d = make_dot_highlight(am, 0, max_dsc=0, max_anc=None, draw_others=False)
     d = make_dot_highlight(am, 0, detect_cycle=True)
