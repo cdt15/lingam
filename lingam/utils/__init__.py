@@ -13,6 +13,7 @@ from sklearn.linear_model import LassoLarsIC, LinearRegression
 from sklearn.utils import check_array, check_scalar
 
 from ._rcd import extract_ancestors
+from ._f_correlation import f_correlation
 
 __all__ = [
     "print_causal_directions",
@@ -29,6 +30,7 @@ __all__ = [
     "log_p_super_gaussian",
     "variance_i",
     "extract_ancestors",
+    "f_correlation",
 ]
 
 
