@@ -15,6 +15,7 @@ from lingam.utils import (
     get_exo_variables,
     find_all_paths,
     extract_ancestors,
+    f_correlation,
 )
 
 
@@ -263,3 +264,36 @@ def test_extract_ancestors():
 
     # Extract a set of ancestors of each variable
     extract_ancestors(X)
+
+
+def corr_data(n, r):
+    a = np.random.randn(n)
+    e1 = np.random.randn(n)
+    e2 = np.random.randn(n)
+    if r < 0:
+        r = -r
+        x = -np.sqrt(r) * a - np.sqrt(1 - r) * e1
+    else:
+        x = np.sqrt(r) * a + np.sqrt(1 - r) * e1
+    y = np.sqrt(r) * a + np.sqrt(1 - r) * e2
+    return x, y
+
+
+def test_f_correlation():
+    # size < 1000
+    x, y = corr_data(500, r=0.3)
+    f_correlation(x, y)
+
+    # size > 1000
+    x, y = corr_data(1500, r=0.3)
+    f_correlation(x, y)
+
+    # len(x) != len(y)
+    try:
+        x = np.array([1, 2, 3])
+        y = np.array([1, 2, 3, 4])
+        f_correlation(x, y)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError

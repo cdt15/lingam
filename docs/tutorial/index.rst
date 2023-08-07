@@ -33,3 +33,4 @@ Contents:
     camuv
     multi_group_rcd
     extract_ancestors
+    f_correlation
