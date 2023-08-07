@@ -4,7 +4,7 @@ RCD
 
 Model
 -------------------
-This method RCD (Repetitive Causal Discovery) assumes an extension of the basic LiNGAM model [1]_ to hidden common cause cases, i.e., the latent variable LiNGAM model [2]_.
+This method RCD (Repetitive Causal Discovery) [3]_　assumes an extension of the basic LiNGAM model [1]_ to hidden common cause cases, i.e., the latent variable LiNGAM model [2]_.
 Similarly to the basic LiNGAM model [1]_, this method makes the following assumptions:
 
 #. Linearity
