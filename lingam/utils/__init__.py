@@ -13,6 +13,7 @@ from sklearn.linear_model import LassoLarsIC, LinearRegression
 from sklearn.utils import check_array, check_scalar
 
 from ._rcd import extract_ancestors
+from ._visualize_nonlinear_causal_effect import visualize_nonlinear_causal_effect
 
 __all__ = [
     "print_causal_directions",
@@ -29,6 +30,7 @@ __all__ = [
     "log_p_super_gaussian",
     "variance_i",
     "extract_ancestors",
+    "visualize_nonlinear_causal_effect",
 ]
 
 
