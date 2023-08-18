@@ -17,3 +17,4 @@ utils
 .. autofunction:: variance_i
 .. autofunction:: extract_ancestors
 .. autofunction:: f_correlation
+.. autofunction:: visualize_nonlinear_causal_effect

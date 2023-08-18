@@ -34,3 +34,4 @@ Contents:
     multi_group_rcd
     extract_ancestors
     f_correlation
+    visualize_nonlinear_causal_effect
