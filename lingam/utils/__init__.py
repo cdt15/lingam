@@ -14,6 +14,7 @@ from sklearn.utils import check_array, check_scalar
 
 from ._rcd import extract_ancestors
 from ._f_correlation import f_correlation
+from ._visualize_nonlinear_causal_effect import visualize_nonlinear_causal_effect
 
 __all__ = [
     "print_causal_directions",
@@ -31,6 +32,7 @@ __all__ = [
     "variance_i",
     "extract_ancestors",
     "f_correlation",
+    "visualize_nonlinear_causal_effect",
 ]
 
 
