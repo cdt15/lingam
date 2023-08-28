@@ -42,8 +42,10 @@ class BootstrapMixin:
         # Bootstrapping
         adjacency_matrices = np.zeros([n_sampling, X.shape[1], X.shape[1]])
         total_effects = np.zeros([n_sampling, X.shape[1], X.shape[1]])
+        index = np.arange(X.shape[0])
+        resampled_indices = []
         for i in range(n_sampling):
-            resampled_X = resample(X)
+            resampled_X, resampled_index = resample(X, index)
             self.fit(resampled_X)
             adjacency_matrices[i] = self._adjacency_matrix
 
@@ -54,13 +56,15 @@ class BootstrapMixin:
                         resampled_X, from_, to
                     )
 
-        return BootstrapResult(adjacency_matrices, total_effects)
+            resampled_indices.append(resampled_index)
+
+        return BootstrapResult(adjacency_matrices, total_effects, resampled_indices=resampled_indices)
 
 
 class BootstrapResult(object):
     """The result of bootstrapping."""
 
-    def __init__(self, adjacency_matrices, total_effects):
+    def __init__(self, adjacency_matrices, total_effects, resampled_indices=None):
         """Construct a BootstrapResult.
 
         Parameters
@@ -69,9 +73,12 @@ class BootstrapResult(object):
             The adjacency matrix list by bootstrapping.
         total_effects : array-like, shape (n_sampling)
             The total effects list by bootstrapping.
+        resampled_indices :  array-like, shape (n_sampling, resample_size), optional (default=None)
+            The list of original index of resampled samples.
         """
         self._adjacency_matrices = adjacency_matrices
         self._total_effects = total_effects
+        self._resampled_indices = resampled_indices
 
     @property
     def adjacency_matrices_(self):
@@ -96,6 +103,19 @@ class BootstrapResult(object):
             the number of bootstrap sampling.
         """
         return self._total_effects
+
+    @property
+    def resampled_indices_(self):
+        """The list of original index of resampled samples.
+
+        Returns
+        -------
+        resampled_indices_ : array-like, shape (n_sampling, resample_size)
+            The list of original index of resampled samples,
+            where ``n_sampling`` is the number of bootstrap sampling
+            and ``resample_size`` is the size of each subsample set.
+        """
+        return self._resampled_indices
 
     def get_causal_direction_counts(
         self,
