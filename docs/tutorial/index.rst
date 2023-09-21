@@ -35,3 +35,4 @@ Contents:
     extract_ancestors
     f_correlation
     visualize_nonlinear_causal_effect
+    predict_adaptive_logistic_regression

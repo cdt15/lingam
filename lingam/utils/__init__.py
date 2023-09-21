@@ -16,6 +16,7 @@ from sklearn.utils import check_array, check_scalar
 from ._rcd import extract_ancestors
 from ._f_correlation import f_correlation
 from ._visualize_nonlinear_causal_effect import visualize_nonlinear_causal_effect
+from ._adaptive_logistic_regression import predict_adaptive_logistic_regression
 
 __all__ = [
     "print_causal_directions",
@@ -25,6 +26,7 @@ __all__ = [
     "make_dot",
     "make_dot_highlight",
     "predict_adaptive_lasso",
+    "predict_adaptive_logistic_regression",
     "get_sink_variables",
     "get_exo_variables",
     "find_all_paths",
