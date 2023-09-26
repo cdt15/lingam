@@ -10,6 +10,7 @@ from matplotlib import colors as mcolors
 from matplotlib.colors import is_color_like
 from sklearn import linear_model
 from sklearn.linear_model import LassoLarsIC, LinearRegression
+from sklearn.preprocessing import StandardScaler
 from sklearn.utils import check_array, check_scalar
 
 from ._rcd import extract_ancestors
@@ -743,12 +744,27 @@ def predict_adaptive_lasso(X, predictors, target, gamma=1.0):
     coef : array-like, shape (n_features)
         Coefficients of predictor variable.
     """
+    # Standardize X
+    scaler = StandardScaler()
+    X_std = scaler.fit_transform(X)
+
+    # Pruning with Adaptive Lasso
     lr = LinearRegression()
-    lr.fit(X[:, predictors], X[:, target])
+    lr.fit(X_std[:, predictors], X_std[:, target])
     weight = np.power(np.abs(lr.coef_), gamma)
-    reg = LassoLarsIC(criterion="bic")
-    reg.fit(X[:, predictors] * weight, X[:, target])
-    return reg.coef_ * weight
+    reg = LassoLarsIC(criterion="bic", normalize=False)
+    reg.fit(X_std[:, predictors] * weight, X_std[:, target])
+    pruned_idx = np.abs(reg.coef_ * weight) > 0.0
+
+    # Calculate coefficients of the original scale
+    coef = np.zeros(reg.coef_.shape)
+    if pruned_idx.sum() > 0:
+        lr = LinearRegression()
+        pred = np.array(predictors)
+        lr.fit(X[:, pred[pruned_idx]], X[:, target])
+        coef[pruned_idx] = lr.coef_
+
+    return coef
 
 
 def find_all_paths(dag, from_index, to_index, min_causal_effect=0.0):
