@@ -36,9 +36,6 @@ To install lingam package, use `pip` as follows:
 pip install lingam
 ```
 
-If you use lingam.utils.predict_adaptive_logistic_regression, install R and the glmnet package and set the path to Rscript.
-
-
 ## Usage
 
 ```python

@@ -27,7 +27,6 @@ setuptools.setup(
     ],
     url='https://github.com/cdt15/lingam',
     packages=setuptools.find_packages(exclude=['tests']),
-    package_data={'': ['**/*.r']},
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
