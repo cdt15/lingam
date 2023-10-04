@@ -6,7 +6,6 @@ import itertools
 import warnings
 
 import numpy as np
-from sklearn.linear_model import LassoLarsIC, LinearRegression
 from sklearn.utils import check_array, resample
 from statsmodels.tsa.vector_ar.var_model import VAR
 
@@ -31,7 +30,7 @@ class VARLiNGAM:
         self,
         lags=1,
         criterion="bic",
-        prune=False,
+        prune=True,
         ar_coefs=None,
         lingam_model=None,
         random_state=None,
@@ -45,8 +44,8 @@ class VARLiNGAM:
         criterion : {‘aic’, ‘fpe’, ‘hqic’, ‘bic’, None}, optional (default='bic')
             Criterion to decide the best lags within ``lags``.
             Searching the best lags is disabled if ``criterion`` is ``None``.
-        prune : boolean, optional (default=False)
-            Whether to prune the adjacency matrix or not.
+        prune : boolean, optional (default=True)
+            Whether to prune the adjacency matrix of lags.
         ar_coefs : array-like, optional (default=None)
             Coefficients of AR model. Estimating AR model is skipped if specified ``ar_coefs``.
             Shape must be (``lags``, n_features, n_features).
@@ -134,6 +133,9 @@ class VARLiNGAM:
 
         n_samples = X.shape[0]
         n_features = X.shape[1]
+
+        # store initial settings
+        ar_coefs = self._ar_coefs
         lags = self._lags
 
         criterion = self._criterion
@@ -141,8 +143,7 @@ class VARLiNGAM:
 
         self.fit(X)
 
-        residuals = self._residuals
-        ar_coefs = self._ar_coefs
+        fitted_ar_coefs = self._ar_coefs
 
         total_effects = np.zeros(
             [n_sampling, n_features, n_features * (1 + self._lags)]
@@ -150,7 +151,7 @@ class VARLiNGAM:
 
         adjacency_matrices = []
         for i in range(n_sampling):
-            sampled_residuals = resample(residuals, n_samples=n_samples)
+            sampled_residuals = resample(self._residuals, n_samples=n_samples)
 
             resampled_X = np.zeros((n_samples, n_features))
             for j in range(n_samples):
@@ -159,10 +160,14 @@ class VARLiNGAM:
                     continue
 
                 ar = np.zeros((1, n_features))
-                for t, M in enumerate(ar_coefs):
+                for t, M in enumerate(fitted_ar_coefs):
                     ar += np.dot(M, resampled_X[j - t - 1, :].T).T
 
                 resampled_X[j, :] = ar + sampled_residuals[j]
+
+            # restore initial settings
+            self._ar_coefs = ar_coefs
+            self._lags = lags
 
             self.fit(resampled_X)
             am = np.concatenate([*self._adjacency_matrices], axis=1)
@@ -341,13 +346,10 @@ class VARLiNGAM:
                 )
 
             # adaptive lasso
-            gamma = 1.0
-            lr = LinearRegression()
-            lr.fit(exp, obj)
-            weight = np.power(np.abs(lr.coef_), gamma)
-            reg = LassoLarsIC(criterion="bic")
-            reg.fit(exp * weight, obj)
-            coef = reg.coef_ * weight
+            predictors = [i for i in range(exp.shape[1])]
+            target = len(predictors)
+            X_con = np.concatenate([exp, obj.reshape(-1, 1)], axis=1)
+            coef = predict_adaptive_lasso(X_con, predictors, target)
 
             B_taus[0][i, ancestor_indexes] = coef[:causal_order_no]
             for j in range(len(B_taus[1:])):
