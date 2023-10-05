@@ -6,7 +6,6 @@ import itertools
 import warnings
 
 import numpy as np
-from sklearn.linear_model import LassoLarsIC, LinearRegression
 from sklearn.utils import check_array, resample
 from statsmodels.tsa.statespace.varmax import VARMAX
 
@@ -31,7 +30,7 @@ class VARMALiNGAM:
         self,
         order=(1, 1),
         criterion="bic",
-        prune=False,
+        prune=True,
         max_iter=100,
         ar_coefs=None,
         ma_coefs=None,
@@ -47,8 +46,8 @@ class VARMALiNGAM:
         criterion : {'aic', 'bic', 'hqic', None}, optional (default='bic')
             Criterion to decide the best order in the all combinations of ``order``.
             Searching the best order is disabled if ``criterion`` is ``None``.
-        prune : boolean, optional (default=False)
-            Whether to prune the adjacency matrix or not.
+        prune : boolean, optional (default=True)
+            Whether to prune the adjacency matrix of lags.
         max_iter : int, optional (default=100)
             Maximm number of iterations to estimate VARMA model.
         ar_coefs : array-like, optional (default=None)
@@ -157,20 +156,23 @@ class VARMALiNGAM:
         n_features = X.shape[1]
         (p, q) = self._order
 
+        # store initial settings
+        ar_coefs = self._ar_coefs
+        ma_coefs = self._ma_coefs
+
         criterion = self._criterion
         self._criterion = None
 
         self.fit(X)
 
-        residuals = self._residuals
-        ar_coefs = self._ar_coefs
-        ma_coefs = self._ma_coefs
+        fitted_ar_coefs = self._ar_coefs
+        fitted_ma_coefs = self._ma_coefs
 
         total_effects = np.zeros([n_sampling, n_features, n_features * (1 + p)])
 
         adjacency_matrices = []
         for i in range(n_sampling):
-            sampled_residuals = resample(residuals, n_samples=n_samples)
+            sampled_residuals = resample(self._residuals, n_samples=n_samples)
 
             resampled_X = np.zeros((n_samples, n_features))
             for j in range(n_samples):
@@ -179,14 +181,18 @@ class VARMALiNGAM:
                     continue
 
                 ar = np.zeros((1, n_features))
-                for t, M in enumerate(ar_coefs):
+                for t, M in enumerate(fitted_ar_coefs):
                     ar += np.dot(M, resampled_X[j - t - 1, :].T).T
 
                 ma = np.zeros((1, n_features))
-                for t, M in enumerate(ma_coefs):
+                for t, M in enumerate(fitted_ma_coefs):
                     ma += np.dot(M, sampled_residuals[j - t - 1, :].T).T
 
                 resampled_X[j, :] = ar + sampled_residuals[j] + ma
+
+            # restore initial settings
+            self._ar_coefs = ar_coefs
+            self._ma_coefs = ma_coefs
 
             self.fit(resampled_X)
 
@@ -406,14 +412,8 @@ class VARMALiNGAM:
             ]
 
             # adaptive lasso
-            gamma = 1.0
-            lr = LinearRegression()
-            lr.fit(X_joined[:, predictors], X_joined[:, target])
-            weight = np.power(np.abs(lr.coef_), gamma)
-            reg = LassoLarsIC(criterion="bic")
-            reg.fit(X_joined[:, predictors] * weight, X_joined[:, target])
-
-            psi_omega[target, predictors] = reg.coef_ * weight
+            coef = predict_adaptive_lasso(X_joined, predictors, target)
+            psi_omega[target, predictors] = coef
 
         # split psi and omega
         psis = np.zeros(((1 + order[0]), n_features, n_features))

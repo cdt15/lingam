@@ -752,7 +752,7 @@ def predict_adaptive_lasso(X, predictors, target, gamma=1.0):
     lr = LinearRegression()
     lr.fit(X_std[:, predictors], X_std[:, target])
     weight = np.power(np.abs(lr.coef_), gamma)
-    reg = LassoLarsIC(criterion="bic", normalize=False)
+    reg = LassoLarsIC(criterion="bic")
     reg.fit(X_std[:, predictors] * weight, X_std[:, target])
     pruned_idx = np.abs(reg.coef_ * weight) > 0.0
 
