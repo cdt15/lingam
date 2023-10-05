@@ -10,8 +10,11 @@ import numpy as np
 import pandas as pd
 import scipy.optimize as sopt
 from scipy.special import expit as sigmoid
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression, PoissonRegressor
 from sklearn.metrics import log_loss
+# import torch 
+# import torch.nn as nn
+# import math
 
 import lingam.utils as ut
 
@@ -60,7 +63,7 @@ class LiM:
         self._w_threshold = w_threshold
         self._adjacency_matrix = None
 
-    def fit(self, X, dis_con, only_global=False):
+    def fit(self, X, dis_con, only_global=False, is_poisson=False):
         """Fit the model to X with mixed data.
 
         Parameters
@@ -75,6 +78,9 @@ class LiM:
         only_global: boolean, optional (default=False)
             If True, then the method will only perform the global optimization
             to estimate the causal structure, without the local search phase.
+        is_poisson: boolean, optional (default=False)
+            If True, then the method will use poisson regression model to compute
+            the log-likelihood in the local search phase.
 
         Returns
         -------
@@ -82,11 +88,11 @@ class LiM:
             Returns the instance of self.
         """
 
-        W_min_lss = self._estimate_LiM(X, dis_con, only_global)
+        W_min_lss = self._estimate_LiM(X, dis_con, only_global, is_poisson)
         self._adjacency_matrix = W_min_lss
         return self._adjacency_matrix
 
-    def _estimate_LiM(self, X, dis_con, only_global):
+    def _estimate_LiM(self, X, dis_con, only_global, is_poisson):
         """Estimate the adjacency matrix btw. mixed variables"""
 
         def _loss(W):
@@ -95,6 +101,13 @@ class LiM:
             if self._loss_type == "logistic":
                 loss = 1.0 / X.shape[0] * (np.logaddexp(0, M) - X * M).sum()
                 G_loss = 1.0 / X.shape[0] * X.T @ (sigmoid(M) - X)
+            elif self._loss_type == "poisson":
+                loss = - np.sum(X.T @ M) + np.exp(M).sum()
+                for j in range(X.shape[0]):
+                    for k in range(X.shape[1]):
+                        loss += np.log(_factorial(X[j][k]))
+                loss =  1.0 / X.shape[0] * loss 
+                G_loss = 1.0 / X.shape[0] * (- X.T @ X + X.T @ np.exp(M))
             elif self._loss_type == "laplace":
                 R = X - M
                 loss = -1.0 / X.shape[0] * np.sum(-np.log(np.cosh(R)))
@@ -125,7 +138,7 @@ class LiM:
                 is_continuous = dis_con[0, :].astype(bool)
                 is_discrete = np.invert(is_continuous)
                 loss = -_bic_scoring(
-                    dag, is_discrete, df, lingam_data
+                    dag, is_discrete, is_poisson, df, lingam_data
                 )  # lingam_data:dims*samples
                 R = X - M
                 G_loss = 1.0 / X.shape[0] * (X.T @ (sigmoid(M) - X) - X.T @ np.tanh(R))
@@ -133,7 +146,7 @@ class LiM:
                 raise ValueError("unknown loss type")
             return loss, G_loss
 
-        def _bic_scoring(dag: nx.DiGraph, is_discrete, df, lingam_data):
+        def _bic_scoring(dag: nx.DiGraph, is_discrete, is_poisson, df, lingam_data):
             """Evaluate value of loss given the DAG."""
             sample_size = df.shape[0]
             K = dag.number_of_edges() + dag.number_of_nodes()
@@ -144,8 +157,8 @@ class LiM:
             for i in dag.nodes:
                 parents_i = [j for j in dag.predecessors(i)]
 
-                # 離散
-                if is_discrete[i]:
+                # 離散 logistic
+                if is_discrete[i] and is_poisson == False:
                     if not parents_i:
                         # Bernoulli binary variable, likelihood using Bernoulli model with MLE parameters
                         frequency_table = df[i].value_counts()
@@ -172,6 +185,42 @@ class LiM:
                         )
                         total_score += likekihood_logistic
                     pass
+                
+                # 離散 poisson
+                elif is_discrete[i] and is_poisson == True:
+                    if not parents_i:
+                        # Bernoulli count variable, likelihood using Bernoulli model with MLE parameters
+                        frequency_table = df[i].value_counts()
+                        likekihood_bernoulli = 0.0
+                        for count_k in frequency_table:
+                            likekihood_bernoulli += count_k * (
+                                np.log(count_k) - np.log(frequency_table.sum())
+                            )
+                        total_score += likekihood_bernoulli
+                    
+                    elif parents_i:
+                        # Count variable, likelihood using poisson regression model.
+                        for iii in range(len(parents_i)):
+                            X = lingam_data[parents_i[iii]]
+                            X = X.reshape(-1,1)
+                            y = lingam_data[i]
+                            poisson = PoissonRegressor()
+                            poisson.fit(X, y)
+                            beta = poisson.coef_
+                            # compute likelihood 
+                            likekihood_poisson = - np.sum(y * lingam_data[parents_i[iii]] * beta) + \
+                            np.sum(np.exp(lingam_data[parents_i[iii]] * beta)) 
+                            for j in range(len(y)):
+                                likekihood_poisson += np.log(_factorial(y[j]))
+                        total_score += likekihood_poisson
+                        # # or we can compute likelihood via nn 
+                        # pnllloss = nn.PoissonNLLLoss()
+                        # log_input = np.log(lingam_data[parents_i] * beta) 
+                        # target = y # torch.randn(5, 2)
+                        # output = pnllloss(log_input, target)
+                        # likekihood_poisson = output.item()
+                        # total_score += likekihood_poisson
+
                 # 連続
                 elif not is_discrete[i]:
                     b_i = np.zeros(dag.number_of_nodes())
@@ -220,6 +269,14 @@ class LiM:
             )
             return obj, g_obj
 
+        def _factorial(y):
+            if not isinstance(y, int):
+                y = round(y)
+            if y == 0 or y == 1 or y < 0:
+                return 1
+            else:
+                return (y*_factorial(y-1))
+    
         n, d = X.shape
         w_est, rho, alpha, h = (
             np.random.random(2 * d * d),
@@ -263,7 +320,7 @@ class LiM:
                 w_est = np.random.random(2 * d * d)
         W_est = _adj(w_est)
         W_est[np.abs(W_est) < self._w_threshold] = 0
-        # print('W_est (without the 2nd phase) is: \n', W_est)
+        print('W_est (without the 2nd phase) is: \n', W_est)
 
         if not only_global:
             self._loss_type = "mixed_dag"

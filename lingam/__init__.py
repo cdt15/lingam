@@ -18,6 +18,8 @@ from .rcd import RCD
 from .resit import RESIT
 from .var_lingam import VARBootstrapResult, VARLiNGAM
 from .varma_lingam import VARMABootstrapResult, VARMALiNGAM
+from .lina import LiNA
+from .lina import MDLiNA
 
 __all__ = [
     "ICALiNGAM",
@@ -38,6 +40,8 @@ __all__ = [
     "LiM",
     "CausalBasedSimulator",
     "MultiGroupRCD",
+    "LiNA",
+    "MDLiNA"
 ]
 
 __version__ = "1.8.2"
