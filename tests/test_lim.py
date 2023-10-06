@@ -6,7 +6,8 @@ The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 import os
 
 import numpy as np
-
+import sys
+sys.path.append('D:/Codes/Git/lingam')
 import lingam
 
 DATA_DIR_PATH = os.path.dirname(__file__)
@@ -25,11 +26,16 @@ def test_fit_lim():
         ]
     )
     model = lingam.LiM()
-    model.fit(X, dis_con, only_global=True)
+    model.fit(X, dis_con, only_global=False, is_poisson=True)
 
     print("The estimated adjacency matrix is:\n", model.adjacency_matrix_)
     print("The true adjacency matrix is:\n", W_true)
     print("Done.")
 
     model = lingam.LiM()
-    model.fit(X, dis_con, only_global=False)
+    model.fit(X, dis_con, only_global=False, is_poisson=False)
+    # model.fit(X, dis_con, only_global=False)
+
+    print("The estimated adjacency matrix is:\n", model.adjacency_matrix_)
+    print("The true adjacency matrix is:\n", W_true)
+    print("Done.")
