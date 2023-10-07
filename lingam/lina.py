@@ -206,11 +206,11 @@ class LiNA:
 
 
 class MDLiNA:
-    """Implementation of MD-LiNA Algorithm [1]_
+    """Implementation of MD-LiNA Algorithm [2]_
 
     References
     ----------
-    .. [1] Y. Zeng, S. Shimizu, R. Cai, F. Xie, M. Yamamoto and Z. Hao.
+    .. [2] Y. Zeng, S. Shimizu, R. Cai, F. Xie, M. Yamamoto and Z. Hao.
        Causal Discovery with Multi-Domain LiNGAM for Latent Factors.
        In Proc. of the Thirtieth International Joint Conference on
        Artificial Intelligence (IJCAI-21), 2021: 2097--2103.
