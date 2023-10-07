@@ -7,3 +7,4 @@ networkx
 pandas
 pygam
 matplotlib
+psy

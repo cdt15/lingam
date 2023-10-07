@@ -24,6 +24,7 @@ setuptools.setup(
         'pandas',
         'pygam',
         'matplotlib',
+        'psy',
     ],
     url='https://github.com/cdt15/lingam',
     packages=setuptools.find_packages(exclude=['tests']),
