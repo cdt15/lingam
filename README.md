@@ -131,6 +131,10 @@ Should you use this package for performing **RCD algorithm**, we kindly request 
 
 * T. N. Maeda and S. Shimizu. **RCD: Repetitive causal discovery of linear non-Gaussian acyclic models with latent confounders.** In Proc. 23rd International Conference on Artificial Intelligence and Statistics (AISTATS2020), Palermo, Sicily, Italy. PMLR  108:735-745, 2020. [[PDF]](http://proceedings.mlr.press/v108/maeda20a.html)
 
+Should you use this package for performing **LiNA algorithm**, we kindly request you to cite the following paper:
+
+* Y. Zeng, S. Shimizu, R. Cai, F. Xie, M. Yamamoto and Z. Hao. **Causal Discovery with Multi-Domain LiNGAM for Latent Factors**. In Proc. of the Thirtieth International Joint Conference on Artificial Intelligence (IJCAI-21), 2021: 2097--2103. [[PDF](https://www.ijcai.org/proceedings/2021/289)]
+
 Should you use this package for performing **CAM-UV algorithm**, we kindly request you to cite the following paper:
 
 * T. N. Maeda and S. Shimizu. **Causal additive models with unobserved variables.** In Proc. 37th Conference on Uncertainty in Artificial Intelligence (UAI). PMLR 161:97-106, 2021. [[PDF]](https://proceedings.mlr.press/v161/maeda21a.html)
