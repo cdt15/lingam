@@ -20,6 +20,7 @@ API Reference
     rcd
     causal_effect
     utils
+    lina
     resit
     lim
     camuv
