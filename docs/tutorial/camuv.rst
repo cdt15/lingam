@@ -1,10 +1,10 @@
 
 CAM-UV
-=====
+======
 
 Model
 -------------------
-This method CAM-UV (Causal Additive Models with Unobserved Variables) assumes an extension of the basic CAM model [1]_ to include unobserved variables.
+This method CAM-UV (Causal Additive Models with Unobserved Variables) [2]_ assumes an extension of the basic CAM model [1]_ to include unobserved variables.
 This method makes the following assumptions:
 
 #. The effects of direct causes on a variable form generalized additive models (GAMs).
