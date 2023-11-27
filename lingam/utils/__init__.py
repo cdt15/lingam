@@ -6,6 +6,8 @@ import graphviz
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
+import pandas as pd
+import semopy
 from matplotlib import colors as mcolors
 from matplotlib.colors import is_color_like
 from sklearn import linear_model
@@ -34,6 +36,7 @@ __all__ = [
     "extract_ancestors",
     "f_correlation",
     "visualize_nonlinear_causal_effect",
+    "evaluate_model_fit",
 ]
 
 
@@ -910,3 +913,82 @@ def variance_i(X, i, b_i):
     variance = np.var(estimated_disturbance)  # stable version, even not zero mean.
 
     return variance
+
+
+def evaluate_model_fit(adjacency_matrix, X, is_ordinal=None):
+    """ evaluate the given adjacency matrix and return fit indices
+
+    Parameters
+    ----------
+    adjacency_matrix : array-like, shape (n_features, n_features)
+        Adjacency matrix representing a causal graph.
+        The i-th column and row correspond to the i-th column of X.
+    X : array-like, shape (n_samples, n_features)
+        Training data.
+    is_ordinal : array-like, shape (n_features,)
+        Binary list. The i-th element represents that the i-th column of X is ordinal or not.
+        0 means not ordinal, otherwise ordinal.
+
+    Return
+    ------
+    fit_indices : pandas.DataFrame
+        Fit indices. This API uses semopy's calc_stats(). See semopy's reference for details.
+    """
+
+    # check inputs
+    adj = check_array(adjacency_matrix, force_all_finite="allow-nan")
+    if adj.ndim != 2 or (adj.shape[0] != adj.shape[1]):
+        raise ValueError("adj must be an square matrix.")
+
+    X = check_array(X)
+    if X.shape[1] != adj.shape[1]:
+        raise ValueError("X.shape[1] and adj.shape[1] must be the same.")
+
+    if is_ordinal is None:
+        is_ordinal = np.zeros(X.shape[1])
+    else:
+        is_ordinal = check_array(is_ordinal, ensure_2d=False).flatten()
+    if is_ordinal.shape[0] != adj.shape[1]:
+        raise ValueError("is_ordinal.shape[0] and adj.shape[1] must be the same.")
+
+    # build desc
+    desc = ""
+    eta_names = []
+
+    for i, row in enumerate(adj):
+        # exogenous
+        if np.sum(np.isnan(row)) == 0 and np.sum(np.isclose(row, 0)) == row.shape[0]:
+            continue
+
+        desc += f"x{i:d} ~ "
+
+        for j, elem in enumerate(row):
+            if np.isnan(elem):
+                eta_name = f"eta_{i}_{j}" if i < j else f"eta_{j}_{i}"
+                desc += f"{eta_name} + "
+                if eta_name not in eta_names:
+                    eta_names.append(eta_name)
+            elif not np.isclose(elem, 0):
+                desc += f"{elem:f} * x{j:d} + "
+        desc = desc[:-len(" * ")] + "\n"
+
+    if len(eta_names) > 0:
+        desc += "DEFINE(latent) " + " ".join(eta_names) + "\n"
+
+    if sum(is_ordinal) > 0:
+        indices = np.argwhere(is_ordinal).flatten()
+
+        desc += "DEFINE(ordinal)"
+        for i in indices:
+            desc += f" x{i}"
+        desc += "\n"
+
+    columns = [f"x{i:d}" for i in range(X.shape[1])]
+    X = pd.DataFrame(X, columns=columns)
+
+    m = semopy.Model(desc)
+    m.fit(X)
+
+    stats = semopy.calc_stats(m)
+
+    return stats

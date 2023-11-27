@@ -18,3 +18,4 @@ utils
 .. autofunction:: extract_ancestors
 .. autofunction:: f_correlation
 .. autofunction:: visualize_nonlinear_causal_effect
+.. autofunction:: evaluate_model_fit

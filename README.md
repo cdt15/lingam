@@ -27,6 +27,8 @@ LiNGAM is a new method for estimating structural equation models or linear Bayes
 
 - itertools
 
+- semopy
+
 
 ## Installation
 

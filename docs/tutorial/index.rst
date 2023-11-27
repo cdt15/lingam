@@ -36,3 +36,4 @@ Contents:
     extract_ancestors
     f_correlation
     visualize_nonlinear_causal_effect
+    evaluate_model_fit

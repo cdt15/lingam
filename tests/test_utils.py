@@ -16,6 +16,7 @@ from lingam.utils import (
     find_all_paths,
     extract_ancestors,
     f_correlation,
+    evaluate_model_fit,
 )
 
 
@@ -297,3 +298,95 @@ def test_f_correlation():
         pass
     else:
         raise AssertionError
+
+def test_evaluate_model_fit():
+    graph = np.array([
+        [0, 0, 0],
+        [0.5, 0, 0],
+        [0.5, 0.5, 0],
+    ])
+
+    graph2 = np.array([
+        [0, 0, 0],
+        [0.5, 0, 0],
+        [0.5, 0, 0],
+    ])
+
+    sample_size = 100
+    X = np.zeros((sample_size, graph.shape[1]))
+    X[:, 0] = np.random.normal(0, 1, size=sample_size)
+    X[:, 1] = X @ graph[1, :]
+    X[:, 1] += np.random.normal(0, np.std(X[:, 1]), size=sample_size)
+    X[:, 2] = X @ graph[2, :]
+    X[:, 2] += np.random.normal(0, np.std(X[:, 2]), size=sample_size)
+    X = pd.DataFrame(X, columns=[f"x{i}" for i in range(graph.shape[1])])
+
+    result = evaluate_model_fit(graph, X)
+    result2 = evaluate_model_fit(graph2, X)
+    assert result["LogLik"].values[0] < result2["LogLik"].values[0]
+
+    # ordinal
+    sample_size = 100
+    X2 = np.zeros((sample_size, graph.shape[1]))
+    X2[:, 0] = np.random.choice([0, 1], size=sample_size)
+    X2[:, 1] = X2 @ graph[1, :]
+    X2[:, 1] += np.random.normal(0, np.std(X2[:, 1]), size=sample_size)
+    X2[:, 2] = X2 @ graph[2, :]
+    X2[:, 2] += np.random.normal(0, np.std(X2[:, 2]), size=sample_size)
+    X2 = pd.DataFrame(X2, columns=[f"x{i}" for i in range(graph.shape[1])])
+
+    result = evaluate_model_fit(graph, X2, is_ordinal=[1, 0, 0])
+    assert result["LogLik"].values[0] > 0
+
+    # latent
+    graph3 = np.array([
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 0, 0, 0],
+        [0, 1, 1, 0],
+    ])
+
+    sample_size = 100
+    X3 = np.zeros((sample_size, graph3.shape[1]))
+    X3[:, 0] = np.random.normal(0, 1, size=sample_size)
+    X3[:, 1] = X3 @ graph3[1, :]
+    X3[:, 1] += np.random.normal(0, np.std(X3[:, 1]), size=sample_size)
+    X3[:, 2] = X3 @ graph3[2, :]
+    X3[:, 2] += np.random.normal(0, np.std(X3[:, 2]), size=sample_size)
+    X3[:, 3] = X3 @ graph3[3, :]
+    X3[:, 3] += np.random.normal(0, np.std(X3[:, 3]), size=sample_size)
+    X3 = X3[:, 1:]
+    X3 = pd.DataFrame(X3, columns=[f"x{i}" for i in range(X3.shape[1])])
+
+    graph3 = np.array([
+        [0, np.nan, 0],
+        [np.nan, 0, 0],
+        [1, 1, 0],
+    ])
+
+    result = evaluate_model_fit(graph3, X3)
+    assert result["LogLik"].values[0] > 0
+
+    # exception
+    try:
+        evaluate_model_fit([[0, 1]], X)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    try:
+        evaluate_model_fit(graph, X.iloc[:, :-1])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    try:
+        evaluate_model_fit(graph, X, is_ordinal=[0])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+
