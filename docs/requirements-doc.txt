@@ -8,5 +8,6 @@ pandas
 pygam
 matplotlib
 psy
+semopy
 sphinx
 sphinx_rtd_theme
