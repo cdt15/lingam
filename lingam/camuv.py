@@ -111,12 +111,9 @@ class CAMUV:
         is_independent = False
         if self._independence == "hsic":
             _, value = hsic_test_gamma(X, Y)
-            f_corr = f_correlation(X, Y)
-            print(f"HSIC p: {value:.3f}, f-corr: {f_corr:.3f}")
             is_independent = value > threshold
         elif self._independence == "fcorr":
             value = f_correlation(X, Y)
-            print(f"f-corr: {value:.3f}")
             is_independent = value < threshold
         return is_independent, value
 

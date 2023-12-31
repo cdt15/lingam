@@ -370,8 +370,6 @@ class MultiGroupRCD:
             max_f_corr = 0.0
             for i, Y in enumerate(Y_list):
                 f_corr = f_correlation(X_list[i], Y[:, xj])
-                print(f"f-corr: {f_corr:.3f}")
-
                 if f_corr > max_f_corr:
                     max_f_corr = f_corr
 
