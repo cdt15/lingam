@@ -15,7 +15,7 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .hsic import get_gram_matrix, get_kernel_width, hsic_test_gamma, hsic_teststat
-from .utils import predict_adaptive_lasso
+from .utils import predict_adaptive_lasso, f_correlation
 
 
 class MultiGroupRCD:
@@ -29,27 +29,36 @@ class MultiGroupRCD:
         shapiro_alpha=0.01,
         MLHSICR=True,
         bw_method="mdbs",
+        independence="hsic",
+        ind_corr=0.5,
     ):
         """Construct a model.
 
         Parameters
         ----------
-         max_explanatory_num : int, optional (default=2)
-             Maximum number of explanatory variables.
-         cor_alpha : float, optional (default=0.01)
-             Alpha level for pearson correlation.
-         ind_alpha : float, optional (default=0.01)
-             Alpha level for HSIC.
-         shapiro_alpha : float, optional (default=0.01)
-             Alpha level for Shapiro-Wilk test.
-         MLHSICR : bool, optional (default=True)
-             If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
-         bw_method : str, optional (default=``mdbs``)
-                 The method used to calculate the bandwidth of the HSIC.
+        max_explanatory_num : int, optional (default=2)
+            Maximum number of explanatory variables.
+        cor_alpha : float, optional (default=0.01)
+            Alpha level for pearson correlation.
+        ind_alpha : float, optional (default=0.01)
+            Alpha level for HSIC.
+        shapiro_alpha : float, optional (default=0.01)
+            Alpha level for Shapiro-Wilk test.
+        MLHSICR : bool, optional (default=True)
+            If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
+        bw_method : str, optional (default=``mdbs``)
+                The method used to calculate the bandwidth of the HSIC.
 
-             * ``mdbs`` : Median distance between samples.
-             * ``scott`` : Scott's Rule of Thumb.
-             * ``silverman`` : Silverman's Rule of Thumb.
+            * ``mdbs`` : Median distance between samples.
+            * ``scott`` : Scott's Rule of Thumb.
+            * ``silverman`` : Silverman's Rule of Thumb.
+        independence : str, optional (default=``hsic``)
+            Methods to determine independence.
+
+            * ``hsic`` : Hilbert-Schmidt independence criterion (HSIC)
+            * ``fcorr`` : F-correlation
+        ind_corr : float, optional (default=0.5)
+            Threshold for determining independence by F-correlation.
         """
         # Check parameters
         if max_explanatory_num <= 0:
@@ -67,6 +76,12 @@ class MultiGroupRCD:
         if bw_method not in ("mdbs", "scott", "silverman"):
             raise ValueError("bw_method must be 'mdbs', 'scott' or 'silverman'.")
 
+        if independence not in ("hsic", "fcorr"):
+            raise ValueError("independence must be 'hsic' or 'fcorr'.")
+
+        if ind_corr < 0.0:
+            raise ValueError("ind_corr must be an float greater than 0.")
+
         self._max_explanatory_num = max_explanatory_num
         self._cor_alpha = cor_alpha
         self._ind_alpha = ind_alpha
@@ -75,6 +90,8 @@ class MultiGroupRCD:
         self._bw_method = bw_method
         self._ancestors_list = None
         self._adjacency_matrices = None
+        self._independence = independence
+        self._ind_corr = ind_corr
 
     def fit(self, X_list):
         """Fit the model to multiple datasets.
@@ -336,10 +353,35 @@ class MultiGroupRCD:
             return True
         return False
 
+    def _is_independent(self, X_list, Y_list, xj):
+        if self._independence == "hsic":
+            fisher_stat = 0
+            for i, Y in enumerate(Y_list):
+                _, hsic_p = hsic_test_gamma(
+                    X_list[i], Y[:, xj], bw_method=self._bw_method
+                )
+                fisher_stat += np.inf if hsic_p == 0 else -2 * np.log(hsic_p)
+
+            fisher_p = chi2.sf(fisher_stat, df=2 * self._k)
+
+            is_independent = fisher_p > self._ind_alpha
+
+        elif self._independence == "fcorr":
+            max_f_corr = 0.0
+            for i, Y in enumerate(Y_list):
+                f_corr = f_correlation(X_list[i], Y[:, xj])
+                print(f"f-corr: {f_corr:.3f}")
+
+                if f_corr > max_f_corr:
+                    max_f_corr = f_corr
+
+            is_independent = f_corr < self._ind_corr
+
+        return is_independent
+
     def _is_independent_of_resid(self, Y_list, xi, xj_list):
         """Check whether the residuals obtained from multiple regressions are independent"""
         # Multiple Regression with OLS.
-        # resid_list = np.zeros(Y_list.shape[0:2])
         resid_list = []
         for Y in Y_list:
             resid, _ = self._get_resid_and_coef(Y, xi, xj_list)
@@ -347,16 +389,8 @@ class MultiGroupRCD:
 
         is_all_independent = True
         for xj in xj_list:
-            fisher_stat = 0
-            for i, Y in enumerate(Y_list):
-                _, hsic_p = hsic_test_gamma(
-                    resid_list[i], Y[:, xj], bw_method=self._bw_method
-                )
-                fisher_stat += np.inf if hsic_p == 0 else -2 * np.log(hsic_p)
-
-            fisher_p = chi2.sf(fisher_stat, df=2 * self._k)
-
-            if fisher_p <= self._ind_alpha:
+            is_independent = self._is_independent(resid_list, Y_list, xj)
+            if not is_independent:
                 is_all_independent = False
                 break
 
@@ -366,23 +400,14 @@ class MultiGroupRCD:
             return False
 
         # Multiple Regression with MLHSICR.
-        # resid_list = np.zeros(Y_list.shape[0:2])
         resid_list = []
         for Y in Y_list:
             resid, _ = self._get_resid_and_coef_by_MLHSICR(Y, xi, xj_list)
             resid_list.append(resid)
 
         for xj in xj_list:
-            fisher_stat = 0
-            for i, Y in enumerate(Y_list):
-                _, hsic_p = hsic_test_gamma(
-                    resid_list[i], Y[:, xj], bw_method=self._bw_method
-                )
-                fisher_stat += np.inf if hsic_p == 0 else -2 * np.log(hsic_p)
-
-            fisher_p = chi2.sf(fisher_stat, df=2 * self._k)
-
-            if fisher_p <= self._ind_alpha:
+            is_independent = self._is_independent(resid_list, Y_list, xj)
+            if not is_independent:
                 return False
 
         return True

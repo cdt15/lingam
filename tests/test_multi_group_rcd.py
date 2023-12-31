@@ -86,6 +86,12 @@ def test_fit_success():
     model.adjacency_matrices_
     model.ancestors_list_
 
+    # f-correlation
+    model = MultiGroupRCD(
+        independence="fcorr",
+    )
+    model.fit(X_list)
+
 
 def test_fit_invalid_data():
     def get_coef():
@@ -199,6 +205,24 @@ def test_fit_invalid_data():
     # Invalid value: bw_method
     try:
         model = MultiGroupRCD(bw_method="X")
+        model.fit(X_list)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid value: independence
+    try:
+        model = MultiGroupRCD(independence="lingam")
+        model.fit(X_list)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid value: ind_corr
+    try:
+        model = MultiGroupRCD(ind_corr=-0.5)
         model.fit(X_list)
     except ValueError:
         pass

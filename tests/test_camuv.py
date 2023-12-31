@@ -71,6 +71,11 @@ def test_fit_success():
     model.fit(X)
     print(model.adjacency_matrix_)
 
+    # f-correlation
+    model = lingam.CAMUV(independence="fcorr", ind_corr=0.5)
+    model.fit(X)
+
+
 def test_fit_invalid():
     try:
         X = create_data(2000)
@@ -84,6 +89,24 @@ def test_fit_invalid():
     try:
         X = create_data(2000)
         model = lingam.CAMUV(num_explanatory_vals=-1)
+        model.fit(X)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid value: independence
+    try:
+        model = lingam.CAMUV(independence="lingam")
+        model.fit(X)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    try:
+        X = create_data(2000)
+        model = lingam.CAMUV(ind_corr=-1.0)
         model.fit(X)
     except ValueError:
         pass

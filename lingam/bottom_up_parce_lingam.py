@@ -13,7 +13,7 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .hsic import hsic_test_gamma
-from .utils import predict_adaptive_lasso
+from .utils import predict_adaptive_lasso, f_correlation
 
 
 class BottomUpParceLiNGAM:
@@ -27,7 +27,13 @@ class BottomUpParceLiNGAM:
     """
 
     def __init__(
-        self, random_state=None, alpha=0.1, regressor=None, prior_knowledge=None
+        self,
+        random_state=None,
+        alpha=0.1,
+        regressor=None,
+        prior_knowledge=None,
+        independence="hsic",
+        ind_corr=0.5,
     ):
         """Construct a BottomUpParceLiNGAM model.
 
@@ -48,6 +54,13 @@ class BottomUpParceLiNGAM:
             * ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
             * ``1`` : :math:`x_i` has a directed path to :math:`x_j`
             * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
+        independence : str, optional (default=``hsic``)
+            Methods to determine independence.
+
+            * ``hsic`` : Hilbert-Schmidt independence criterion (HSIC)
+            * ``fcorr`` : F-correlation
+        ind_corr : float, optional (default=0.5)
+            Threshold for determining independence by F-correlation.
         """
         # Check parameters
         if regressor is not None:
@@ -57,12 +70,20 @@ class BottomUpParceLiNGAM:
         if alpha < 0.0:
             raise ValueError("alpha must be an float greater than 0.")
 
+        if independence not in ("hsic", "fcorr"):
+            raise ValueError("independence must be 'hsic' or 'fcorr'.")
+
+        if ind_corr < 0.0:
+            raise ValueError("ind_corr must be an float greater than 0.")
+
         self._random_state = random_state
         self._alpha = alpha
         self._causal_order = None
         self._adjacency_matrix = None
         self._reg = regressor
         self._Aknw = prior_knowledge
+        self._independence = independence
+        self._ind_corr = ind_corr
 
         if self._Aknw is not None:
             self._Aknw = check_array(self._Aknw)
@@ -103,10 +124,10 @@ class BottomUpParceLiNGAM:
         X = X - np.tile(np.mean(X, axis=0), (X.shape[0], 1))
 
         # bonferroni correction
-        thresh_p = self._alpha / (n_features - 1)
+        self._thresh_p = self._alpha / (n_features - 1)
 
         # Search causal orders one by one from the bottom upward
-        K_bttm, p_bttm = self._search_causal_order(X, thresh_p)
+        K_bttm, p_bttm = self._search_causal_order(X)
 
         U_res = list(np.setdiff1d(np.arange(n_features), K_bttm))
         K = []
@@ -164,7 +185,7 @@ class BottomUpParceLiNGAM:
 
         return U
 
-    def _search_causal_order(self, X, thresh_p):
+    def _search_causal_order(self, X):
         """Search causal orders one by one from the bottom upward."""
         U = np.arange(X.shape[1])
         K_bttm = []
@@ -175,23 +196,15 @@ class BottomUpParceLiNGAM:
             # Search for candidate features
             Uc = self._search_candidate(U)
 
-            if len(Uc) == 1:
-                # If there is only one variable in Uc,
-                # calculate HSIC with the rest of the variables
-                m = np.array([Uc[0]])
-                predictors = np.setdiff1d(U, Uc[0])
-                R = self._compute_residuals(X, predictors, m)
-                fisher_p, _ = self._fisher_hsic_test(X[:, predictors], R, np.inf)
-            else:
-                # Find the most sink variable
-                m, _, fisher_p = self._find_exo_vec(X, Uc)
+            # Find the most sink variable
+            m, _, eval = self._find_exo_vec(X, Uc, U)
 
             # Conduct statistical test by the p-value or the statistic
             # If statistical test is not rejected
-            if fisher_p >= thresh_p:
+            if not self._is_reject(eval):
                 # Add index of the exogenous variable to K_bttm
                 K_bttm = np.append(m, K_bttm).astype(np.int64)
-                p_bttm.insert(0, fisher_p)
+                p_bttm.insert(0, eval)
 
                 # Update U and partial orders
                 U = U[U != m]
@@ -211,32 +224,66 @@ class BottomUpParceLiNGAM:
 
         return K_bttm, p_bttm
 
-    def _find_exo_vec(self, X, U):
+    def _find_exo_vec(self, X, Uc, U):
         """Find the most exogenous vector."""
-        max_p = -np.inf
-        max_p_stat = np.inf
 
+        eval = np.inf
         exo_vec = []
-        for j in range(len(U)):
-            xi_index = np.setdiff1d(U, U[j])
-            xj_index = np.array([U[j]])
 
-            # Compute residuals
-            R = self._compute_residuals(X, xi_index, xj_index)
+        if len(Uc) == 1:
+            # If there is only one variable in Uc,
+            # calculate HSIC with the rest of the variables
+            m = np.array([Uc[0]])
+            predictors = np.setdiff1d(U, Uc[0])
+            R = self._compute_residuals(X, predictors, m)
+            if self._independence == "hsic":
+                eval, _ = self._fisher_hsic_test(X[:, predictors], R, np.inf)
+            elif self._independence == "fcorr":
+                eval = self._f_correlation(X[:, predictors], R)
+            return m, [], eval
 
-            # HSIC test with Fisher's method
-            fisher_p, fisher_stat = self._fisher_hsic_test(
-                X[:, xi_index], R, max_p_stat
-            )
+        else:
+            max_p_stat = np.inf
+            for j in range(len(Uc)):
+                xi_index = np.setdiff1d(Uc, Uc[j])
+                xj_index = np.array([Uc[j]])
 
-            # Update output
-            if fisher_stat < max_p_stat or fisher_p > max_p:
-                exo_vec = xi_index
-                max_p = fisher_p
-                max_p_stat = fisher_stat
+                # Compute residuals
+                R = self._compute_residuals(X, xi_index, xj_index)
 
-        m = np.setdiff1d(U, exo_vec)
-        return m, exo_vec, max_p
+                if self._independence == "hsic":
+                    # HSIC test with Fisher's method
+                    fisher_p, fisher_stat = self._fisher_hsic_test(
+                        X[:, xi_index], R, max_p_stat
+                    )
+
+                    # Update output
+                    if fisher_stat < max_p_stat:
+                        exo_vec = xi_index
+                        eval = fisher_p
+                        max_p_stat = fisher_stat
+
+                elif self._independence == "fcorr":
+                    f_corr = self._f_correlation(X[:, xi_index], R)
+
+                    # Update output
+                    if f_corr < eval:
+                        exo_vec = xi_index
+                        eval = f_corr
+
+            m = np.setdiff1d(Uc, exo_vec)
+
+        return m, exo_vec, eval
+
+    def _is_reject(self, eval):
+        is_reject = False
+        if self._independence == "hsic":
+            if eval < self._thresh_p:
+                is_reject = True
+        elif self._independence == "fcorr":
+            if eval >= self._ind_corr:
+                is_reject = True
+        return is_reject
 
     def _compute_residuals(self, X, predictors, target):
         """Compute residuals"""
@@ -271,6 +318,21 @@ class BottomUpParceLiNGAM:
             fisher_p = 1 - chi2.cdf(fisher_stat, df=2 * n_features)
 
         return fisher_p, fisher_stat
+
+    def _f_correlation(self, X, R):
+        """Determine independence by F-correlation."""
+        max_f_corr = 0.0
+        n_features = X.shape[1]
+
+        if n_features == 1:
+            max_f_corr = f_correlation(X, R)
+        else:
+            for i in range(n_features):
+                f_corr = f_correlation(X[:, [i]], R)
+                if f_corr > max_f_corr:
+                    max_f_corr = f_corr
+
+        return max_f_corr
 
     def _flatten(self, arr):
         """Return a copy of an array flattened in one dimension."""

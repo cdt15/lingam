@@ -12,6 +12,7 @@ from pygam import LinearGAM
 from sklearn.utils import check_array
 
 from .hsic import hsic_test_gamma
+from .utils import f_correlation
 
 
 class CAMUV:
@@ -23,15 +24,24 @@ class CAMUV:
        In Proc. Thirty-Seventh Conference on Uncertainty in Artificial Intelligence (UAI). PMLR  161:97-106, 2021.
     """
 
-    def __init__(self, alpha=0.01, num_explanatory_vals=2):
+    def __init__(
+        self, alpha=0.01, num_explanatory_vals=2, independence="hsic", ind_corr=0.5
+    ):
         """Construct a CAM-UV model.
 
         Parameters
         ----------
-         alpha : float, optional (default=0.01)
-             Alpha level.
-         num_explanatory_vals : int, optional (default=2)
-             Maximum number of explanatory variables.
+        alpha : float, optional (default=0.01)
+            Alpha level.
+        num_explanatory_vals : int, optional (default=2)
+            Maximum number of explanatory variables.
+        independence : str, optional (default=``hsic``)
+            Methods to determine independence.
+
+            * ``hsic`` : Hilbert-Schmidt independence criterion (HSIC)
+            * ``fcorr`` : F-correlation
+        ind_corr : float, optional (default=0.5)
+            Threshold for determining independence by F-correlation.
         """
 
         # Check parameters
@@ -41,16 +51,24 @@ class CAMUV:
         if alpha < 0:
             raise ValueError("alpha must be >= 0.")
 
+        if independence not in ("hsic", "fcorr"):
+            raise ValueError("independence must be 'hsic' or 'fcorr'.")
+
+        if ind_corr < 0.0:
+            raise ValueError("ind_corr must be an float greater than 0.")
+
         self._num_explanatory_vals = num_explanatory_vals
         self._alpha = alpha
+        self._independence = independence
+        self._ind_corr = ind_corr
 
     def fit(self, X):
         X = check_array(X)
 
         n = X.shape[0]
         d = X.shape[1]
-        N = self._get_neighborhoods(X, self._alpha)
-        P = self._find_parents(X, self._alpha, self._num_explanatory_vals, N)
+        N = self._get_neighborhoods(X)
+        P = self._find_parents(X, self._num_explanatory_vals, N)
 
         U = []
 
@@ -60,12 +78,12 @@ class CAMUV:
                     continue
                 if (i not in N[j]) or (j not in N[i]):
                     continue
+
                 i_residual = self._get_residual(X, i, P[i])
                 j_residual = self._get_residual(X, j, P[j])
                 in_X = np.reshape(i_residual, [n, 1])
                 in_Y = np.reshape(j_residual, [n, 1])
-                independence = hsic_test_gamma(X=in_X, Y=in_Y)[1]
-                if independence < self._alpha:
+                if not self._is_independent(in_X, in_Y):
                     if not set([i, j]) in U:
                         U.append(set([i, j]))
 
@@ -81,7 +99,28 @@ class CAMUV:
             residual = X[:, explained_i] - gam.predict(X[:, explanatory_ids])
         return residual
 
-    def _get_neighborhoods(self, X, alpha):
+    def _is_independent(self, X, Y):
+        if self._independence == "hsic":
+            threshold = self._alpha
+        elif self._independence == "fcorr":
+            threshold = self._ind_corr
+        is_independent, _ = self._is_independent_by(X, Y, threshold)
+        return is_independent
+
+    def _is_independent_by(self, X, Y, threshold):
+        is_independent = False
+        if self._independence == "hsic":
+            _, value = hsic_test_gamma(X, Y)
+            f_corr = f_correlation(X, Y)
+            print(f"HSIC p: {value:.3f}, f-corr: {f_corr:.3f}")
+            is_independent = value > threshold
+        elif self._independence == "fcorr":
+            value = f_correlation(X, Y)
+            print(f"f-corr: {value:.3f}")
+            is_independent = value < threshold
+        return is_independent, value
+
+    def _get_neighborhoods(self, X):
         n = X.shape[0]
         d = X.shape[1]
         N = [set() for i in range(d)]
@@ -89,13 +128,12 @@ class CAMUV:
             for j in range(d)[i + 1 :]:
                 in_X = np.reshape(X[:, i], [n, 1])
                 in_Y = np.reshape(X[:, j], [n, 1])
-                independence = hsic_test_gamma(X=in_X, Y=in_Y)[1]
-                if independence < self._alpha:
+                if not self._is_independent(in_X, in_Y):
                     N[i].add(j)
                     N[j].add(i)
         return N
 
-    def _find_parents(self, X, alpha, maxnum_vals, N):
+    def _find_parents(self, X, maxnum_vals, N):
         n = X.shape[0]
         d = X.shape[1]
         P = [set() for i in range(d)]  # Parents
@@ -111,16 +149,14 @@ class CAMUV:
                 if not self._check_identified_causality(variables_set, P):
                     continue
 
-                child, independence_with_K = self._get_child(
-                    X, variables_set, P, N, Y, alpha
+                child, is_independence_with_K = self._get_child(
+                    X, variables_set, P, N, Y
                 )
-                if not independence_with_K > alpha:
+                if not is_independence_with_K:
                     continue
 
                 parents = variables_set - {child}
-                if not self._check_independence_withou_K(
-                    parents, child, P, N, Y, alpha
-                ):
+                if not self._check_independence_withou_K(parents, child, P, N, Y):
                     continue
 
                 for parent in parents:
@@ -142,8 +178,7 @@ class CAMUV:
                 residual_j = self._get_residual(X, j, P[j])
                 in_X = np.reshape(residual_i, [n, 1])
                 in_Y = np.reshape(residual_j, [n, 1])
-                independence = hsic_test_gamma(X=in_X, Y=in_Y)[1]
-                if independence > alpha:
+                if self._is_independent(in_X, in_Y):
                     non_parents.add(j)
             P[i] = P[i] - non_parents
 
@@ -154,10 +189,10 @@ class CAMUV:
         Y[:, child] = self._get_residual(X, child, P[child])
         return Y
 
-    def _get_child(self, X, variables_set, P, N, Y, alpha):
+    def _get_child(self, X, variables_set, P, N, Y):
         n = X.shape[0]
 
-        max_independence = 0.0
+        prev_independence = 0.0 if self._independence == "hsic" else 1.0
         max_independence_child = None
 
         for child in variables_set:
@@ -169,20 +204,24 @@ class CAMUV:
             residual = self._get_residual(X, child, parents | P[child])
             in_X = np.reshape(residual, [n, 1])
             in_Y = np.reshape(Y[:, list(parents)], [n, len(parents)])
-            independence = hsic_test_gamma(X=in_X, Y=in_Y)[1]
-            if max_independence < independence:
-                max_independence = independence
+            is_ind, value = self._is_independent_by(in_X, in_Y, prev_independence)
+            if is_ind:
+                prev_independence = value
                 max_independence_child = child
 
-        return max_independence_child, max_independence
+        if self._independence == "hsic":
+            is_independent = prev_independence > self._alpha
+        elif self._independence == "fcorr":
+            is_independent = prev_independence < self._ind_corr
 
-    def _check_independence_withou_K(self, parents, child, P, N, Y, alpha):
+        return max_independence_child, is_independent
+
+    def _check_independence_withou_K(self, parents, child, P, N, Y):
         n = Y.shape[0]
         for parent in parents:
             in_X = np.reshape(Y[:, child], [n, 1])
             in_Y = np.reshape(Y[:, parent], [n, 1])
-            independence = hsic_test_gamma(X=in_X, Y=in_Y)[1]
-            if alpha < independence:
+            if self._is_independent(in_X, in_Y):
                 return False
         return True
 
