@@ -35,13 +35,10 @@ class CAMUV:
             Alpha level.
         num_explanatory_vals : int, optional (default=2)
             Maximum number of explanatory variables.
-        independence : str, optional (default=``hsic``)
-            Methods to determine independence.
-
-            * ``hsic`` : Hilbert-Schmidt independence criterion (HSIC)
-            * ``fcorr`` : F-correlation
+        independence : {'hsic', 'fcorr'}, optional (default='hsic')
+            Methods to determine independence. If 'hsic' is set, test for independence by HSIC. If 'fcorr' is set, independence is determined by F-correlation.
         ind_corr : float, optional (default=0.5)
-            Threshold for determining independence by F-correlation.
+            The threshold value for determining independence by F-correlation; independence is determined when the value of F-correlation is below this threshold value.
         """
 
         # Check parameters

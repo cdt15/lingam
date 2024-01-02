@@ -60,13 +60,10 @@ class RCD:
             * ``mdbs`` : Median distance between samples.
             * ``scott`` : Scott's Rule of Thumb.
             * ``silverman`` : Silverman's Rule of Thumb.
-        independence : str, optional (default=``hsic``)
-            Methods to determine independence.
-
-            * ``hsic`` : Hilbert-Schmidt independence criterion (HSIC)
-            * ``fcorr`` : F-correlation
+        independence : {'hsic', 'fcorr'}, optional (default='hsic')
+            Methods to determine independence. If 'hsic' is set, test for independence by HSIC. If 'fcorr' is set, independence is determined by F-correlation.
         ind_corr : float, optional (default=0.5)
-            Threshold for determining independence by F-correlation.
+            The threshold value for determining independence by F-correlation; independence is determined when the value of F-correlation is below this threshold value.
         """
         # Check parameters
         if max_explanatory_num <= 0:

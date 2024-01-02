@@ -54,13 +54,10 @@ class BottomUpParceLiNGAM:
             * ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
             * ``1`` : :math:`x_i` has a directed path to :math:`x_j`
             * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
-        independence : str, optional (default=``hsic``)
-            Methods to determine independence.
-
-            * ``hsic`` : Hilbert-Schmidt independence criterion (HSIC)
-            * ``fcorr`` : F-correlation
+        independence : {'hsic', 'fcorr'}, optional (default='hsic')
+            Methods to determine independence. If 'hsic' is set, test for independence by HSIC. If 'fcorr' is set, independence is determined by F-correlation.
         ind_corr : float, optional (default=0.5)
-            Threshold for determining independence by F-correlation.
+            The threshold value for determining independence by F-correlation; independence is determined when the value of F-correlation is below this threshold value.
         """
         # Check parameters
         if regressor is not None:
