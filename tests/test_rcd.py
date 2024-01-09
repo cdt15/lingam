@@ -89,6 +89,10 @@ def test_fit_success():
     model.fit(X)
     p_values = model.get_error_independence_p_values(X)
 
+    # f-correlation
+    model = RCD(independence="fcorr")
+    model.fit(X)
+
 
 
 def test_fit_invalid_data():
@@ -182,6 +186,24 @@ def test_fit_invalid_data():
     # Invalid value: bw_method
     try:
         model = RCD(bw_method='X')
+        model.fit(X)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid value: independence
+    try:
+        model = RCD(independence="lingam")
+        model.fit(X)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid value: ind_corr
+    try:
+        model = RCD(ind_corr=-0.5)
         model.fit(X)
     except ValueError:
         pass

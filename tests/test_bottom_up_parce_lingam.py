@@ -53,6 +53,11 @@ def test_fit_success():
     model._causal_order = [[0, 1], 2, 3, 4]
     model.estimate_total_effect(X, 0, 1)
 
+    # f-correlation
+    model = BottomUpParceLiNGAM(independence="fcorr")
+    model.fit(X)
+
+
 def test_bootstrap_success():
     # causal direction: x5 --> x1, x3 --> x0 --> x2 --> x4
     n_samples = 300
@@ -79,6 +84,11 @@ def test_bootstrap_success():
     probs = result.get_probabilities()
     ce = result.get_total_causal_effects()
     paths = result.get_paths(3, 4)
+
+    # f-correlation
+    model = BottomUpParceLiNGAM(independence="fcorr")
+    result = model.bootstrap(X, n_sampling=5)
+
 
 def test_fit_invalid_data():
     # Not array data
@@ -144,6 +154,24 @@ def test_fit_invalid_data():
     # invalid alpha
     try:
         model = BottomUpParceLiNGAM(alpha=-1)
+        model.fit(X)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid value: independence
+    try:
+        model = BottomUpParceLiNGAM(independence="lingam")
+        model.fit(X)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # invalid ind_corr
+    try:
+        model = BottomUpParceLiNGAM(ind_corr=-1.0)
         model.fit(X)
     except ValueError:
         pass

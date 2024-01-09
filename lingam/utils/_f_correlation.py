@@ -35,6 +35,10 @@ def f_correlation(x, y):
     if y_.shape[0] != n:
         raise ValueError("x and y must be the same size.")
 
+    # Standardize
+    x_ = (x_ - x_.mean()) / x_.std()
+    y_ = (y_ - y_.mean()) / y_.std()
+
     X = [x_, y_]
     m = len(X)
 

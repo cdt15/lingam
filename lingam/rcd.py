@@ -15,7 +15,7 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .hsic import get_gram_matrix, get_kernel_width, hsic_test_gamma, hsic_teststat
-from .utils import predict_adaptive_lasso
+from .utils import predict_adaptive_lasso, f_correlation
 
 
 class RCD:
@@ -37,27 +37,33 @@ class RCD:
         shapiro_alpha=0.01,
         MLHSICR=False,
         bw_method="mdbs",
+        independence="hsic",
+        ind_corr=0.5,
     ):
         """Construct a RCD model.
 
         Parameters
         ----------
-         max_explanatory_num : int, optional (default=2)
-             Maximum number of explanatory variables.
-         cor_alpha : float, optional (default=0.01)
-             Alpha level for pearson correlation.
-         ind_alpha : float, optional (default=0.01)
-             Alpha level for HSIC.
-         shapiro_alpha : float, optional (default=0.01)
-             Alpha level for Shapiro-Wilk test.
-         MLHSICR : bool, optional (default=False)
-             If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
-         bw_method : str, optional (default=``mdbs``)
-                 The method used to calculate the bandwidth of the HSIC.
+        max_explanatory_num : int, optional (default=2)
+            Maximum number of explanatory variables.
+        cor_alpha : float, optional (default=0.01)
+            Alpha level for pearson correlation.
+        ind_alpha : float, optional (default=0.01)
+            Alpha level for HSIC.
+        shapiro_alpha : float, optional (default=0.01)
+            Alpha level for Shapiro-Wilk test.
+        MLHSICR : bool, optional (default=False)
+            If True, use MLHSICR for multiple regression, if False, use OLS for multiple regression.
+        bw_method : str, optional (default=``mdbs``)
+            The method used to calculate the bandwidth of the HSIC.
 
-             * ``mdbs`` : Median distance between samples.
-             * ``scott`` : Scott's Rule of Thumb.
-             * ``silverman`` : Silverman's Rule of Thumb.
+            * ``mdbs`` : Median distance between samples.
+            * ``scott`` : Scott's Rule of Thumb.
+            * ``silverman`` : Silverman's Rule of Thumb.
+        independence : {'hsic', 'fcorr'}, optional (default='hsic')
+            Methods to determine independence. If 'hsic' is set, test for independence by HSIC. If 'fcorr' is set, independence is determined by F-correlation.
+        ind_corr : float, optional (default=0.5)
+            The threshold value for determining independence by F-correlation; independence is determined when the value of F-correlation is below this threshold value.
         """
         # Check parameters
         if max_explanatory_num <= 0:
@@ -75,6 +81,12 @@ class RCD:
         if bw_method not in ("mdbs", "scott", "silverman"):
             raise ValueError("bw_method must be 'mdbs', 'scott' or 'silverman'.")
 
+        if independence not in ("hsic", "fcorr"):
+            raise ValueError("independence must be 'hsic' or 'fcorr'.")
+
+        if ind_corr < 0.0:
+            raise ValueError("ind_corr must be an float greater than 0.")
+
         self._max_explanatory_num = max_explanatory_num
         self._cor_alpha = cor_alpha
         self._ind_alpha = ind_alpha
@@ -84,6 +96,8 @@ class RCD:
         self._ancestors_list = None
         self._adjacency_matrix = None
         # DEBAG: self._adjacency_matrix_no_lc = None
+        self._independence = independence
+        self._ind_corr = ind_corr
 
     def fit(self, X):
         """Fit the model to X.
@@ -158,8 +172,14 @@ class RCD:
         return False
 
     def _is_independent(self, X, Y):
-        _, p = hsic_test_gamma(X, Y, bw_method=self._bw_method)
-        return p > self._ind_alpha
+        is_independent = False
+        if self._independence == "hsic":
+            _, p = hsic_test_gamma(X, Y, bw_method=self._bw_method)
+            is_independent = p > self._ind_alpha
+        elif self._independence == "fcorr":
+            f_corr = f_correlation(X, Y)
+            is_independent = f_corr < self._ind_corr
+        return is_independent
 
     def _get_resid_and_coef_by_MLHSICR(self, Y, xi, xj_list):
         """Get the residuals and coefficients by minimizing the sum of HSICs using the L-BFGS method."""
