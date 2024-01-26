@@ -13,7 +13,7 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .hsic import hsic_test_gamma
-from .utils import predict_adaptive_lasso, f_correlation
+from .utils import predict_adaptive_lasso, f_correlation, calculate_total_effect
 
 
 class BottomUpParceLiNGAM:
@@ -453,6 +453,56 @@ class BottomUpParceLiNGAM:
 
         return coefs[0]
 
+    def estimate_total_effect2(self, from_index, to_index):
+        """Estimate total effect using causal model.
+
+        Parameters
+        ----------
+        from_index :
+            Index of source variable to estimate total effect.
+        to_index :
+            Index of destination variable to estimate total effect.
+
+        Returns
+        -------
+        total_effect : float
+            Estimated total effect.
+        """
+        # Check from/to causal order
+        for i, order in enumerate(self._causal_order):
+            if hasattr(order, "__iter__") and from_index in order:
+                from_order = i
+                break
+            elif not hasattr(order, "__iter__") and int(from_index) == int(order):
+                from_order = i
+                break
+
+        for i, order in enumerate(self._causal_order):
+            if hasattr(order, "__iter__") and to_index in order:
+                to_order = i
+                break
+            elif not hasattr(order, "__iter__") and int(to_index) == int(order):
+                to_order = i
+                break
+
+        if from_order > to_order:
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the causal order of the destination variable (to_index={to_index}) "
+                f"is earlier than the source variable (from_index={from_index})."
+            )
+
+        # Check confounders
+        if True in np.isnan(self._adjacency_matrix[from_index]):
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the source variable (from_index={from_index}) is influenced by confounders."
+            )
+            return np.nan
+
+        effect = calculate_total_effect(self._adjacency_matrix, from_index, to_index)
+        return effect
+
     def get_error_independence_p_values(self, X):
         """Calculate the p-value matrix of independence between error variables.
 
@@ -555,10 +605,10 @@ class BottomUpParceLiNGAM:
                         for from_item in from_:
                             total_effects[
                                 i, to, from_item
-                            ] = self.estimate_total_effect(resampled_X, from_item, to)
+                            ] = self.estimate_total_effect2(from_item, to)
                     else:
-                        total_effects[i, to, from_] = self.estimate_total_effect(
-                            resampled_X, from_, to
+                        total_effects[i, to, from_] = self.estimate_total_effect2(
+                            from_, to
                         )
 
         return BootstrapResult(adjacency_matrices, total_effects)

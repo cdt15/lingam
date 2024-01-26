@@ -15,7 +15,7 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .hsic import get_gram_matrix, get_kernel_width, hsic_test_gamma, hsic_teststat
-from .utils import predict_adaptive_lasso, f_correlation
+from .utils import predict_adaptive_lasso, f_correlation, calculate_total_effect
 
 
 class RCD:
@@ -435,6 +435,28 @@ class RCD:
 
         return coefs[0]
 
+    def estimate_total_effect2(self, from_index, to_index):
+        # Check from/to ancestors
+        if to_index in self._ancestors_list[from_index]:
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the causal order of the destination variable (to_index={to_index}) "
+                f"is earlier than the source variable (from_index={from_index})."
+            )
+
+        # Check confounders
+        if True in np.isnan(self._adjacency_matrix[from_index]):
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the source variable (from_index={from_index}) is influenced by confounders."
+            )
+            return np.nan
+
+        effect = calculate_total_effect(self._adjacency_matrix, from_index, to_index)
+
+        return effect
+
+
     def get_error_independence_p_values(self, X):
         """Calculate the p-value matrix of independence between error variables.
 
@@ -532,8 +554,8 @@ class RCD:
             # Calculate total effects
             for to, ancestors in enumerate(self._ancestors_list):
                 for from_ in ancestors:
-                    total_effects[i, to, from_] = self.estimate_total_effect(
-                        resampled_X, from_, to
+                    total_effects[i, to, from_] = self.estimate_total_effect2(
+                        from_, to
                     )
 
         return BootstrapResult(adjacency_matrices, total_effects)

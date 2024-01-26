@@ -17,6 +17,8 @@ from lingam.utils import (
     extract_ancestors,
     f_correlation,
     evaluate_model_fit,
+    calculate_distance_from_root_nodes,
+    calculate_total_effect,
 )
 
 
@@ -390,3 +392,101 @@ def test_evaluate_model_fit():
         raise AssertionError
 
 
+def test_calculate_distance_from_root_nodes():
+    # default
+    adj = np.array([
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 1, 0, 0],
+        [0, 0, 1, 0],
+    ])
+    result = calculate_distance_from_root_nodes(adj)
+    assert result == {0: [0], 1: [1, 2], 2: [3]}
+
+    # max_distance
+    result = calculate_distance_from_root_nodes(adj, max_distance=1)
+    assert result == {0: [0], 1: [1, 2]}
+
+    # hidden common cause
+    adj = np.array([
+        [0, np.nan, 0, 0],
+        [np.nan, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 1, 0, 0],
+    ])
+    result = calculate_distance_from_root_nodes(adj)
+    assert result == {0: [0, 1], 1: [2, 3]}
+
+    # only hidden common cause
+    adj = np.array([
+        [0, np.nan],
+        [np.nan, 0],
+    ])
+    result = calculate_distance_from_root_nodes(adj)
+    assert result == {0: [0, 1]}
+
+    # cyclic graph
+    adj = np.array([
+        [0, 0, 0, 0],
+        [1, 0, 0, 1],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+    ])
+    result = calculate_distance_from_root_nodes(adj)
+    assert result == {0: [0], 1: [1], 2: [2], 3: [3]}
+
+    # exception: not square
+    adj = np.array([
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+    ])
+    try:
+        calculate_distance_from_root_nodes(adj)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # exception: no root node
+    adj = np.array([
+        [0, 1],
+        [1, 0],
+    ])
+    try:
+        calculate_distance_from_root_nodes(adj)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+
+def test_calculate_total_effect():
+    # default
+    adj = np.array([
+        [0, 0, 0],
+        [0.5, 0, 0],
+        [0, 0.5, 0],
+    ])
+    total_effect = calculate_total_effect(adj, 0, 2)
+    assert np.isclose(total_effect, 0.5**2)
+
+    # exception: continuous on the path
+    is_con = [False, True, False]
+    try:
+        calculate_total_effect(adj, 0, 2, is_continuous=is_con)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # exception: not square
+    adj = np.array([
+        [0, 0, 0],
+        [1, 0, 0],
+    ])
+    try:
+        calculate_total_effect(adj, 0, 2)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError

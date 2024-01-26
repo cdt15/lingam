@@ -12,7 +12,7 @@ from sklearn.utils import check_array
 
 from .direct_lingam import DirectLiNGAM
 from .hsic import hsic_test_gamma
-from .utils import predict_adaptive_lasso, find_all_paths
+from .utils import predict_adaptive_lasso, find_all_paths, calculate_total_effect
 
 
 class LongitudinalLiNGAM:
@@ -151,13 +151,13 @@ class LongitudinalLiNGAM:
                     for to in self._causal_orders[from_t][c + 1 :]:
                         total_effects[
                             i, to_t * self._p + to, from_t * self._p + from_
-                        ] = self.estimate_total_effect(resampled_X_t, from_t, from_, to_t, to)
+                        ] = self.estimate_total_effect2(from_t, from_, to_t, to)
 
                     for to_t in range(from_t + 1, self._T):
                         for to in self._causal_orders[to_t]:
                             total_effects[
                                 i, to_t * self._p + to, from_t * self._p + from_
-                            ] = self.estimate_total_effect(resampled_X_t, from_t, from_, to_t, to)
+                            ] = self.estimate_total_effect2(from_t, from_, to_t, to)
 
         return LongitudinalBootstrapResult(self._T, adjacency_matrices, total_effects)
 
@@ -166,7 +166,7 @@ class LongitudinalLiNGAM:
 
         Parameters
         ----------
-        X_t : array-like, shape (n_samples, n_features)
+        X_t : array-like, shape (timepoint, n_samples, n_features)
             Original data, where n_samples is the number of samples
             and n_features is the number of features.
         from _t :
@@ -219,6 +219,51 @@ class LongitudinalLiNGAM:
         coefs = predict_adaptive_lasso(X_joined, predictors, to_index)
 
         return coefs[0]
+
+    def estimate_total_effect2(self, from_t, from_index, to_t, to_index):
+        """Estimate total effect using causal model.
+
+        Parameters
+        ----------
+        from _t :
+            The timepoint of source variable.
+        from_index :
+            Index of source variable to estimate total effect.
+        to_t :
+            The timepoint of destination variable.
+        to_index :
+            Index of destination variable to estimate total effect.
+
+        Returns
+        -------
+        total_effect : float
+            Estimated total effect.
+        """
+        # Check from/to causal order
+        if to_t == from_t:
+            from_order = self._causal_orders[to_t].index(from_index)
+            to_order = self._causal_orders[from_t].index(to_index)
+            if from_order > to_order:
+                warnings.warn(
+                    f"The estimated causal effect may be incorrect because "
+                    f"the causal order of the destination variable (to_t={to_t}, to_index={to_index}) "
+                    f"is earlier than the source variable (from_t={from_t}, from_index={from_index})."
+                )
+        elif to_t < from_t:
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the causal order of the destination variable (to_t={to_t}) "
+                f"is earlier than the source variable (from_t={from_t})."
+            )
+
+        am = np.concatenate([*self._adjacency_matrices[to_t]], axis=1)
+        am = np.pad(am, [(0, am.shape[1] - am.shape[0]), (0, 0)])
+
+        from_index = from_index + self._p * (to_t - from_t)
+
+        effect = calculate_total_effect(am, from_index, to_index)
+
+        return effect
 
     def get_error_independence_p_values(self):
         """Calculate the p-value matrix of independence between error variables.
