@@ -135,7 +135,7 @@ def test_discrete(init, test_data2):
 
     # models
     transformers = [
-        ("categorical", OneHotEncoder(sparse=False), ["x3"]),
+        ("categorical", OneHotEncoder(sparse_output=False), ["x3"]),
         ("numeric", "passthrough", ["x4"]),
     ]
     trans = ColumnTransformer(transformers=transformers)
@@ -146,7 +146,7 @@ def test_discrete(init, test_data2):
     ])
     
     transformers = [
-        ("categorical", OneHotEncoder(sparse=False), ["x1", "x3"]),
+        ("categorical", OneHotEncoder(sparse_output=False), ["x1", "x3"]),
         ("numeric", "passthrough", ["x4"]),
     ]
     trans = ColumnTransformer(transformers=transformers)
