@@ -1,6 +1,6 @@
 numpy
 scipy
-scikit-learn
+scikit-learn>=1.2
 graphviz
 statsmodels
 networkx
