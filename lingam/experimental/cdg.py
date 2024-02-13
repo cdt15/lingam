@@ -311,7 +311,7 @@ class CausalDataGenerator:
 
             if len(categoricals) > 0:
                 transformers = [
-                    ("categorical", OneHotEncoder(sparse=False), categoricals),
+                    ("categorical", OneHotEncoder(sparse_output=False), categoricals),
                     ("numeric", "passthrough", numerics),
                 ]
                 trans = ColumnTransformer(transformers=transformers)
