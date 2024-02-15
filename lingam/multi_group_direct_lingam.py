@@ -12,7 +12,7 @@ from sklearn.utils import check_array, resample
 from .bootstrap import BootstrapResult
 from .direct_lingam import DirectLiNGAM
 from .hsic import hsic_test_gamma
-from .utils import predict_adaptive_lasso
+from .utils import predict_adaptive_lasso, calculate_total_effect
 
 
 class MultiGroupDirectLiNGAM(DirectLiNGAM):
@@ -146,7 +146,7 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
             # Calculate total effects
             for c, from_ in enumerate(self._causal_order):
                 for to in self._causal_order[c + 1 :]:
-                    effects = self.estimate_total_effect(resampled_X_list, from_, to)
+                    effects = self.estimate_total_effect2(from_, to)
                     for i, effect in enumerate(effects):
                         total_effects_list[i, n, to, from_] = effect
 
@@ -200,6 +200,38 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
             coefs = predict_adaptive_lasso(X, predictors, to_index)
 
             effects.append(coefs[0])
+
+        return effects
+
+    def estimate_total_effect2(self, from_index, to_index):
+        """Estimate total effect using causal model.
+
+        Parameters
+        ----------
+        from_index :
+            Index of source variable to estimate total effect.
+        to_index :
+            Index of destination variable to estimate total effect.
+
+        Returns
+        -------
+        total_effect : float
+            Estimated total effect.
+        """
+        # Check from/to causal order
+        from_order = self._causal_order.index(from_index)
+        to_order = self._causal_order.index(to_index)
+        if from_order > to_order:
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the causal order of the destination variable (to_index={to_index}) "
+                f"is earlier than the source variable (from_index={from_index})."
+            )
+
+        effects = []
+        for am in self._adjacency_matrices:
+            effect = calculate_total_effect(am, from_index, to_index)
+            effects.append(effect)
 
         return effects
 

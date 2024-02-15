@@ -15,7 +15,7 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .hsic import get_gram_matrix, get_kernel_width, hsic_test_gamma, hsic_teststat
-from .utils import predict_adaptive_lasso, f_correlation
+from .utils import predict_adaptive_lasso, f_correlation, calculate_total_effect
 
 
 class MultiGroupRCD:
@@ -178,6 +178,45 @@ class MultiGroupRCD:
 
         return effects
 
+    def estimate_total_effect2(self, from_index, to_index):
+        """Estimate total effect using causal model.
+
+        Parameters
+        ----------
+        from_index :
+            Index of source variable to estimate total effect.
+        to_index :
+            Index of destination variable to estimate total effect.
+
+        Returns
+        -------
+        total_effect : float
+            Estimated total effect.
+        """
+        # Check from/to ancestors
+        if to_index in self._ancestors_list[from_index]:
+            warnings.warn(
+                f"The estimated causal effect may be incorrect because "
+                f"the causal order of the destination variable (to_index={to_index}) "
+                f"is earlier than the source variable (from_index={from_index})."
+            )
+
+        effects = []
+        for am in self._adjacency_matrices:
+            # Check confounders
+            if True in np.isnan(am[from_index]):
+                warnings.warn(
+                    f"The estimated causal effect may be incorrect because "
+                    f"the source variable (from_index={from_index}) is influenced by confounders."
+                )
+                return effects
+
+            effect = calculate_total_effect(am, from_index, to_index)
+            effects.append(effect)
+
+        return effects
+
+
     def get_error_independence_p_values(self, X_list):
         """Calculate the p-value matrix of independence between error variables.
 
@@ -258,7 +297,7 @@ class MultiGroupRCD:
             # Calculate total effects
             for to, ancestors in enumerate(self._ancestors_list):
                 for from_ in ancestors:
-                    effects = self.estimate_total_effect(resampled_X_list, from_, to)
+                    effects = self.estimate_total_effect2(from_, to)
                     for i, effect in enumerate(effects):
                         total_effects_list[i, n, to, from_] = effect
 

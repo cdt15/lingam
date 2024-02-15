@@ -13,7 +13,7 @@ from .base import _BaseLiNGAM
 from .bootstrap import BootstrapResult
 from .direct_lingam import DirectLiNGAM
 from .hsic import hsic_test_gamma
-from .utils import predict_adaptive_lasso, find_all_paths
+from .utils import predict_adaptive_lasso, find_all_paths, calculate_total_effect
 
 
 class VARMALiNGAM:
@@ -207,8 +207,8 @@ class VARMALiNGAM:
             for c, to in enumerate(reversed(self._causal_order)):
                 # time t
                 for from_ in self._causal_order[: n_features - (c + 1)]:
-                    total_effects[i, to, from_] = self.estimate_total_effect(
-                        resampled_X, ee, from_, to
+                    total_effects[i, to, from_] = self.estimate_total_effect2(
+                        n_features, from_, to
                     )
 
                 # time t-tau
@@ -216,8 +216,8 @@ class VARMALiNGAM:
                     for from_ in range(n_features):
                         total_effects[
                             i, to, from_ + n_features * (lag + 1)
-                        ] = self.estimate_total_effect(
-                            resampled_X, ee, from_, to, lag + 1
+                        ] = self.estimate_total_effect2(
+                            n_features, from_, to, lag + 1
                         )
 
         self._criterion = criterion
@@ -290,6 +290,48 @@ class VARMALiNGAM:
         coefs = predict_adaptive_lasso(X_joined, predictors, to_index)
 
         return coefs[0]
+
+    def estimate_total_effect2(self, n_features, from_index, to_index, from_lag=0):
+        """Estimate total effect using causal model.
+
+        Parameters
+        ----------
+        n_features :
+            The number of features.
+        from_index :
+            Index of source variable to estimate total effect.
+        to_index :
+            Index of destination variable to estimate total effect.
+
+        Returns
+        -------
+        total_effect : float
+            Estimated total effect.
+        """
+        # Check from/to causal order
+        if from_lag == 0:
+            from_order = self._causal_order.index(from_index)
+            to_order = self._causal_order.index(to_index)
+            if from_order > to_order:
+                warnings.warn(
+                    f"The estimated causal effect may be incorrect because "
+                    f"the causal order of the destination variable (to_index={to_index}) "
+                    f"is earlier than the source variable (from_index={from_index})."
+                )
+
+        # concat psi and omega
+        psi = self._adjacency_matrices[0]
+        am = np.concatenate([*psi], axis=1)
+        am = np.pad(am, [(0, am.shape[1] - am.shape[0]), (0, 0)])
+
+        # from_index + parents indices
+        from_index = from_index if from_lag == 0 else from_index + n_features
+
+        # Estimate total effect
+        effect = calculate_total_effect(am, from_index, to_index)
+
+        return effect
+
 
     def get_error_independence_p_values(self):
         """Calculate the p-value matrix of independence between error variables.

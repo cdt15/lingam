@@ -66,8 +66,8 @@ In this example, we need to import ``numpy``, ``pandas``, and
 
 .. parsed-literal::
 
-    ['1.16.2', '0.24.2', '0.11.1', '1.5.4']
-    
+    ['1.24.4', '2.0.3', '0.20.1', '1.8.3']
+
 
 Test data
 ---------
@@ -79,7 +79,7 @@ variable for x2 and x3.
 .. code-block:: python
 
     np.random.seed(1000)
-
+    
     x6 = np.random.uniform(size=1000)
     x3 = 2.0*x6 + np.random.uniform(size=1000)
     x0 = 0.5*x3 + np.random.uniform(size=1000)
@@ -87,10 +87,10 @@ variable for x2 and x3.
     x1 = 0.5*x0 + 0.5*x2 + np.random.uniform(size=1000)
     x5 = 0.5*x0 + np.random.uniform(size=1000)
     x4 = 0.5*x0 - 0.5*x2 + np.random.uniform(size=1000)
-
+    
     # The latent variable x6 is not included.
     X = pd.DataFrame(np.array([x0, x1, x2, x3, x4, x5]).T, columns=['x0', 'x1', 'x2', 'x3', 'x4', 'x5'])
-
+    
     X.head()
 
 
@@ -209,16 +209,16 @@ variable for x2 and x3.
                   [0.5, 0.0,-0.5, 0.0, 0.0, 0.0, 0.0],
                   [0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                   [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
-
+    
     dot = make_dot(m)
-
+    
     # Save pdf
     dot.render('dag')
-
+    
     # Save png
     dot.format = 'png'
     dot.render('dag')
-
+    
     dot
 
 
@@ -244,7 +244,7 @@ call the ``fit`` method.
 
 .. parsed-literal::
 
-    <lingam.bottom_up_parce_lingam.BottomUpParceLiNGAM at 0x2098ee24860>
+    <lingam.bottom_up_parce_lingam.BottomUpParceLiNGAM at 0x7fb69052ca60>
 
 
 
@@ -278,12 +278,12 @@ between variables with latent confounders are np.nan.
 
 .. parsed-literal::
 
-    array([[ 0.   ,  0.   ,  0.   ,  0.506,  0.   ,  0.   ],
-           [ 0.499,  0.   ,  0.495,  0.007,  0.   ,  0.   ],
+    array([[ 0.   ,  0.   ,  0.   ,  0.511,  0.   ,  0.   ],
+           [ 0.504,  0.   ,  0.499,  0.   ,  0.   ,  0.   ],
            [ 0.   ,  0.   ,  0.   ,    nan,  0.   ,  0.   ],
            [ 0.   ,  0.   ,    nan,  0.   ,  0.   ,  0.   ],
-           [ 0.448,  0.   , -0.451,  0.   ,  0.   ,  0.   ],
-           [ 0.48 ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
+           [ 0.481,  0.   , -0.473,  0.   ,  0.   ,  0.   ],
+           [ 0.519,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
 
 
 
@@ -316,13 +316,13 @@ the error variables :math:`e_i` and :math:`e_j`.
 
 .. parsed-literal::
 
-    [[0.    0.491   nan   nan 0.763 0.2  ]
-     [0.491 0.      nan   nan 0.473 0.684]
+    [[0.    0.523   nan   nan 0.8   0.399]
+     [0.523 0.      nan   nan 0.44  0.6  ]
      [  nan   nan 0.      nan   nan   nan]
      [  nan   nan   nan 0.      nan   nan]
-     [0.763 0.473   nan   nan 0.    0.427]
-     [0.2   0.684   nan   nan 0.427 0.   ]]
-    
+     [0.8   0.44    nan   nan 0.    0.446]
+     [0.399 0.6     nan   nan 0.446 0.   ]]
+
 
 Bootstrapping
 -------------
@@ -366,10 +366,10 @@ We can check the result by utility function.
     x1 <--- x0 (b>0) (41.0%)
     x1 <--- x2 (b>0) (41.0%)
     x5 <--- x0 (b>0) (26.0%)
-    x1 <--- x3 (b>0) (21.0%)
     x0 <--- x3 (b>0) (12.0%)
-    x5 <--- x2 (b>0) (7.0%)
-    
+    x1 <--- x4 (b>0) (6.0%)
+    x4 <--- x1 (b>0) (4.0%)
+
 
 Directed Acyclic Graphs
 -----------------------
@@ -394,13 +394,17 @@ We can check the result by utility function.
 .. parsed-literal::
 
     DAG[0]: 33.0%
-    DAG[1]: 13.0%
+    DAG[1]: 12.0%
     	x4 <--- x0 (b>0)
     	x4 <--- x2 (b<0)
-    DAG[2]: 7.0%
+    DAG[2]: 10.0%
+    	x0 <--- x3 (b>0)
     	x1 <--- x0 (b>0)
     	x1 <--- x2 (b>0)
-    
+    	x4 <--- x0 (b>0)
+    	x4 <--- x2 (b<0)
+    	x5 <--- x0 (b>0)
+
 
 Probability
 -----------
@@ -417,12 +421,12 @@ bootstrapping.
 .. parsed-literal::
 
     [[0.   0.01 0.   0.12 0.01 0.  ]
-     [0.41 0.   0.41 0.21 0.   0.  ]
+     [0.41 0.   0.41 0.   0.06 0.  ]
      [0.   0.   0.   0.02 0.   0.  ]
      [0.   0.   0.   0.   0.   0.  ]
-     [0.45 0.03 0.45 0.02 0.   0.07]
-     [0.26 0.01 0.07 0.02 0.   0.  ]]
-    
+     [0.45 0.04 0.45 0.02 0.   0.01]
+     [0.26 0.   0.   0.   0.   0.  ]]
+
 
 Total Causal Effects
 --------------------
@@ -501,70 +505,84 @@ below.
           <th>0</th>
           <td>x0</td>
           <td>x5</td>
-          <td>0.515510</td>
+          <td>0.518064</td>
           <td>0.12</td>
         </tr>
         <tr>
           <th>1</th>
           <td>x0</td>
           <td>x1</td>
-          <td>0.477885</td>
+          <td>0.504613</td>
           <td>0.11</td>
         </tr>
         <tr>
           <th>2</th>
           <td>x0</td>
           <td>x4</td>
-          <td>0.494946</td>
+          <td>0.479543</td>
           <td>0.11</td>
         </tr>
         <tr>
           <th>3</th>
           <td>x2</td>
           <td>x1</td>
-          <td>0.482657</td>
+          <td>0.508531</td>
           <td>0.02</td>
         </tr>
         <tr>
           <th>4</th>
           <td>x2</td>
           <td>x4</td>
-          <td>-0.490889</td>
+          <td>-0.476555</td>
           <td>0.02</td>
         </tr>
         <tr>
           <th>5</th>
           <td>x3</td>
           <td>x0</td>
-          <td>0.511008</td>
+          <td>0.490217</td>
           <td>0.01</td>
         </tr>
         <tr>
           <th>6</th>
           <td>x3</td>
           <td>x1</td>
-          <td>0.653876</td>
+          <td>0.630292</td>
           <td>0.01</td>
         </tr>
         <tr>
           <th>7</th>
-          <td>x3</td>
-          <td>x2</td>
-          <td>0.790837</td>
+          <td>x4</td>
+          <td>x1</td>
+          <td>0.097063</td>
           <td>0.01</td>
         </tr>
         <tr>
           <th>8</th>
           <td>x3</td>
-          <td>x4</td>
-          <td>-0.126227</td>
+          <td>x2</td>
+          <td>0.796101</td>
           <td>0.01</td>
         </tr>
         <tr>
           <th>9</th>
+          <td>x1</td>
+          <td>x4</td>
+          <td>0.089596</td>
+          <td>0.01</td>
+        </tr>
+        <tr>
+          <th>10</th>
+          <td>x3</td>
+          <td>x4</td>
+          <td>-0.151733</td>
+          <td>0.01</td>
+        </tr>
+        <tr>
+          <th>11</th>
           <td>x3</td>
           <td>x5</td>
-          <td>0.265528</td>
+          <td>0.254280</td>
           <td>0.01</td>
         </tr>
       </tbody>
@@ -633,38 +651,38 @@ We can easily perform sorting operations with pandas.DataFrame.
       </thead>
       <tbody>
         <tr>
-          <th>7</th>
+          <th>8</th>
           <td>x3</td>
           <td>x2</td>
-          <td>0.790837</td>
+          <td>0.796101</td>
           <td>0.01</td>
         </tr>
         <tr>
           <th>6</th>
           <td>x3</td>
           <td>x1</td>
-          <td>0.653876</td>
+          <td>0.630292</td>
           <td>0.01</td>
         </tr>
         <tr>
           <th>0</th>
           <td>x0</td>
           <td>x5</td>
-          <td>0.515510</td>
+          <td>0.518064</td>
           <td>0.12</td>
         </tr>
         <tr>
-          <th>5</th>
-          <td>x3</td>
-          <td>x0</td>
-          <td>0.511008</td>
-          <td>0.01</td>
+          <th>3</th>
+          <td>x2</td>
+          <td>x1</td>
+          <td>0.508531</td>
+          <td>0.02</td>
         </tr>
         <tr>
-          <th>2</th>
+          <th>1</th>
           <td>x0</td>
-          <td>x4</td>
-          <td>0.494946</td>
+          <td>x1</td>
+          <td>0.504613</td>
           <td>0.11</td>
         </tr>
       </tbody>
@@ -734,35 +752,35 @@ We can easily perform sorting operations with pandas.DataFrame.
           <th>5</th>
           <td>x3</td>
           <td>x0</td>
-          <td>0.511008</td>
+          <td>0.490217</td>
           <td>0.01</td>
         </tr>
         <tr>
           <th>6</th>
           <td>x3</td>
           <td>x1</td>
-          <td>0.653876</td>
+          <td>0.630292</td>
           <td>0.01</td>
         </tr>
         <tr>
           <th>7</th>
-          <td>x3</td>
-          <td>x2</td>
-          <td>0.790837</td>
+          <td>x4</td>
+          <td>x1</td>
+          <td>0.097063</td>
           <td>0.01</td>
         </tr>
         <tr>
           <th>8</th>
           <td>x3</td>
-          <td>x4</td>
-          <td>-0.126227</td>
+          <td>x2</td>
+          <td>0.796101</td>
           <td>0.01</td>
         </tr>
         <tr>
           <th>9</th>
-          <td>x3</td>
-          <td>x5</td>
-          <td>0.265528</td>
+          <td>x1</td>
+          <td>x4</td>
+          <td>0.089596</td>
           <td>0.01</td>
         </tr>
       </tbody>
@@ -835,21 +853,28 @@ following code extracts the causal direction towards x1.
           <th>1</th>
           <td>x0</td>
           <td>x1</td>
-          <td>0.477885</td>
+          <td>0.504613</td>
           <td>0.11</td>
         </tr>
         <tr>
           <th>3</th>
           <td>x2</td>
           <td>x1</td>
-          <td>0.482657</td>
+          <td>0.508531</td>
           <td>0.02</td>
         </tr>
         <tr>
           <th>6</th>
           <td>x3</td>
           <td>x1</td>
-          <td>0.653876</td>
+          <td>0.630292</td>
+          <td>0.01</td>
+        </tr>
+        <tr>
+          <th>7</th>
+          <td>x4</td>
+          <td>x1</td>
+          <td>0.097063</td>
           <td>0.01</td>
         </tr>
       </tbody>
@@ -946,20 +971,14 @@ variable X0 to variable X1.
       <tbody>
         <tr>
           <th>0</th>
-          <td>[3, 1]</td>
-          <td>0.028621</td>
-          <td>0.23</td>
-        </tr>
-        <tr>
-          <th>1</th>
           <td>[3, 0, 1]</td>
-          <td>0.255185</td>
+          <td>0.263068</td>
           <td>0.11</td>
         </tr>
         <tr>
-          <th>2</th>
+          <th>1</th>
           <td>[3, 2, 1]</td>
-          <td>0.372204</td>
+          <td>0.404828</td>
           <td>0.02</td>
         </tr>
       </tbody>

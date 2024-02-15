@@ -58,8 +58,8 @@ In this example, we need to import ``numpy``, ``pandas``, and
 
 .. parsed-literal::
 
-    ['1.16.2', '0.24.2', '0.11.1', '1.5.4']
-    
+    ['1.24.4', '2.0.3', '0.20.1', '1.8.3']
+
 
 Test data
 ---------
@@ -358,7 +358,7 @@ To run causal discovery for multiple datasets, we create a :class:`~lingam.Multi
 
 .. parsed-literal::
 
-    <lingam.multi_group_direct_lingam.MultiGroupDirectLiNGAM at 0x21f895d0f60>
+    <lingam.multi_group_direct_lingam.MultiGroupDirectLiNGAM at 0x7f87aca0fcd0>
 
 
 
@@ -387,13 +387,12 @@ Also, using the :attr:`~lingam.MultiGroupDirectLiNGAM.adjacency_matrix_` propert
 
 .. parsed-literal::
 
-    [[0.    0.    0.    3.006 0.    0.   ]
-     [2.873 0.    1.969 0.    0.    0.   ]
-     [0.    0.    0.    5.882 0.    0.   ]
-     [0.    0.    0.    0.    0.    0.   ]
-     [6.095 0.    0.    0.    0.    0.   ]
-     [3.967 0.    0.    0.    0.    0.   ]]
-    
+    [[ 0.     0.     0.     3.006  0.     0.   ]
+     [ 2.962  0.     2.015  0.     0.     0.   ]
+     [ 0.     0.     0.     5.97   0.     0.   ]
+     [ 0.     0.     0.     0.     0.     0.   ]
+     [ 8.01   0.    -1.006  0.     0.     0.   ]
+     [ 3.998  0.     0.     0.     0.     0.   ]]
 
 
 
@@ -410,12 +409,12 @@ Also, using the :attr:`~lingam.MultiGroupDirectLiNGAM.adjacency_matrix_` propert
 .. parsed-literal::
 
     [[ 0.     0.     0.     3.483  0.     0.   ]
-     [ 3.516  0.     2.466  0.165  0.     0.   ]
-     [ 0.     0.     0.     6.383  0.     0.   ]
+     [ 3.526  0.     2.486  0.     0.     0.   ]
+     [ 0.     0.     0.     6.503  0.     0.   ]
      [ 0.     0.     0.     0.     0.     0.   ]
-     [ 8.456  0.    -1.471  0.     0.     0.   ]
-     [ 4.446  0.     0.     0.     0.     0.   ]]
-    
+     [ 8.478  0.    -1.484  0.     0.     0.   ]
+     [ 4.494  0.     0.     0.     0.     0.   ]]
+
 
 
 
@@ -483,13 +482,12 @@ the error variables :math:`e_i` and :math:`e_j`.
 
 .. parsed-literal::
 
-    [[0.    0.136 0.075 0.838 0.    0.832]
-     [0.136 0.    0.008 0.    0.544 0.403]
-     [0.075 0.008 0.    0.11  0.    0.511]
-     [0.838 0.    0.11  0.    0.039 0.049]
-     [0.    0.544 0.    0.039 0.    0.101]
-     [0.832 0.403 0.511 0.049 0.101 0.   ]]
-    
+    [[0.    0.939 0.07  0.838 0.467 0.818]
+     [0.939 0.    0.195 0.755 0.053 0.254]
+     [0.07  0.195 0.    0.851 0.374 0.507]
+     [0.838 0.755 0.851 0.    0.422 0.755]
+     [0.467 0.053 0.374 0.422 0.    0.581]
+     [0.818 0.254 0.507 0.755 0.581 0.   ]]
 
 .. code-block:: python
 
@@ -498,13 +496,13 @@ the error variables :math:`e_i` and :math:`e_j`.
 
 .. parsed-literal::
 
-    [[0.    0.545 0.908 0.285 0.525 0.728]
-     [0.545 0.    0.84  0.814 0.086 0.297]
-     [0.908 0.84  0.    0.032 0.328 0.026]
-     [0.285 0.814 0.032 0.    0.904 0.   ]
-     [0.525 0.086 0.328 0.904 0.    0.237]
-     [0.728 0.297 0.026 0.    0.237 0.   ]]
-    
+    [[0.    0.521 0.973 0.285 0.459 0.606]
+     [0.521 0.    0.805 0.785 0.078 0.395]
+     [0.973 0.805 0.    0.807 0.378 0.129]
+     [0.285 0.785 0.807 0.    0.913 0.99 ]
+     [0.459 0.078 0.378 0.913 0.    0.269]
+     [0.606 0.395 0.129 0.99  0.269 0.   ]]
+
 
 Bootstrapping
 -------------
@@ -533,10 +531,9 @@ The :func:`~lingam.MultiGroupDirectLiNGAM.bootstrap` method returns a list of mu
     x1 <--- x2  (100.0%)
     x2 <--- x3  (100.0%)
     x4 <--- x0  (100.0%)
+    x4 <--- x2  (100.0%)
     x5 <--- x0  (100.0%)
-    x4 <--- x2  (94.0%)
-    x4 <--- x5  (20.0%)
-    
+    x1 <--- x3  (4.0%)
 
 .. code-block:: python
 
@@ -549,12 +546,12 @@ The :func:`~lingam.MultiGroupDirectLiNGAM.bootstrap` method returns a list of mu
     x0 <--- x3  (100.0%)
     x1 <--- x0  (100.0%)
     x1 <--- x2  (100.0%)
+    x5 <--- x0  (100.0%)
     x2 <--- x3  (100.0%)
     x4 <--- x0  (100.0%)
     x4 <--- x2  (100.0%)
-    x5 <--- x0  (100.0%)
-    x1 <--- x3  (72.0%)
-    
+    x4 <--- x3  (12.0%)
+
 
 Directed Acyclic Graphs
 -----------------------
@@ -569,7 +566,7 @@ Also, using the :func:`~lingam.BootstrapResult.get_directed_acyclic_graph_counts
 
 .. parsed-literal::
 
-    DAG[0]: 61.0%
+    DAG[0]: 87.0%
     	x0 <--- x3 
     	x1 <--- x0 
     	x1 <--- x2 
@@ -577,23 +574,25 @@ Also, using the :func:`~lingam.BootstrapResult.get_directed_acyclic_graph_counts
     	x4 <--- x0 
     	x4 <--- x2 
     	x5 <--- x0 
-    DAG[1]: 13.0%
+    DAG[1]: 4.0%
     	x0 <--- x3 
     	x1 <--- x0 
     	x1 <--- x2 
     	x2 <--- x3 
     	x4 <--- x0 
     	x4 <--- x2 
-    	x4 <--- x5 
     	x5 <--- x0 
-    DAG[2]: 6.0%
+    	x5 <--- x2 
+    	x5 <--- x3 
+    DAG[2]: 4.0%
     	x0 <--- x3 
     	x1 <--- x0 
     	x1 <--- x2 
+    	x1 <--- x3 
     	x2 <--- x3 
     	x4 <--- x0 
+    	x4 <--- x2 
     	x5 <--- x0 
-    
 
 .. code-block:: python
 
@@ -603,16 +602,7 @@ Also, using the :func:`~lingam.BootstrapResult.get_directed_acyclic_graph_counts
 
 .. parsed-literal::
 
-    DAG[0]: 59.0%
-    	x0 <--- x3 
-    	x1 <--- x0 
-    	x1 <--- x2 
-    	x1 <--- x3 
-    	x2 <--- x3 
-    	x4 <--- x0 
-    	x4 <--- x2 
-    	x5 <--- x0 
-    DAG[1]: 17.0%
+    DAG[0]: 60.0%
     	x0 <--- x3 
     	x1 <--- x0 
     	x1 <--- x2 
@@ -620,17 +610,25 @@ Also, using the :func:`~lingam.BootstrapResult.get_directed_acyclic_graph_counts
     	x4 <--- x0 
     	x4 <--- x2 
     	x5 <--- x0 
-    DAG[2]: 10.0%
-    	x0 <--- x2 
+    DAG[1]: 8.0%
     	x0 <--- x3 
     	x1 <--- x0 
     	x1 <--- x2 
-    	x1 <--- x3 
     	x2 <--- x3 
     	x4 <--- x0 
     	x4 <--- x2 
     	x5 <--- x0 
-    
+    	x5 <--- x2 
+    DAG[2]: 7.0%
+    	x0 <--- x3 
+    	x1 <--- x0 
+    	x1 <--- x2 
+    	x2 <--- x3 
+    	x4 <--- x0 
+    	x4 <--- x2 
+    	x4 <--- x3 
+    	x5 <--- x0 
+
 
 Probability
 -----------
@@ -645,13 +643,13 @@ Using the :func:`~lingam.BootstrapResult.get_probabilities` method, we can get t
 
 .. parsed-literal::
 
-    [[0.   0.   0.08 1.   0.   0.  ]
-     [1.   0.   1.   0.08 0.   0.05]
-     [0.   0.   0.   1.   0.   0.  ]
+    [[0.   0.   0.   1.   0.   0.  ]
+     [1.   0.   1.   0.04 0.   0.02]
+     [0.01 0.   0.   1.   0.   0.  ]
      [0.   0.   0.   0.   0.   0.  ]
-     [1.   0.   0.94 0.   0.   0.2 ]
-     [1.   0.   0.   0.   0.01 0.  ]]
-    
+     [1.   0.   1.   0.02 0.   0.  ]
+     [1.   0.   0.04 0.04 0.   0.  ]]
+
 
 Total Causal Effects
 --------------------
@@ -736,21 +734,21 @@ below.
           <th>1</th>
           <td>x0</td>
           <td>x1</td>
-          <td>2.990264</td>
+          <td>2.963048</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>2</th>
           <td>x2</td>
           <td>x1</td>
-          <td>2.091170</td>
+          <td>2.016516</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>3</th>
           <td>x3</td>
           <td>x1</td>
-          <td>20.937520</td>
+          <td>20.943993</td>
           <td>1.00</td>
         </tr>
         <tr>
@@ -764,77 +762,56 @@ below.
           <th>5</th>
           <td>x0</td>
           <td>x4</td>
-          <td>7.992477</td>
+          <td>8.011896</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>6</th>
-          <td>x3</td>
+          <td>x2</td>
           <td>x4</td>
-          <td>18.058717</td>
+          <td>-1.007165</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>7</th>
-          <td>x0</td>
-          <td>x5</td>
-          <td>3.970275</td>
+          <td>x3</td>
+          <td>x4</td>
+          <td>18.061596</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>8</th>
-          <td>x3</td>
+          <td>x0</td>
           <td>x5</td>
-          <td>12.028240</td>
+          <td>4.001221</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>9</th>
+          <td>x3</td>
           <td>x5</td>
-          <td>x1</td>
-          <td>0.148078</td>
-          <td>0.29</td>
+          <td>12.026086</td>
+          <td>1.00</td>
         </tr>
         <tr>
           <th>10</th>
+          <td>x2</td>
           <td>x5</td>
-          <td>x4</td>
-          <td>0.104561</td>
-          <td>0.21</td>
+          <td>-0.119097</td>
+          <td>0.04</td>
         </tr>
         <tr>
           <th>11</th>
-          <td>x2</td>
           <td>x5</td>
-          <td>0.152502</td>
-          <td>0.15</td>
+          <td>x1</td>
+          <td>0.092263</td>
+          <td>0.02</td>
         </tr>
         <tr>
           <th>12</th>
-          <td>x5</td>
-          <td>x2</td>
-          <td>0.078391</td>
-          <td>0.09</td>
-        </tr>
-        <tr>
-          <th>13</th>
-          <td>x2</td>
           <td>x0</td>
-          <td>0.035852</td>
-          <td>0.08</td>
-        </tr>
-        <tr>
-          <th>14</th>
-          <td>x4</td>
-          <td>x1</td>
-          <td>-1.623188</td>
-          <td>0.03</td>
-        </tr>
-        <tr>
-          <th>15</th>
-          <td>x4</td>
-          <td>x5</td>
-          <td>0.027130</td>
+          <td>x2</td>
+          <td>0.079547</td>
           <td>0.01</td>
         </tr>
       </tbody>
@@ -907,28 +884,28 @@ We can easily perform sorting operations with pandas.DataFrame.
           <th>3</th>
           <td>x3</td>
           <td>x1</td>
-          <td>20.937520</td>
+          <td>20.943993</td>
           <td>1.0</td>
         </tr>
         <tr>
-          <th>6</th>
+          <th>7</th>
           <td>x3</td>
           <td>x4</td>
-          <td>18.058717</td>
+          <td>18.061596</td>
           <td>1.0</td>
         </tr>
         <tr>
-          <th>8</th>
+          <th>9</th>
           <td>x3</td>
           <td>x5</td>
-          <td>12.028240</td>
+          <td>12.026086</td>
           <td>1.0</td>
         </tr>
         <tr>
           <th>5</th>
           <td>x0</td>
           <td>x4</td>
-          <td>7.992477</td>
+          <td>8.011896</td>
           <td>1.0</td>
         </tr>
         <tr>
@@ -1009,36 +986,29 @@ following code extracts the causal direction towards x1.
           <th>1</th>
           <td>x0</td>
           <td>x1</td>
-          <td>2.990264</td>
+          <td>2.963048</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>2</th>
           <td>x2</td>
           <td>x1</td>
-          <td>2.091170</td>
+          <td>2.016516</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>3</th>
           <td>x3</td>
           <td>x1</td>
-          <td>20.937520</td>
+          <td>20.943993</td>
           <td>1.00</td>
         </tr>
         <tr>
-          <th>9</th>
+          <th>11</th>
           <td>x5</td>
           <td>x1</td>
-          <td>0.148078</td>
-          <td>0.29</td>
-        </tr>
-        <tr>
-          <th>14</th>
-          <td>x4</td>
-          <td>x1</td>
-          <td>-1.623188</td>
-          <td>0.03</td>
+          <td>0.092263</td>
+          <td>0.02</td>
         </tr>
       </tbody>
     </table>
@@ -1111,32 +1081,32 @@ variable X0 to variable X1.
         <tr>
           <th>0</th>
           <td>[3, 0, 1]</td>
-          <td>8.561128</td>
+          <td>8.905047</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>1</th>
           <td>[3, 2, 1]</td>
-          <td>11.622379</td>
+          <td>12.049228</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>2</th>
           <td>[3, 1]</td>
-          <td>0.151715</td>
-          <td>0.08</td>
+          <td>-0.733971</td>
+          <td>0.04</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>[3, 2, 0, 1]</td>
-          <td>0.618533</td>
-          <td>0.08</td>
+          <td>[3, 0, 5, 1]</td>
+          <td>1.096850</td>
+          <td>0.02</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>[3, 0, 5, 1]</td>
-          <td>0.967472</td>
-          <td>0.05</td>
+          <td>[3, 0, 2, 1]</td>
+          <td>0.493177</td>
+          <td>0.01</td>
         </tr>
       </tbody>
     </table>

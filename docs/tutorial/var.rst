@@ -63,8 +63,8 @@ In this example, we need to import ``numpy``, ``pandas``, and
 
 .. parsed-literal::
 
-    ['1.16.2', '0.24.2', '0.11.1', '1.5.2']
-    
+    ['1.24.4', '2.0.3', '0.20.1', '1.8.3']
+
 
 Test data
 ---------
@@ -107,7 +107,7 @@ To run causal discovery, we create a :class:`~lingam.VARLiNGAM` object and call 
 
 .. parsed-literal::
 
-    <lingam.var_lingam.VARLiNGAM at 0x20510e049b0>
+    <lingam.var_lingam.VARLiNGAM at 0x7fc1a642d970>
 
 
 
@@ -138,11 +138,11 @@ Also, using the :attr:`~lingam.VARLiNGAM.adjacency_matrices_` properties, we can
 
 .. parsed-literal::
 
-    array([[ 0.   , -0.144,  0.   ,  0.   ,  0.   ],
+    array([[ 0.   , -0.136,  0.   ,  0.   ,  0.   ],
            [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
-           [-0.372,  0.   ,  0.   ,  0.   ,  0.   ],
-           [ 0.069, -0.21 ,  0.   ,  0.   ,  0.   ],
-           [ 0.083,  0.   , -0.033,  0.   ,  0.   ]])
+           [-0.484,  0.   ,  0.   ,  0.   ,  0.   ],
+           [ 0.075, -0.21 ,  0.   ,  0.   ,  0.   ],
+           [ 0.168,  0.   ,  0.   ,  0.   ,  0.   ]])
 
 
 
@@ -156,11 +156,11 @@ Also, using the :attr:`~lingam.VARLiNGAM.adjacency_matrices_` properties, we can
 
 .. parsed-literal::
 
-    array([[-0.366, -0.011,  0.074,  0.297,  0.025],
-           [-0.083, -0.349, -0.168, -0.327,  0.43 ],
-           [ 0.077, -0.043,  0.427,  0.046,  0.49 ],
-           [-0.389, -0.097, -0.263,  0.014, -0.159],
-           [-0.018,  0.01 ,  0.001,  0.071,  0.003]])
+    array([[-0.358,  0.   ,  0.073,  0.302,  0.   ],
+           [ 0.   , -0.338, -0.154, -0.335,  0.423],
+           [ 0.   ,  0.   ,  0.424,  0.112,  0.493],
+           [-0.386, -0.1  , -0.266,  0.   , -0.159],
+           [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
 
 
 
@@ -199,9 +199,9 @@ calculate B0 matrix.
 
     array([[ 0.   , -0.144,  0.   ,  0.   ,  0.   ],
            [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
-           [-0.372,  0.   ,  0.   ,  0.   ,  0.   ],
-           [ 0.069, -0.21 ,  0.   ,  0.   ,  0.   ],
-           [ 0.083,  0.   , -0.033,  0.   ,  0.   ]])
+           [-0.456,  0.   ,  0.   ,  0.   ,  0.   ],
+           [ 0.   , -0.22 ,  0.   ,  0.   ,  0.   ],
+           [ 0.157,  0.   ,  0.   ,  0.   ,  0.   ]])
 
 
 
@@ -235,12 +235,12 @@ the error variables :math:`e_i` and :math:`e_j`.
 
 .. parsed-literal::
 
-    [[0.    0.065 0.068 0.038 0.249]
-     [0.065 0.    0.13  0.88  0.57 ]
-     [0.068 0.13  0.    0.321 0.231]
-     [0.038 0.88  0.321 0.    0.839]
-     [0.249 0.57  0.231 0.839 0.   ]]
-    
+    [[0.    0.127 0.104 0.042 0.746]
+     [0.127 0.    0.086 0.874 0.739]
+     [0.104 0.086 0.    0.404 0.136]
+     [0.042 0.874 0.404 0.    0.763]
+     [0.746 0.739 0.136 0.763 0.   ]]
+
 
 Bootstrap
 ---------
@@ -273,15 +273,15 @@ We can check the result by utility function.
 
 .. parsed-literal::
 
-    x0(t) <--- x0(t-1) (b<0) (100.0%)
-    x1(t) <--- x1(t-1) (b<0) (100.0%)
-    x1(t) <--- x3(t-1) (b<0) (100.0%)
-    x1(t) <--- x4(t-1) (b>0) (100.0%)
-    x2(t) <--- x2(t-1) (b>0) (100.0%)
     x2(t) <--- x4(t-1) (b>0) (100.0%)
-    x3(t) <--- x0(t-1) (b<0) (100.0%)
-    x2(t) <--- x0(t) (b<0) (99.0%)
-    
+    x2(t) <--- x2(t-1) (b>0) (100.0%)
+    x0(t) <--- x0(t-1) (b<0) (95.0%)
+    x1(t) <--- x1(t-1) (b<0) (86.0%)
+    x1(t) <--- x4(t-1) (b>0) (85.0%)
+    x3(t) <--- x0(t-1) (b<0) (78.0%)
+    x2(t) <--- x4(t) (b<0) (60.0%)
+    x0(t) <--- x3(t-1) (b>0) (48.0%)
+
 
 Directed Acyclic Graphs
 -----------------------
@@ -301,43 +301,51 @@ We can check the result by utility function.
 
 .. parsed-literal::
 
-    DAG[0]: 57.0%
+    DAG[0]: 5.0%
+    	x0(t) <--- x0(t-1) (b<0)
+    	x0(t) <--- x3(t-1) (b>0)
+    	x1(t) <--- x0(t) (b<0)
+    	x1(t) <--- x0(t-1) (b<0)
+    	x1(t) <--- x1(t-1) (b<0)
+    	x1(t) <--- x4(t-1) (b>0)
+    	x2(t) <--- x0(t) (b<0)
+    	x2(t) <--- x4(t) (b<0)
+    	x2(t) <--- x2(t-1) (b>0)
+    	x2(t) <--- x4(t-1) (b>0)
+    	x3(t) <--- x0(t) (b>0)
+    	x3(t) <--- x0(t-1) (b<0)
+    	x3(t) <--- x2(t-1) (b<0)
+    	x3(t) <--- x4(t-1) (b<0)
+    DAG[1]: 5.0%
+    	x0(t) <--- x0(t-1) (b<0)
+    	x0(t) <--- x3(t-1) (b>0)
+    	x1(t) <--- x0(t) (b<0)
+    	x1(t) <--- x2(t) (b>0)
+    	x1(t) <--- x0(t-1) (b<0)
+    	x1(t) <--- x1(t-1) (b<0)
+    	x1(t) <--- x4(t-1) (b>0)
+    	x2(t) <--- x0(t) (b<0)
+    	x2(t) <--- x4(t) (b<0)
+    	x2(t) <--- x2(t-1) (b>0)
+    	x2(t) <--- x4(t-1) (b>0)
+    	x3(t) <--- x0(t) (b>0)
+    	x3(t) <--- x0(t-1) (b<0)
+    	x3(t) <--- x2(t-1) (b<0)
+    DAG[2]: 5.0%
     	x0(t) <--- x0(t-1) (b<0)
     	x0(t) <--- x3(t-1) (b>0)
     	x1(t) <--- x1(t-1) (b<0)
     	x1(t) <--- x3(t-1) (b<0)
     	x1(t) <--- x4(t-1) (b>0)
-    	x2(t) <--- x0(t) (b<0)
+    	x2(t) <--- x1(t) (b>0)
+    	x2(t) <--- x3(t) (b>0)
+    	x2(t) <--- x0(t-1) (b>0)
     	x2(t) <--- x2(t-1) (b>0)
     	x2(t) <--- x4(t-1) (b>0)
     	x3(t) <--- x1(t) (b<0)
     	x3(t) <--- x0(t-1) (b<0)
     	x3(t) <--- x2(t-1) (b<0)
-    DAG[1]: 42.0%
-    	x0(t) <--- x0(t-1) (b<0)
-    	x0(t) <--- x3(t-1) (b>0)
-    	x1(t) <--- x1(t-1) (b<0)
-    	x1(t) <--- x3(t-1) (b<0)
-    	x1(t) <--- x4(t-1) (b>0)
-    	x2(t) <--- x0(t) (b<0)
-    	x2(t) <--- x2(t-1) (b>0)
-    	x2(t) <--- x4(t-1) (b>0)
-    	x3(t) <--- x0(t-1) (b<0)
-    	x3(t) <--- x2(t-1) (b<0)
-    DAG[2]: 1.0%
-    	x0(t) <--- x0(t-1) (b<0)
-    	x0(t) <--- x3(t-1) (b>0)
-    	x1(t) <--- x1(t-1) (b<0)
-    	x1(t) <--- x3(t-1) (b<0)
-    	x1(t) <--- x4(t-1) (b>0)
-    	x2(t) <--- x0(t) (b<0)
-    	x2(t) <--- x2(t-1) (b>0)
-    	x2(t) <--- x4(t-1) (b>0)
-    	x3(t) <--- x1(t) (b<0)
-    	x3(t) <--- x0(t-1) (b<0)
-    	x3(t) <--- x2(t-1) (b<0)
-    	x4(t) <--- x0(t) (b>0)
-    
+
 
 Probability
 -----------
@@ -354,18 +362,18 @@ Using the :func:`~lingam.BootstrapResult.get_probabilities` method, we can get t
 .. parsed-literal::
 
     Probability of B0:
-     [[0.   0.98 0.   0.02 0.  ]
-     [0.   0.   0.   0.   0.  ]
-     [1.   0.   0.   0.   0.01]
-     [0.1  1.   0.   0.   0.  ]
-     [0.51 0.   0.02 0.08 0.  ]]
+     [[0.   0.6  0.04 0.06 0.14]
+     [0.39 0.   0.25 0.18 0.16]
+     [0.65 0.68 0.   0.67 0.84]
+     [0.51 0.6  0.07 0.   0.66]
+     [0.35 0.28 0.01 0.09 0.  ]]
     Probability of B1:
-     [[1.   0.   0.02 1.   0.  ]
-     [0.   1.   1.   1.   1.  ]
-     [0.03 0.   1.   0.05 1.  ]
-     [1.   0.16 1.   0.   1.  ]
-     [0.   0.   0.   0.25 0.  ]]
-    
+     [[1.   0.   0.3  1.   0.02]
+     [0.56 1.   0.94 0.67 1.  ]
+     [0.8  0.02 1.   0.25 1.  ]
+     [1.   0.24 1.   0.08 1.  ]
+     [0.02 0.   0.03 0.07 0.  ]]
+
 
 Total Causal Effects
 --------------------
@@ -440,269 +448,318 @@ below.
       <tbody>
         <tr>
           <th>0</th>
-          <td>x1(t)</td>
-          <td>x0(t)</td>
-          <td>-0.131094</td>
+          <td>x0(t-1)</td>
+          <td>x2(t)</td>
+          <td>0.181032</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>x4(t-1)</td>
+          <td>x2(t-1)</td>
           <td>x2(t)</td>
-          <td>0.463646</td>
+          <td>0.388777</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>2</th>
           <td>x4(t-1)</td>
-          <td>x3(t)</td>
-          <td>-0.224349</td>
+          <td>x1(t)</td>
+          <td>0.427308</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>x0(t-1)</td>
-          <td>x0(t)</td>
-          <td>-0.297905</td>
+          <td>x1(t-1)</td>
+          <td>x1(t)</td>
+          <td>-0.338691</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>x1(t)</td>
+          <td>x0(t-1)</td>
           <td>x3(t)</td>
-          <td>-0.217983</td>
+          <td>-0.397439</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>5</th>
           <td>x3(t-1)</td>
           <td>x0(t)</td>
-          <td>0.273013</td>
+          <td>0.345461</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>6</th>
-          <td>x2(t-1)</td>
-          <td>x3(t)</td>
-          <td>-0.177952</td>
+          <td>x4(t-1)</td>
+          <td>x2(t)</td>
+          <td>0.501859</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>7</th>
-          <td>x0(t-1)</td>
+          <td>x4(t-1)</td>
           <td>x3(t)</td>
-          <td>-0.269388</td>
+          <td>-0.253700</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>8</th>
-          <td>x1(t-1)</td>
-          <td>x1(t)</td>
-          <td>-0.260914</td>
+          <td>x0(t-1)</td>
+          <td>x0(t)</td>
+          <td>-0.357296</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>9</th>
           <td>x2(t-1)</td>
-          <td>x2(t)</td>
-          <td>0.310371</td>
+          <td>x3(t)</td>
+          <td>-0.222886</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>10</th>
-          <td>x4(t-1)</td>
-          <td>x1(t)</td>
-          <td>0.397907</td>
+          <td>x3(t-1)</td>
+          <td>x3(t)</td>
+          <td>0.101008</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>11</th>
-          <td>x0(t)</td>
-          <td>x2(t)</td>
-          <td>-0.404106</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>12</th>
-          <td>x1(t)</td>
-          <td>x2(t)</td>
-          <td>0.090684</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>13</th>
           <td>x3(t-1)</td>
           <td>x1(t)</td>
-          <td>-0.206743</td>
+          <td>-0.315462</td>
           <td>0.99</td>
         </tr>
         <tr>
+          <th>12</th>
+          <td>x2(t-1)</td>
+          <td>x0(t)</td>
+          <td>0.090369</td>
+          <td>0.99</td>
+        </tr>
+        <tr>
+          <th>13</th>
+          <td>x2(t-1)</td>
+          <td>x1(t)</td>
+          <td>-0.172693</td>
+          <td>0.98</td>
+        </tr>
+        <tr>
           <th>14</th>
-          <td>x3(t-1)</td>
-          <td>x3(t)</td>
-          <td>0.091307</td>
-          <td>0.93</td>
+          <td>x1(t-1)</td>
+          <td>x2(t)</td>
+          <td>-0.063602</td>
+          <td>0.89</td>
         </tr>
         <tr>
           <th>15</th>
-          <td>x2(t-1)</td>
-          <td>x1(t)</td>
-          <td>-0.121280</td>
-          <td>0.86</td>
+          <td>x4(t)</td>
+          <td>x2(t)</td>
+          <td>-0.449165</td>
+          <td>0.89</td>
         </tr>
         <tr>
           <th>16</th>
-          <td>x0(t)</td>
-          <td>x4(t)</td>
-          <td>0.106232</td>
-          <td>0.86</td>
+          <td>x3(t-1)</td>
+          <td>x2(t)</td>
+          <td>-0.079600</td>
+          <td>0.89</td>
         </tr>
         <tr>
           <th>17</th>
-          <td>x0(t-1)</td>
+          <td>x0(t)</td>
           <td>x2(t)</td>
-          <td>0.083258</td>
-          <td>0.79</td>
+          <td>-0.280635</td>
+          <td>0.83</td>
         </tr>
         <tr>
           <th>18</th>
-          <td>x3(t-1)</td>
-          <td>x2(t)</td>
-          <td>-0.085736</td>
-          <td>0.73</td>
+          <td>x1(t-1)</td>
+          <td>x0(t)</td>
+          <td>0.057164</td>
+          <td>0.82</td>
         </tr>
         <tr>
           <th>19</th>
+          <td>x4(t-1)</td>
           <td>x0(t)</td>
-          <td>x3(t)</td>
-          <td>0.075516</td>
-          <td>0.68</td>
+          <td>-0.050805</td>
+          <td>0.79</td>
         </tr>
         <tr>
           <th>20</th>
-          <td>x2(t-1)</td>
-          <td>x0(t)</td>
-          <td>0.070990</td>
-          <td>0.58</td>
+          <td>x4(t)</td>
+          <td>x3(t)</td>
+          <td>-0.151835</td>
+          <td>0.76</td>
         </tr>
         <tr>
           <th>21</th>
-          <td>x1(t-1)</td>
+          <td>x1(t)</td>
           <td>x2(t)</td>
-          <td>-0.043181</td>
-          <td>0.55</td>
+          <td>0.211957</td>
+          <td>0.75</td>
         </tr>
         <tr>
           <th>22</th>
-          <td>x4(t-1)</td>
-          <td>x0(t)</td>
-          <td>-0.047978</td>
-          <td>0.50</td>
+          <td>x1(t-1)</td>
+          <td>x3(t)</td>
+          <td>-0.021313</td>
+          <td>0.75</td>
         </tr>
         <tr>
           <th>23</th>
-          <td>x1(t-1)</td>
-          <td>x0(t)</td>
-          <td>0.026918</td>
-          <td>0.32</td>
+          <td>x3(t)</td>
+          <td>x2(t)</td>
+          <td>0.248101</td>
+          <td>0.66</td>
         </tr>
         <tr>
           <th>24</th>
-          <td>x2(t)</td>
-          <td>x4(t)</td>
-          <td>-0.049998</td>
-          <td>0.29</td>
+          <td>x0(t)</td>
+          <td>x3(t)</td>
+          <td>0.259859</td>
+          <td>0.64</td>
         </tr>
         <tr>
           <th>25</th>
-          <td>x3(t)</td>
-          <td>x0(t)</td>
-          <td>0.053440</td>
-          <td>0.23</td>
+          <td>x3(t-1)</td>
+          <td>x4(t)</td>
+          <td>0.061849</td>
+          <td>0.62</td>
         </tr>
         <tr>
           <th>26</th>
-          <td>x4(t)</td>
-          <td>x2(t)</td>
-          <td>-0.053585</td>
-          <td>0.22</td>
+          <td>x1(t)</td>
+          <td>x3(t)</td>
+          <td>-0.218490</td>
+          <td>0.62</td>
         </tr>
         <tr>
           <th>27</th>
-          <td>x3(t)</td>
-          <td>x2(t)</td>
-          <td>-0.034164</td>
-          <td>0.22</td>
+          <td>x1(t)</td>
+          <td>x0(t)</td>
+          <td>-0.199704</td>
+          <td>0.61</td>
         </tr>
         <tr>
           <th>28</th>
-          <td>x3(t-1)</td>
+          <td>x1(t)</td>
           <td>x4(t)</td>
-          <td>0.069278</td>
-          <td>0.20</td>
+          <td>-0.104466</td>
+          <td>0.56</td>
         </tr>
         <tr>
           <th>29</th>
+          <td>x0(t-1)</td>
           <td>x1(t)</td>
-          <td>x4(t)</td>
-          <td>-0.032277</td>
-          <td>0.17</td>
+          <td>-0.119971</td>
+          <td>0.53</td>
         </tr>
         <tr>
           <th>30</th>
+          <td>x2(t-1)</td>
           <td>x4(t)</td>
-          <td>x3(t)</td>
-          <td>-0.041963</td>
-          <td>0.16</td>
+          <td>0.017608</td>
+          <td>0.50</td>
         </tr>
         <tr>
           <th>31</th>
-          <td>x1(t-1)</td>
-          <td>x3(t)</td>
-          <td>0.018327</td>
-          <td>0.14</td>
+          <td>x4(t-1)</td>
+          <td>x4(t)</td>
+          <td>-0.041991</td>
+          <td>0.47</td>
         </tr>
         <tr>
           <th>32</th>
-          <td>x2(t)</td>
-          <td>x3(t)</td>
-          <td>-0.017783</td>
-          <td>0.13</td>
+          <td>x1(t-1)</td>
+          <td>x4(t)</td>
+          <td>0.029382</td>
+          <td>0.42</td>
         </tr>
         <tr>
           <th>33</th>
           <td>x0(t-1)</td>
-          <td>x1(t)</td>
-          <td>0.084306</td>
-          <td>0.04</td>
+          <td>x4(t)</td>
+          <td>-0.055934</td>
+          <td>0.42</td>
         </tr>
         <tr>
           <th>34</th>
-          <td>x3(t)</td>
           <td>x4(t)</td>
-          <td>-0.117271</td>
-          <td>0.02</td>
+          <td>x1(t)</td>
+          <td>-0.063677</td>
+          <td>0.42</td>
         </tr>
         <tr>
           <th>35</th>
           <td>x4(t)</td>
           <td>x0(t)</td>
-          <td>0.081813</td>
-          <td>0.01</td>
+          <td>-0.066867</td>
+          <td>0.40</td>
         </tr>
         <tr>
           <th>36</th>
-          <td>x0(t-1)</td>
-          <td>x4(t)</td>
-          <td>-0.085855</td>
-          <td>0.01</td>
+          <td>x0(t)</td>
+          <td>x1(t)</td>
+          <td>-0.719255</td>
+          <td>0.39</td>
         </tr>
         <tr>
           <th>37</th>
-          <td>x1(t-1)</td>
+          <td>x0(t)</td>
           <td>x4(t)</td>
-          <td>0.036685</td>
-          <td>0.01</td>
+          <td>0.174717</td>
+          <td>0.37</td>
+        </tr>
+        <tr>
+          <th>38</th>
+          <td>x2(t)</td>
+          <td>x1(t)</td>
+          <td>0.212699</td>
+          <td>0.25</td>
+        </tr>
+        <tr>
+          <th>39</th>
+          <td>x3(t)</td>
+          <td>x1(t)</td>
+          <td>-0.308596</td>
+          <td>0.20</td>
+        </tr>
+        <tr>
+          <th>40</th>
+          <td>x2(t)</td>
+          <td>x3(t)</td>
+          <td>-0.084192</td>
+          <td>0.18</td>
+        </tr>
+        <tr>
+          <th>41</th>
+          <td>x3(t)</td>
+          <td>x0(t)</td>
+          <td>0.154238</td>
+          <td>0.11</td>
+        </tr>
+        <tr>
+          <th>42</th>
+          <td>x3(t)</td>
+          <td>x4(t)</td>
+          <td>-0.205918</td>
+          <td>0.10</td>
+        </tr>
+        <tr>
+          <th>43</th>
+          <td>x2(t)</td>
+          <td>x0(t)</td>
+          <td>-0.217316</td>
+          <td>0.06</td>
+        </tr>
+        <tr>
+          <th>44</th>
+          <td>x2(t)</td>
+          <td>x4(t)</td>
+          <td>-0.093614</td>
+          <td>0.03</td>
         </tr>
       </tbody>
     </table>
@@ -771,39 +828,39 @@ We can easily perform sorting operations with pandas.DataFrame.
       </thead>
       <tbody>
         <tr>
-          <th>1</th>
+          <th>6</th>
           <td>x4(t-1)</td>
           <td>x2(t)</td>
-          <td>0.463646</td>
+          <td>0.501859</td>
           <td>1.00</td>
         </tr>
         <tr>
-          <th>10</th>
+          <th>2</th>
           <td>x4(t-1)</td>
           <td>x1(t)</td>
-          <td>0.397907</td>
+          <td>0.427308</td>
           <td>1.00</td>
         </tr>
         <tr>
-          <th>9</th>
+          <th>1</th>
           <td>x2(t-1)</td>
           <td>x2(t)</td>
-          <td>0.310371</td>
+          <td>0.388777</td>
           <td>1.00</td>
         </tr>
         <tr>
           <th>5</th>
           <td>x3(t-1)</td>
           <td>x0(t)</td>
-          <td>0.273013</td>
+          <td>0.345461</td>
           <td>1.00</td>
         </tr>
         <tr>
-          <th>16</th>
+          <th>24</th>
           <td>x0(t)</td>
-          <td>x4(t)</td>
-          <td>0.106232</td>
-          <td>0.86</td>
+          <td>x3(t)</td>
+          <td>0.259859</td>
+          <td>0.64</td>
         </tr>
       </tbody>
     </table>
@@ -872,39 +929,39 @@ And with pandas.DataFrame, we can easily filter by keywords. The following code 
       </thead>
       <tbody>
         <tr>
-          <th>8</th>
-          <td>x1(t-1)</td>
-          <td>x1(t)</td>
-          <td>-0.260914</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>10</th>
+          <th>2</th>
           <td>x4(t-1)</td>
           <td>x1(t)</td>
-          <td>0.397907</td>
+          <td>0.427308</td>
           <td>1.00</td>
         </tr>
         <tr>
-          <th>13</th>
+          <th>3</th>
+          <td>x1(t-1)</td>
+          <td>x1(t)</td>
+          <td>-0.338691</td>
+          <td>1.00</td>
+        </tr>
+        <tr>
+          <th>11</th>
           <td>x3(t-1)</td>
           <td>x1(t)</td>
-          <td>-0.206743</td>
+          <td>-0.315462</td>
           <td>0.99</td>
         </tr>
         <tr>
-          <th>15</th>
+          <th>13</th>
           <td>x2(t-1)</td>
           <td>x1(t)</td>
-          <td>-0.121280</td>
-          <td>0.86</td>
+          <td>-0.172693</td>
+          <td>0.98</td>
         </tr>
         <tr>
-          <th>33</th>
+          <th>29</th>
           <td>x0(t-1)</td>
           <td>x1(t)</td>
-          <td>0.084306</td>
-          <td>0.04</td>
+          <td>-0.119971</td>
+          <td>0.53</td>
         </tr>
       </tbody>
     </table>
