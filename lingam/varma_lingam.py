@@ -2,6 +2,7 @@
 Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 """
+
 import itertools
 import warnings
 
@@ -201,8 +202,6 @@ class VARMALiNGAM:
             am = np.concatenate([*psi, *omega], axis=1)
             adjacency_matrices.append(am)
 
-            ee = np.dot(np.eye(psi[0].shape[0]) - psi[0], sampled_residuals.T).T
-
             # total effects
             for c, to in enumerate(reversed(self._causal_order)):
                 # time t
@@ -214,10 +213,8 @@ class VARMALiNGAM:
                 # time t-tau
                 for lag in range(p):
                     for from_ in range(n_features):
-                        total_effects[
-                            i, to, from_ + n_features * (lag + 1)
-                        ] = self.estimate_total_effect2(
-                            n_features, from_, to, lag + 1
+                        total_effects[i, to, from_ + n_features * (lag + 1)] = (
+                            self.estimate_total_effect2(n_features, from_, to, lag + 1)
                         )
 
         self._criterion = criterion
@@ -331,7 +328,6 @@ class VARMALiNGAM:
         effect = calculate_total_effect(am, from_index, to_index)
 
         return effect
-
 
     def get_error_independence_p_values(self):
         """Calculate the p-value matrix of independence between error variables.
@@ -522,7 +518,9 @@ class VARMABootstrapResult(BootstrapResult):
         self._order = order
         super().__init__(adjacency_matrices, total_effects)
 
-    def get_paths(self, from_index, to_index, from_lag=0, to_lag=0, min_causal_effect=None):
+    def get_paths(
+        self, from_index, to_index, from_lag=0, to_lag=0, min_causal_effect=None
+    ):
         """Get all paths from the start variable to the end variable and their bootstrap probabilities.
 
         Parameters
@@ -576,11 +574,15 @@ class VARMABootstrapResult(BootstrapResult):
                     row = n_features * i
                     col = n_features * j
                     lag = col - row
-                    expansion_m[row:row + n_features, col:col + n_features] = am[0:n_features, lag:lag + n_features]
-            paths, effects = find_all_paths(expansion_m,
-                                            int(n_features * from_lag + from_index),
-                                            int(n_features * to_lag + to_index),
-                                            min_causal_effect)
+                    expansion_m[row : row + n_features, col : col + n_features] = am[
+                        0:n_features, lag : lag + n_features
+                    ]
+            paths, effects = find_all_paths(
+                expansion_m,
+                int(n_features * from_lag + from_index),
+                int(n_features * to_lag + to_index),
+                min_causal_effect,
+            )
 
             # Convert path to string to make them easier to handle.
             paths_list.extend(["_".join(map(str, p)) for p in paths])

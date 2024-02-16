@@ -25,7 +25,7 @@ In addition, we add the following guidelines:
 Coding style is checked with flake8.
 
 ``` sh
-flake8 lingam --count --ignore=E203,E741 --max-complexity=10 --max-line-length=127 --statistics
+flake8 lingam --count --ignore=E203,E741,C901 --max-line-length=127 --statistics
 ```
 
 ## Documentation

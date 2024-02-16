@@ -2,6 +2,7 @@
 Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 """
+
 import numbers
 import graphviz
 import matplotlib.pyplot as plt
@@ -919,7 +920,7 @@ def variance_i(X, i, b_i):
 
 
 def evaluate_model_fit(adjacency_matrix, X, is_ordinal=None):
-    """ evaluate the given adjacency matrix and return fit indices
+    """evaluate the given adjacency matrix and return fit indices
 
     Parameters
     ----------
@@ -973,7 +974,7 @@ def evaluate_model_fit(adjacency_matrix, X, is_ordinal=None):
                     eta_names.append(eta_name)
             elif not np.isclose(elem, 0):
                 desc += f"{elem:f} * x{j:d} + "
-        desc = desc[:-len(" * ")] + "\n"
+        desc = desc[: -len(" * ")] + "\n"
 
     if len(eta_names) > 0:
         desc += "DEFINE(latent) " + " ".join(eta_names) + "\n"
@@ -995,6 +996,7 @@ def evaluate_model_fit(adjacency_matrix, X, is_ordinal=None):
     stats = semopy.calc_stats(m)
 
     return stats
+
 
 def calculate_distance_from_root_nodes(adjacency_matrix, max_distance=None):
     """Calculate shortest distances from root nodes.
@@ -1018,17 +1020,17 @@ def calculate_distance_from_root_nodes(adjacency_matrix, max_distance=None):
         adjacency_matrix,
         ensure_min_samples=2,
         ensure_min_features=2,
-        force_all_finite="allow-nan"
+        force_all_finite="allow-nan",
     )
     if adjacency_matrix.shape[0] != adjacency_matrix.shape[1]:
         raise ValueError("adjacency_matrix must be an square matrix.")
-    
+
     if max_distance is not None:
         max_distance = check_scalar(max_distance, "max_distance", int, min_val=1)
 
     # delete hidden common causes
     adjacency_matrix = np.nan_to_num(adjacency_matrix)
-    
+
     # find root nodes
     root_indices = np.argwhere(
         np.isclose(np.sum(adjacency_matrix, axis=1), 0) == True
@@ -1044,7 +1046,7 @@ def calculate_distance_from_root_nodes(adjacency_matrix, max_distance=None):
         dist = nx.shortest_path_length(G, source=index)
         dist_df[index] = dist
     dist_df = pd.DataFrame(dist_df)
-    
+
     dist_df = dist_df.fillna(np.iinfo(int).max)
     dist_df = dist_df.min(axis=1)
     if max_distance is not None:
@@ -1052,11 +1054,12 @@ def calculate_distance_from_root_nodes(adjacency_matrix, max_distance=None):
     dist_df = dist_df.sort_index()
     dist_df = dist_df.astype(int)
 
-    result = {i:[] for i in pd.unique(dist_df)}
+    result = {i: [] for i in pd.unique(dist_df)}
     for name, dist in dist_df.items():
         result[dist].append(name)
 
     return result
+
 
 def calculate_total_effect(adjacency_matrix, from_index, to_index, is_continuous=None):
     """Calculate total effect.
@@ -1077,23 +1080,25 @@ def calculate_total_effect(adjacency_matrix, from_index, to_index, is_continuous
     -------
     total_effect : float
     """
- 
+
     # check inputs
     adjacency_matrix = check_array(
         adjacency_matrix,
         ensure_min_samples=2,
         ensure_min_features=2,
-        force_all_finite='allow-nan'
+        force_all_finite="allow-nan",
     )
     if adjacency_matrix.shape[0] != adjacency_matrix.shape[1]:
-        raise ValueError("adjacency_matrix must be an square matrix.", adjacency_matrix.shape)
-        
+        raise ValueError(
+            "adjacency_matrix must be an square matrix.", adjacency_matrix.shape
+        )
+
     from_index = check_scalar(
         from_index,
         "from_index",
         (numbers.Integral, np.integer),
         min_val=0,
-        max_val=len(adjacency_matrix) - 1
+        max_val=len(adjacency_matrix) - 1,
     )
 
     to_index = check_scalar(
@@ -1101,16 +1106,14 @@ def calculate_total_effect(adjacency_matrix, from_index, to_index, is_continuous
         "to_index",
         (numbers.Integral, np.integer),
         min_val=0,
-        max_val=len(adjacency_matrix) - 1
+        max_val=len(adjacency_matrix) - 1,
     )
- 
+
     if is_continuous is None:
         is_continuous = [True for _ in range(len(adjacency_matrix))]
     else:
         is_continuous = check_array(
-            is_continuous,
-            ensure_2d=False,
-            ensure_min_samples=len(adjacency_matrix)
+            is_continuous, ensure_2d=False, ensure_min_samples=len(adjacency_matrix)
         )
 
     # find all paths
@@ -1121,7 +1124,7 @@ def calculate_total_effect(adjacency_matrix, from_index, to_index, is_continuous
         for node in path[1:]:
             if not is_continuous[node]:
                 raise ValueError("Variables on the path must be continuous variables.")
-    
+
     total_effect = sum(effects)
-    
+
     return total_effect

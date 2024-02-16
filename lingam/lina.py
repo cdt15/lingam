@@ -83,10 +83,10 @@ class LiNA:
         self : object
             Returns the instance of self.
         """
-        
+
         n_samples = X.shape[0]
         n_features_latent = G_sign.shape[1]
-        
+
         lam, phi, var_e = cfa(X, G_sign)
         G_est_nor = lam
 

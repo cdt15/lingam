@@ -10,18 +10,11 @@ from sklearn.utils import check_array
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.pipeline import Pipeline
 
-TrainData = namedtuple(
-    "TrainData",
-    ("condition", "X", "y")
-)
+TrainData = namedtuple("TrainData", ("condition", "X", "y"))
 TrainResult = namedtuple(
-    "TrainResult",
-    ("condition", "model", "exp_columns", "predicted", "residual")
+    "TrainResult", ("condition", "model", "exp_columns", "predicted", "residual")
 )
-ChangingModels = namedtuple(
-    "ChangingModels",
-    ("name", "condition", "model")
-)
+ChangingModels = namedtuple("ChangingModels", ("name", "condition", "model"))
 
 
 class CausalBasedSimulator:
@@ -78,29 +71,15 @@ class CausalBasedSimulator:
 
         causal_graph = self._check_causal_graph(causal_graph, data.shape[1])
 
-        train_models = self._check_models(
-            models,
-            data.index,
-            data.columns,
-            cat_map
-        )
+        train_models = self._check_models(models, data.index, data.columns, cat_map)
 
         # training
-        train_results = self._train(
-            data,
-            cat_map,
-            causal_graph,
-            train_models
-        )
+        train_results = self._train(data, cat_map, causal_graph, train_models)
 
         residual_df = {}
         for col_name in X.columns:
             if len(train_results[col_name]) > 0:
-                series = self._concat_residuals(
-                    train_results,
-                    col_name,
-                    data.index
-                )
+                series = self._concat_residuals(train_results, col_name, data.index)
             else:
                 # node with no parent nodes
                 series = np.ones(data.shape[0]) * np.nan
@@ -110,10 +89,7 @@ class CausalBasedSimulator:
         residual_df = pd.DataFrame(residual_df)
 
         # setting attributes
-        self.train_result_ = self._prep_to_expose_train(
-            train_results,
-            cat_map
-        )
+        self.train_result_ = self._prep_to_expose_train(train_results, cat_map)
         self.residual_ = residual_df
         self.categorical_info_ = cat_map
 
@@ -130,7 +106,7 @@ class CausalBasedSimulator:
         changing_exog=None,
         changing_models=None,
         shuffle_residual=False,
-        random_state=None
+        random_state=None,
     ):
         """
         Generate simulated data using trained models and the given
@@ -170,21 +146,14 @@ class CausalBasedSimulator:
         """
 
         if self._train_results is None:
-            raise RuntimeError(
-                "run() shall be executed after train() is executed"
-            )
+            raise RuntimeError("run() shall be executed after train() is executed")
 
         # checking inputs
         changing_exog_df = self._check_changing_exog(
-            changing_exog,
-            self._data.index,
-            self._data.columns,
-            self.categorical_info_
+            changing_exog, self._data.index, self._data.columns, self.categorical_info_
         )
         changing_models2 = self._check_changing_models(
-            changing_models,
-            self.categorical_info_,
-            self._train_results
+            changing_models, self.categorical_info_, self._train_results
         )
 
         # calculating causal_order if it has not been calculated
@@ -202,7 +171,7 @@ class CausalBasedSimulator:
             changing_models2,
             self._train_results,
             shuffle_residual,
-            random_state
+            random_state,
         )
 
         # set attributes
@@ -270,8 +239,7 @@ class CausalBasedSimulator:
                     raise Exception
             except Exception:
                 raise RuntimeError(
-                    "Classification models shall have "
-                    + "predict_proba()."
+                    "Classification models shall have " + "predict_proba()."
                 )
 
     def _check_models(self, models, index, columns, cat_map):
@@ -299,9 +267,7 @@ class CausalBasedSimulator:
         changing_exog_df = {}
         for col_name, values in changing_exog.items():
             if col_name not in columns:
-                raise RuntimeError(
-                    f"Unknown key in changing_exog. ({col_name})"
-                )
+                raise RuntimeError(f"Unknown key in changing_exog. ({col_name})")
 
             if col_name in cat_map.keys():
                 raise RuntimeError(
@@ -310,9 +276,7 @@ class CausalBasedSimulator:
 
             s = check_array(values, ensure_2d=False, dtype=None).flatten()
             if s.shape[0] != len(index):
-                raise RuntimeError(
-                    f"Wrong length. ({s.shape[0]} != {len(index)})"
-                )
+                raise RuntimeError(f"Wrong length. ({s.shape[0]} != {len(index)})")
 
             changing_exog_df[col_name] = pd.Series(values, index=index)
         changing_exog_df = pd.DataFrame(changing_exog_df).loc[index, :]
@@ -329,24 +293,18 @@ class CausalBasedSimulator:
         changing_models_ = []
         for model_info in changing_models:
             if not isinstance(model_info, dict):
-                raise RuntimeError(
-                    "changing_models shall be a list of dictionaries."
-                )
+                raise RuntimeError("changing_models shall be a list of dictionaries.")
 
             missing_keys = set(ChangingModels._fields) - set(model_info.keys())
             if len(missing_keys) > 0:
-                raise RuntimeError(
-                    "Missing key on model_info. " + str(missing_keys)
-                )
+                raise RuntimeError("Missing key on model_info. " + str(missing_keys))
 
             name = model_info["name"]
             if name not in train_results.keys():
                 raise RuntimeError(f"Unknown name. ({name})")
 
             condition = model_info["condition"]
-            conditions = [
-                cond_result.condition for cond_result in train_results[name]
-            ]
+            conditions = [cond_result.condition for cond_result in train_results[name]]
             if condition not in conditions:
                 raise RuntimeError("Not-exsitent consition. " + str(condition))
 
@@ -366,9 +324,7 @@ class CausalBasedSimulator:
 
         while 0 < len(causal_graph):
             # finding rows where the elements are all zeros
-            row_index_list = np.where(
-                np.sum(np.abs(causal_graph), axis=1) == 0
-            )[0]
+            row_index_list = np.where(np.sum(np.abs(causal_graph), axis=1) == 0)[0]
             if len(row_index_list) == 0:
                 break
 
@@ -379,11 +335,7 @@ class CausalBasedSimulator:
             original_index = np.delete(original_index, target_index, axis=0)
 
             # remove i-th row and i-th column from matrix
-            mask = np.delete(
-                np.arange(len(causal_graph)),
-                target_index,
-                axis=0
-            )
+            mask = np.delete(np.arange(len(causal_graph)), target_index, axis=0)
             causal_graph = causal_graph[mask][:, mask]
 
         if len(causal_order) != row_num:
@@ -391,14 +343,7 @@ class CausalBasedSimulator:
 
         return np.array(causal_order)
 
-    def _get_train_data(
-        self,
-        data,
-        X_cols,
-        y_col,
-        cat_map,
-        changing_exog_df=None
-    ):
+    def _get_train_data(self, data, X_cols, y_col, cat_map, changing_exog_df=None):
         train_data_list = []
 
         # column names of categorical variables in X_columns
@@ -424,10 +369,7 @@ class CausalBasedSimulator:
         X_cols_num = sorted(X_cols_num, key=lambda x: list(X_cols).index(x))
 
         # unique conditions by categorical parent nodes
-        uniq_conds = np.unique(
-            data.loc[:, X_cols_cat].values.tolist(),
-            axis=0
-        )
+        uniq_conds = np.unique(data.loc[:, X_cols_cat].values.tolist(), axis=0)
 
         for uniq_cond in uniq_conds:
             # filter by the condition
@@ -459,8 +401,7 @@ class CausalBasedSimulator:
             predicted = model.predict(X.values)
         except Exception as e:
             raise RuntimeError(
-                "An exception occurred during predict() of the model. "
-                + str(e)
+                "An exception occurred during predict() of the model. " + str(e)
             )
 
         return np.array(predicted)
@@ -470,8 +411,7 @@ class CausalBasedSimulator:
             model.fit(X.values, y.values)
         except Exception as e:
             raise RuntimeError(
-                "An exception occurred during fit() of the model. "
-                + str(e)
+                "An exception occurred during fit() of the model. " + str(e)
             )
 
         predicted = self._predict_reg_model(X, model)
@@ -486,8 +426,7 @@ class CausalBasedSimulator:
             proba = model.predict_proba(X.values)
         except Exception as e:
             raise RuntimeError(
-                "An exception occurred during predict_proba() of the model. "
-                + str(e)
+                "An exception occurred during predict_proba() of the model. " + str(e)
             )
 
         # sampling values based on predicted probability
@@ -502,8 +441,7 @@ class CausalBasedSimulator:
             model.fit(X.values, y.values)
         except Exception as e:
             raise RuntimeError(
-                "An exception occurred during fit() of the model. "
-                + str(e)
+                "An exception occurred during fit() of the model. " + str(e)
             )
 
         predicted = self._predict_clf_model(X, model)
@@ -524,8 +462,7 @@ class CausalBasedSimulator:
             if series is None:
                 predicted = getattr(cond_result, "predicted")
                 series = pd.Series(
-                    np.ones(predicted.shape[0]) * np.nan,
-                    index=predicted.index
+                    np.ones(predicted.shape[0]) * np.nan, index=predicted.index
                 )
 
             ret.append(series)
@@ -558,9 +495,7 @@ class CausalBasedSimulator:
                 if result.condition is None:
                     result_["condition"] = None
                 else:
-                    result_["condition"] = {
-                        k: v for k, v in result.condition.items()
-                    }
+                    result_["condition"] = {k: v for k, v in result.condition.items()}
 
                 result_["model"] = result.model
 
@@ -588,25 +523,18 @@ class CausalBasedSimulator:
         for to_index, graph_row in enumerate(graph):
             cond_results = []
 
-            from_indices = np.argwhere(
-                ~np.isclose(graph_row, 0)
-            ).flatten()
+            from_indices = np.argwhere(~np.isclose(graph_row, 0)).flatten()
 
             # get column names
             to_name = data.columns[to_index]
             from_names = data.columns[from_indices]
             from_names_num = sorted(
                 set(from_names) - set(cat_map.keys()),
-                key=lambda x: list(data.columns).index(x)
+                key=lambda x: list(data.columns).index(x),
             )
 
             # making data list splitted by conditions
-            cond_tr_data = self._get_train_data(
-                data,
-                from_names,
-                to_name,
-                cat_map
-            )
+            cond_tr_data = self._get_train_data(data, from_names, to_name, cat_map)
 
             # node with no parents
             if len(from_names) == 0:
@@ -635,35 +563,27 @@ class CausalBasedSimulator:
                 # train model
                 if to_name in cat_map.keys():
                     model, predicted, resid = self._train_clf_model(
-                        tr_data.X,
-                        tr_data.y,
-                        model,
-                        cat_map
+                        tr_data.X, tr_data.y, model, cat_map
                     )
                 else:
                     model, predicted, resid = self._train_reg_model(
-                        tr_data.X,
-                        tr_data.y,
-                        model
+                        tr_data.X, tr_data.y, model
                     )
 
-                cond_results.append(TrainResult(
-                    condition=tr_data.condition,
-                    model=model,
-                    exp_columns=from_names_num,
-                    predicted=predicted,
-                    residual=resid
-                ))
+                cond_results.append(
+                    TrainResult(
+                        condition=tr_data.condition,
+                        model=model,
+                        exp_columns=from_names_num,
+                        predicted=predicted,
+                        residual=resid,
+                    )
+                )
             train_results[to_name] = cond_results
 
         return train_results
 
-    def _select_changing_model(
-        self,
-        changing_models,
-        to_name,
-        condition
-    ):
+    def _select_changing_model(self, changing_models, to_name, condition):
         for model_info in changing_models:
             if model_info.name != to_name:
                 continue
@@ -683,7 +603,7 @@ class CausalBasedSimulator:
         changing_models,
         train_results,
         shuffle_residual,
-        random_state
+        random_state,
     ):
         sim_df = pd.DataFrame(index=data.index)
 
@@ -694,9 +614,7 @@ class CausalBasedSimulator:
             from_indices = np.argwhere(~np.isclose(from_indices, 0)).flatten()
 
             to_name = data.columns[to_index]
-            from_names = [
-                data.columns[from_index] for from_index in from_indices
-            ]
+            from_names = [data.columns[from_index] for from_index in from_indices]
 
             # assigning values without predicting if to_name has no parents.
             if len(from_names) == 0:
@@ -706,11 +624,7 @@ class CausalBasedSimulator:
             if to_name in changing_exog_df.columns:
                 error = changing_exog_df[to_name]
             elif to_name not in cat_map.keys():
-                error = self._concat_residuals(
-                    train_results,
-                    to_name,
-                    data.index
-                )
+                error = self._concat_residuals(train_results, to_name, data.index)
 
             X = sim_df[from_names]
 
@@ -735,14 +649,12 @@ class CausalBasedSimulator:
                     X_ = pd.DataFrame(
                         np.ones(X_.shape[0]).reshape(X_.shape[0]) * np.nan,
                         index=X_.index,
-                        columns=[to_name]
+                        columns=[to_name],
                     )
 
                 # selecting a model for the simulation
                 model = self._select_changing_model(
-                    changing_models,
-                    to_name,
-                    cond_result.condition
+                    changing_models, to_name, cond_result.condition
                 )
                 if model is None:
                     model = cond_result.model
@@ -755,8 +667,7 @@ class CausalBasedSimulator:
                     cond_error = error.loc[X_.index]
                     if shuffle_residual is True:
                         cond_error = cond_error.sample(
-                            frac=1,
-                            random_state=random_state
+                            frac=1, random_state=random_state
                         )
                     y_hat += cond_error
 
@@ -766,9 +677,7 @@ class CausalBasedSimulator:
 
         # decoding categorical values
         for col_name, categories in cat_map.items():
-            sim_df[col_name] = sim_df[col_name].map(
-                lambda idx: categories[idx]
-            )
+            sim_df[col_name] = sim_df[col_name].map(lambda idx: categories[idx])
             sim_df[col_name] = sim_df[col_name].astype("category")
 
         return sim_df

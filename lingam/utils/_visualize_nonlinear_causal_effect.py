@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from sklearn.utils import check_array
-from sklearn.base import clone, is_regressor, is_classifier
+from sklearn.base import is_regressor, is_classifier
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -17,7 +17,7 @@ def visualize_nonlinear_causal_effect(
     cause_positions=None,
     percentile=None,
     fig=None,
-    boxplot=False
+    boxplot=False,
 ):
     """Visualize non-linear causal effect.
 
@@ -37,7 +37,7 @@ def visualize_nonlinear_causal_effect(
     effect_name : str
         The name of the effect variable.
     cause_positions : array-like, optional (default=None)
-        List of positions from which causal effects are calculated. 
+        List of positions from which causal effects are calculated.
         By default, ``cause_positions`` stores the position at which the value range of X is divided
         into 10 equal parts.
     percentile : array-like, optional (default=None)
@@ -59,8 +59,12 @@ def visualize_nonlinear_causal_effect(
     if not isinstance(X, pd.DataFrame):
         raise TypeError("X must be pandas.DataFrame.")
 
-    if not _is_bootstrap_result(cd_result) and not _is_adjacency_matrix(cd_result, X.shape[1]):
-        raise TypeError("cd_result must be lingam.bootstrap.BootstrapResult or array-like.")
+    if not _is_bootstrap_result(cd_result) and not _is_adjacency_matrix(
+        cd_result, X.shape[1]
+    ):
+        raise TypeError(
+            "cd_result must be lingam.bootstrap.BootstrapResult or array-like."
+        )
 
     if cause_name not in X.columns:
         raise ValueError("cause_name is not exsit in X.columns.")
@@ -75,7 +79,9 @@ def visualize_nonlinear_causal_effect(
     _check_estimator(estimator, is_discrete)
 
     if cause_positions is not None:
-        cause_positions = check_array(cause_positions, dtype=None, ensure_2d=False).flatten()
+        cause_positions = check_array(
+            cause_positions, dtype=None, ensure_2d=False
+        ).flatten()
         if None in cause_positions:
             raise TypeError("cause_positions must not include None.")
 
@@ -83,7 +89,9 @@ def visualize_nonlinear_causal_effect(
         if not isinstance(percentile, list) or len(percentile) != 3:
             raise TypeError("percentile must be a list of 3 floats.")
         if not all(map(lambda x: 0 <= x and x <= 100, percentile)):
-            raise TypeError("Elements of percentile must be between 0 and 100 inclusive.")
+            raise TypeError(
+                "Elements of percentile must be between 0 and 100 inclusive."
+            )
 
     if fig is not None:
         if not isinstance(fig, Figure):
@@ -125,7 +133,8 @@ def visualize_nonlinear_causal_effect(
         estimator,
         cause_positions,
         X,
-        is_discrete)
+        is_discrete,
+    )
 
     # visualize
     fig = _draw(
@@ -136,7 +145,7 @@ def visualize_nonlinear_causal_effect(
         cause_name,
         effect_name,
         boxplot,
-        disable_percentile
+        disable_percentile,
     )
 
     return fig
@@ -159,9 +168,7 @@ def _is_adjacency_matrix(cd_result, col_num):
 
 def _check_estimator(estimator, is_discrete):
     if is_discrete is True and is_regressor(estimator):
-        raise TypeError(
-            "X[effect_name] is discrete but the estimator is a regressor."
-        )
+        raise TypeError("X[effect_name] is discrete but the estimator is a regressor.")
     elif is_discrete is False and is_classifier(estimator):
         raise TypeError(
             "X[effect_name] is not discrete but the estimator is a classifier."
@@ -173,12 +180,20 @@ def _check_estimator(estimator, is_discrete):
             if not callable(func):
                 raise Exception
         except Exception:
-            raise RuntimeError(
-                "Classification models must have predict_proba()."
-            )
+            raise RuntimeError("Classification models must have predict_proba().")
 
 
-def _calculate(effect_classes, adj_matrices, index_list, cause_index, effect_index, estimator, cause_positions, X, is_discrete):
+def _calculate(
+    effect_classes,
+    adj_matrices,
+    index_list,
+    cause_index,
+    effect_index,
+    estimator,
+    cause_positions,
+    X,
+    is_discrete,
+):
     # effect_classes is [None] if X.iloc[effect_index] is continuous
     effect_info = {effect_class: {} for effect_class in effect_classes}
     for c in effect_info.keys():
@@ -218,7 +233,16 @@ def _calculate(effect_classes, adj_matrices, index_list, cause_index, effect_ind
     return effect_info
 
 
-def _draw(effect_info, cause_positions, percentile, fig, cause_name, effect_name, is_box, disable_percentile):
+def _draw(
+    effect_info,
+    cause_positions,
+    percentile,
+    fig,
+    cause_name,
+    effect_name,
+    is_box,
+    disable_percentile,
+):
     if disable_percentile is False:
         alpha = 0.5
         colors = ["red", "green", "blue"]
@@ -237,7 +261,13 @@ def _draw(effect_info, cause_positions, percentile, fig, cause_name, effect_name
 
         for interv_val, values in effects.items():
             if not is_box:
-                ax.scatter(interv_val * np.ones(len(values)), values, color="black", alpha=alpha, facecolor="none")
+                ax.scatter(
+                    interv_val * np.ones(len(values)),
+                    values,
+                    color="black",
+                    alpha=alpha,
+                    facecolor="none",
+                )
             else:
                 ax.boxplot(values, positions=[interv_val], manage_ticks=False)
 

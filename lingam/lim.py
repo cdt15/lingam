@@ -10,11 +10,9 @@ import numpy as np
 import pandas as pd
 import scipy.optimize as sopt
 from scipy.special import expit as sigmoid
-from sklearn.linear_model import LinearRegression, LogisticRegression, PoissonRegressor
+from sklearn.linear_model import (LinearRegression, LogisticRegression,
+                                  PoissonRegressor)
 from sklearn.metrics import log_loss
-# import torch 
-# import torch.nn as nn
-# import math
 
 import lingam.utils as ut
 
@@ -102,12 +100,12 @@ class LiM:
                 loss = 1.0 / X.shape[0] * (np.logaddexp(0, M) - X * M).sum()
                 G_loss = 1.0 / X.shape[0] * X.T @ (sigmoid(M) - X)
             elif self._loss_type == "poisson":
-                loss = - np.sum(X.T @ M) + np.exp(M).sum()
+                loss = -np.sum(X.T @ M) + np.exp(M).sum()
                 for j in range(X.shape[0]):
                     for k in range(X.shape[1]):
                         loss += np.log(_factorial(X[j][k]))
-                loss =  1.0 / X.shape[0] * loss 
-                G_loss = 1.0 / X.shape[0] * (- X.T @ X + X.T @ np.exp(M))
+                loss = 1.0 / X.shape[0] * loss
+                G_loss = 1.0 / X.shape[0] * (-X.T @ X + X.T @ np.exp(M))
             elif self._loss_type == "laplace":
                 R = X - M
                 loss = -1.0 / X.shape[0] * np.sum(-np.log(np.cosh(R)))
@@ -185,7 +183,7 @@ class LiM:
                         )
                         total_score += likekihood_logistic
                     pass
-                
+
                 # 離散 poisson
                 elif is_discrete[i] and is_poisson == True:
                     if not parents_i:
@@ -197,25 +195,26 @@ class LiM:
                                 np.log(count_k) - np.log(frequency_table.sum())
                             )
                         total_score += likekihood_bernoulli
-                    
+
                     elif parents_i:
                         # Count variable, likelihood using poisson regression model.
                         for iii in range(len(parents_i)):
                             X = lingam_data[parents_i[iii]]
-                            X = X.reshape(-1,1)
+                            X = X.reshape(-1, 1)
                             y = lingam_data[i]
                             poisson = PoissonRegressor()
                             poisson.fit(X, y)
                             beta = poisson.coef_
-                            # compute likelihood 
-                            likekihood_poisson = - np.sum(y * lingam_data[parents_i[iii]] * beta) + \
-                            np.sum(np.exp(lingam_data[parents_i[iii]] * beta)) 
+                            # compute likelihood
+                            likekihood_poisson = -np.sum(
+                                y * lingam_data[parents_i[iii]] * beta
+                            ) + np.sum(np.exp(lingam_data[parents_i[iii]] * beta))
                             for j in range(len(y)):
                                 likekihood_poisson += np.log(_factorial(y[j]))
                         total_score += likekihood_poisson
-                        # # or we can compute likelihood via nn 
+                        # # or we can compute likelihood via nn
                         # pnllloss = nn.PoissonNLLLoss()
-                        # log_input = np.log(lingam_data[parents_i] * beta) 
+                        # log_input = np.log(lingam_data[parents_i] * beta)
                         # target = y # torch.randn(5, 2)
                         # output = pnllloss(log_input, target)
                         # likekihood_poisson = output.item()
@@ -275,8 +274,8 @@ class LiM:
             if y == 0 or y == 1 or y < 0:
                 return 1
             else:
-                return (y*_factorial(y-1))
-    
+                return y * _factorial(y - 1)
+
         n, d = X.shape
         w_est, rho, alpha, h = (
             np.random.random(2 * d * d),
@@ -320,7 +319,7 @@ class LiM:
                 w_est = np.random.random(2 * d * d)
         W_est = _adj(w_est)
         W_est[np.abs(W_est) < self._w_threshold] = 0
-        print('W_est (without the 2nd phase) is: \n', W_est)
+        print("W_est (without the 2nd phase) is: \n", W_est)
 
         if not only_global:
             self._loss_type = "mixed_dag"
@@ -396,7 +395,6 @@ class LiM:
 
         else:
             W_min_lss = np.copy(W_est)
-
 
         return W_min_lss
 

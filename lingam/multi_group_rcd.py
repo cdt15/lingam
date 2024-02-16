@@ -53,9 +53,11 @@ class MultiGroupRCD:
             * ``scott`` : Scott's Rule of Thumb.
             * ``silverman`` : Silverman's Rule of Thumb.
         independence : {'hsic', 'fcorr'}, optional (default='hsic')
-            Methods to determine independence. If 'hsic' is set, test for independence by HSIC. If 'fcorr' is set, independence is determined by F-correlation.
+            Methods to determine independence. If 'hsic' is set, test for independence by HSIC.
+            If 'fcorr' is set, independence is determined by F-correlation.
         ind_corr : float, optional (default=0.5)
-            The threshold value for determining independence by F-correlation; independence is determined when the value of F-correlation is below this threshold value.
+            The threshold value for determining independence by F-correlation;
+            independence is determined when the value of F-correlation is below this threshold value.
         """
         # Check parameters
         if max_explanatory_num <= 0:
@@ -215,7 +217,6 @@ class MultiGroupRCD:
             effects.append(effect)
 
         return effects
-
 
     def get_error_independence_p_values(self, X_list):
         """Calculate the p-value matrix of independence between error variables.
