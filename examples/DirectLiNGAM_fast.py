@@ -32,25 +32,22 @@ def main():
         X = pd.DataFrame(np.array([x0, x1, x2, x3, x4, x5]).T ,columns=['x0', 'x1', 'x2', 'x3', 'x4', 'x5'])
         X.head()
 
-
-        m = np.array([[0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
-                    [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 6.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [8.0, 0.0,-1.0, 0.0, 0.0, 0.0],
-                    [4.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
-
         # ## Causal Discovery
         # To run causal discovery, we create a `DirectLiNGAM` object and call the `fit` method.
         # We use the pwling_fast measure which uses a CUDA accelerated implementation of pwling
 
-        model = lingam.DirectLiNGAM(measure='pwling_fast')
+        model = lingam.DirectLiNGAM(measure='pwling')
         model.fit(X)
 
         print(model.causal_order_)
         print(model.adjacency_matrix_)
 
-        make_dot(model.adjacency_matrix_)
+        m = model.adjacency_matrix_
+
+        model = lingam.DirectLiNGAM(measure='pwling_fast')
+        model.fit(X)
+
+        assert np.allclose(model.adjacency_matrix_, m)
 
         # ## Independence between error variables
         # To check if the LiNGAM assumption is broken, we can get p-values of independence between error variables. The value in the i-th row and j-th column of the obtained matrix shows the p-value of the independence of the error variables $e_i$ and $e_j$.
