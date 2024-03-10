@@ -8,7 +8,6 @@ from sklearn.preprocessing import scale
 from sklearn.utils import check_array
 
 from .base import _BaseLiNGAM
-from lingam_cuda import causal_order as causal_order_gpu
 
 
 class DirectLiNGAM(_BaseLiNGAM):
@@ -48,6 +47,7 @@ class DirectLiNGAM(_BaseLiNGAM):
             If True, apply prior knowledge softly.
         measure : {'pwling', 'kernel', 'pwling_fast'}, optional (default='pwling')
             Measure to evaluate independence: 'pwling' [2]_ or 'kernel' [1]_.
+            For fast execution with GPU, 'pwling_fast' can be used (culingam is required).
         """
         super().__init__(random_state)
         self._Aknw = prior_knowledge
@@ -256,6 +256,7 @@ class DirectLiNGAM(_BaseLiNGAM):
         rows = len(X)
 
         arr = X[:, np.array(U)]
+        from lingam_cuda import causal_order as causal_order_gpu
         mlist = causal_order_gpu(arr, rows, cols)
         return U[np.argmax(mlist)]
 
