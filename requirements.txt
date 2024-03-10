@@ -10,4 +10,4 @@ matplotlib
 psy
 semopy
 #optional (install if gpu and cuda is available)
-# culingam==0.0.8
+# culingam==0.0.7
