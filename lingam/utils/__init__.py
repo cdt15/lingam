@@ -10,6 +10,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import semopy
+import subprocess
+
 from matplotlib import colors as mcolors
 from matplotlib.colors import is_color_like
 from sklearn import linear_model
@@ -1128,3 +1130,12 @@ def calculate_total_effect(adjacency_matrix, from_index, to_index, is_continuous
     total_effect = sum(effects)
 
     return total_effect
+
+def get_cuda_version():
+    try:
+        nvcc_version = subprocess.check_output(["nvcc", "--version"]).decode('utf-8')
+        print("CUDA Version found:\n", nvcc_version)
+        return True
+    except Exception as e:
+        print("CUDA not found or nvcc not in PATH:", e)
+        return False
