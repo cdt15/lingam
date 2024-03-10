@@ -9,3 +9,5 @@ pygam
 matplotlib
 psy
 semopy
+#optional (install if gpu and cuda is available)
+# culingam

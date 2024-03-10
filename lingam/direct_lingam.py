@@ -45,8 +45,9 @@ class DirectLiNGAM(_BaseLiNGAM):
             * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
         apply_prior_knowledge_softly : boolean, optional (default=False)
             If True, apply prior knowledge softly.
-        measure : {'pwling', 'kernel'}, optional (default='pwling')
+        measure : {'pwling', 'kernel', 'pwling_fast'}, optional (default='pwling')
             Measure to evaluate independence: 'pwling' [2]_ or 'kernel' [1]_.
+            For fast execution with GPU, 'pwling_fast' can be used (culingam is required).
         """
         super().__init__(random_state)
         self._Aknw = prior_knowledge
@@ -96,6 +97,8 @@ class DirectLiNGAM(_BaseLiNGAM):
         for _ in range(n_features):
             if self._measure == "kernel":
                 m = self._search_causal_order_kernel(X_, U)
+            elif self._measure == "pwling_fast":
+                m = self._search_causal_order_gpu(X_.astype(np.float64), U.astype(np.int32))
             else:
                 m = self._search_causal_order(X_, U)
             for i in U:
@@ -232,6 +235,30 @@ class DirectLiNGAM(_BaseLiNGAM):
                     M += np.min([0, self._diff_mutual_info(xi_std, xj_std, ri_j, rj_i)]) ** 2
             M_list.append(-1.0 * M)
         return Uc[np.argmax(M_list)]
+
+    def _search_causal_order_gpu(self, X, U):
+        """Accelerated Causal ordering.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Training data, where ``n_samples`` is the number of samples
+            and ``n_features`` is the number of features.
+        U: indices of cols in X
+
+        Returns
+        -------
+        self : object
+            Returns the instance itself.
+        mlist: causal ordering
+        """
+        cols = len(U)
+        rows = len(X)
+
+        arr = X[:, np.array(U)]
+        from lingam_cuda import causal_order as causal_order_gpu
+        mlist = causal_order_gpu(arr, rows, cols)
+        return U[np.argmax(mlist)]
 
     def _mutual_information(self, x1, x2, param):
         """Calculate the mutual informations."""
