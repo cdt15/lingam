@@ -1111,6 +1111,9 @@ def calculate_total_effect(adjacency_matrix, from_index, to_index, is_continuous
         max_val=len(adjacency_matrix) - 1,
     )
 
+    if from_index == to_index:
+        raise ValueError("from_index and to_index mustn't be the same.")
+
     if is_continuous is None:
         is_continuous = [True for _ in range(len(adjacency_matrix))]
     else:
