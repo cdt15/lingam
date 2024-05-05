@@ -208,7 +208,7 @@ class LongitudinalLiNGAM:
             pos = self._p + self._p * tau
             X_joined[:, pos : pos + self._p] = X_t[from_t - tau]
 
-        am = np.concatenate([*self._adjacency_matrices[to_t]], axis=1)
+        am = np.concatenate([*self._adjacency_matrices[from_t]], axis=1)
 
         # from_index + parents indices
         parents = np.where(np.abs(am[from_index]) > 0)[0]
