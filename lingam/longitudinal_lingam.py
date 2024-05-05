@@ -256,12 +256,23 @@ class LongitudinalLiNGAM:
                 f"is earlier than the source variable (from_t={from_t})."
             )
 
-        am = np.concatenate([*self._adjacency_matrices[to_t]], axis=1)
-        am = np.pad(am, [(0, am.shape[1] - am.shape[0]), (0, 0)])
+        n_timepoints = to_t - from_t + 1
+        n_features = self._adjacency_matrices.shape[2]
+        expansion_m_size = n_features * n_timepoints
+        expansion_m = np.zeros((expansion_m_size, expansion_m_size))
+        for i in range(n_timepoints):
+            for j in range(n_timepoints):
+                row = n_features * i
+                col = n_features * j
+                t = i + from_t
+                tau = i - j
+                if col > row:
+                    continue
+                if tau > self._n_lags:
+                    continue
+                expansion_m[row : row + n_features, col : col + n_features] = self._adjacency_matrices[t, tau]
 
-        from_index = from_index + self._p * (to_t - from_t)
-
-        effect = calculate_total_effect(am, from_index, to_index)
+        effect = calculate_total_effect(expansion_m, from_index, n_features * (to_t - from_t) + to_index)
 
         return effect
 
@@ -738,11 +749,13 @@ class LongitudinalBootstrapResult(object):
                 for j in range(n_timepoints):
                     row = n_features * i
                     col = n_features * j
+                    t = i + from_t
+                    tau = i - j
                     if col > row:
                         continue
-                    expansion_m[row : row + n_features, col : col + n_features] = am[
-                        i + from_t, i - j
-                    ]
+                    if tau > am.shape[1]-1:
+                        continue
+                    expansion_m[row : row + n_features, col : col + n_features] = am[t, tau]
 
             paths, effects = find_all_paths(
                 expansion_m,
