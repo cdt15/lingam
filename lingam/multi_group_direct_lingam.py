@@ -7,12 +7,13 @@ import numbers
 import warnings
 
 import numpy as np
+from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .direct_lingam import DirectLiNGAM
 from .hsic import hsic_test_gamma
-from .utils import predict_adaptive_lasso, calculate_total_effect
+from .utils import calculate_total_effect
 
 
 class MultiGroupDirectLiNGAM(DirectLiNGAM):
@@ -197,9 +198,10 @@ class MultiGroupDirectLiNGAM(DirectLiNGAM):
             predictors.extend(parents)
 
             # Estimate total effect
-            coefs = predict_adaptive_lasso(X, predictors, to_index)
+            lr = LinearRegression()
+            lr.fit(X[:, predictors], X[:, to_index])
 
-            effects.append(coefs[0])
+            effects.append(lr.coef_[0])
 
         return effects
 

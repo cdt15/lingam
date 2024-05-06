@@ -6,6 +6,7 @@ import itertools
 import warnings
 
 import numpy as np
+from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array, resample
 from statsmodels.tsa.vector_ar.var_model import VAR
 
@@ -241,9 +242,10 @@ class VARLiNGAM:
         predictors.extend(parents)
 
         # estimate total effect
-        coefs = predict_adaptive_lasso(X_joined, predictors, to_index)
+        lr = LinearRegression()
+        lr.fit(X_joined[:, predictors], X_joined[:, to_index])
 
-        return coefs[0]
+        return lr.coef_[0]
 
     def estimate_total_effect2(self, n_features, from_index, to_index, from_lag=0):
         """Estimate total effect using causal model.

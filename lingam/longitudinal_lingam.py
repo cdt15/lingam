@@ -12,7 +12,7 @@ from sklearn.utils import check_array
 
 from .direct_lingam import DirectLiNGAM
 from .hsic import hsic_test_gamma
-from .utils import predict_adaptive_lasso, find_all_paths, calculate_total_effect
+from .utils import find_all_paths, calculate_total_effect
 
 
 class LongitudinalLiNGAM:
@@ -216,9 +216,10 @@ class LongitudinalLiNGAM:
         predictors.extend(parents + self._p)
 
         # Estimate total effect
-        coefs = predict_adaptive_lasso(X_joined, predictors, to_index)
+        lr = LinearRegression()
+        lr.fit(X_joined[:, predictors], X_joined[:, to_index])
 
-        return coefs[0]
+        return lr.coef_[0]
 
     def estimate_total_effect2(self, from_t, from_index, to_t, to_index):
         """Estimate total effect using causal model.
@@ -753,7 +754,7 @@ class LongitudinalBootstrapResult(object):
                     tau = i - j
                     if col > row:
                         continue
-                    if tau > am.shape[1]-1:
+                    if tau > am.shape[1] - 1:
                         continue
                     expansion_m[row : row + n_features, col : col + n_features] = am[t, tau]
 
