@@ -15,7 +15,7 @@ from sklearn.utils import check_array, resample
 
 from .bootstrap import BootstrapResult
 from .hsic import get_gram_matrix, get_kernel_width, hsic_test_gamma, hsic_teststat
-from .utils import predict_adaptive_lasso, f_correlation, calculate_total_effect
+from .utils import f_correlation, calculate_total_effect
 
 
 class MultiGroupRCD:
@@ -174,9 +174,10 @@ class MultiGroupRCD:
             predictors.extend(parents)
 
             # Estimate total effect
-            coefs = predict_adaptive_lasso(X, predictors, to_index)
+            lr = LinearRegression()
+            lr.fit(X[:, predictors], X[:, to_index])
 
-            effects.append(coefs[0])
+            effects.append(lr.coef_[0])
 
         return effects
 

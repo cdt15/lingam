@@ -8,6 +8,7 @@ import warnings
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
+from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array
 
 from .bootstrap import BootstrapMixin
@@ -84,9 +85,10 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
         predictors.extend(parents)
 
         # Estimate total effect
-        coefs = predict_adaptive_lasso(X, predictors, to_index)
+        lr = LinearRegression()
+        lr.fit(X[:, predictors], X[:, to_index])
 
-        return coefs[0]
+        return lr.coef_[0]
 
     def get_error_independence_p_values(self, X):
         """Calculate the p-value matrix of independence between error variables.
