@@ -25,3 +25,4 @@ API Reference
     lim
     camuv
     multi_group_rcd
+    tools
