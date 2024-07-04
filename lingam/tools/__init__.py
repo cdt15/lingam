@@ -45,7 +45,7 @@ def bootstrap_with_imputation(
     prior_knowledge : array-like, shape (n_features, n_features), optional (default=None)
         Prior knowledge used for causal discovery, where ``n_features`` is the number of features.
 
-        The elements of prior knowledge matrix are defined as follows [1]_:
+        The elements of prior knowledge matrix are defined as follows:
 
         * ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
         * ``1`` : :math:`x_i` has a directed path to :math:`x_j`
