@@ -38,3 +38,4 @@ Contents:
     visualize_nonlinear_causal_effect
     evaluate_model_fit
     bootstrap_with_imputation
+    high_dim_direct_lingam
