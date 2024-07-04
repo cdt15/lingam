@@ -26,3 +26,4 @@ API Reference
     camuv
     multi_group_rcd
     tools
+    high_dim_direct_lingam

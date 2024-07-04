@@ -20,6 +20,7 @@ from .var_lingam import VARBootstrapResult, VARLiNGAM
 from .varma_lingam import VARMABootstrapResult, VARMALiNGAM
 from .lina import LiNA
 from .lina import MDLiNA
+from .high_dim_direct_lingam import HighDimDirectLiNGAM
 
 __all__ = [
     "ICALiNGAM",
@@ -41,7 +42,8 @@ __all__ = [
     "CausalBasedSimulator",
     "MultiGroupRCD",
     "LiNA",
-    "MDLiNA"
+    "MDLiNA",
+    "HighDimDirectLiNGAM",
 ]
 
 __version__ = "1.8.3"
