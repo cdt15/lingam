@@ -156,6 +156,11 @@ def bootstrap_with_imputation(
 
 
 class BaseMultiGroupCDModel(metaclass=ABCMeta):
+    """ The abstract class of the causal discovery model for multigroup data
+
+    Inherit this abstract class and send that instance to ``bootstrap_with_imputation``
+    if you need to customize the causal discovery model in ``bootstrap_with_imputation``.
+    """
 
     @abstractmethod
     def before_imputation(self, X):
@@ -197,6 +202,7 @@ class BaseMultiGroupCDModel(metaclass=ABCMeta):
 
 
 class _DefaultMultiGroupCDModel(BaseMultiGroupCDModel):
+    """ The default class for causal discovery on multigroup data """
 
     def __init__(self, prior_knowledge=None, apply_prior_knowledge_softly=False, random_state=None):
         self._model = MultiGroupDirectLiNGAM(
