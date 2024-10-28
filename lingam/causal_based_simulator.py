@@ -1,20 +1,21 @@
-from collections import namedtuple
+from .direct_lingam import DirectLiNGAM
+from .ica_lingam import ICALiNGAM
+from .bottom_up_parce_lingam import BottomUpParceLiNGAM
+from .var_lingam import VARLiNGAM
+from .longitudinal_lingam import LongitudinalLiNGAM
+
+from abc import ABCMeta, abstractmethod
+import numbers
 
 import numpy as np
 import pandas as pd
+from scipy.special import expit
 
-from sklearn.base import RegressorMixin, ClassifierMixin, clone
-from sklearn.dummy import DummyClassifier, DummyRegressor
-from sklearn.model_selection._search import BaseSearchCV
-from sklearn.utils import check_array
+from sklearn.utils import check_array, check_scalar, check_random_state
 from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.base import clone, is_regressor, is_classifier
 from sklearn.pipeline import Pipeline
-
-TrainData = namedtuple("TrainData", ("condition", "X", "y"))
-TrainResult = namedtuple(
-    "TrainResult", ("condition", "model", "exp_columns", "predicted", "residual")
-)
-ChangingModels = namedtuple("ChangingModels", ("name", "condition", "model"))
+from sklearn.model_selection._search import BaseSearchCV
 
 
 class CausalBasedSimulator:
@@ -23,40 +24,32 @@ class CausalBasedSimulator:
 
     Attributes
     ----------
-    train_result_ : dict of string -> list of dict
-        information about trained models.
-
-    residual_ : pandas.DataFrame
-        residuals of trained models.
-
-    cat_map_ : dict of strig -> list of str
-        information about categorical variables. the key of its dictioary is
-        variable name, the value is the list of classes.
-
-    simulated_data_ : pandas.DataFrame
-        result of simulation.
+    train_result_ : dict
+        Information about trained models.
     """
 
-    def train(self, X, causal_graph, models=None):
+    def train(self, X, causal_graph, cd_algo_name=None, models=None, is_discrete=None):
         """
         Estimate functional relations between variables and variable
-        distributions based on the training data ``X`` and the causal graph
-        ``G``. The functional relations represents by
-        sklearn.linear_model.LinearRegression if the object variable is
-        numeric, and represents by sklearn.linear_model.LogisticRegression
-        if the object variable is categorical by default. ``train_result_``
-        and ``residual_`` will be exposed after executing train().
+        distributions based on the training data ``X`` and the causal graph.
+        The functional relations represents by linear regression model
+        if the object variable is numeric, and represents by logistic
+        regression model if the object variable is discrete by default.
+        ``train_result_`` will be exposed after executing train().
 
         Parameters
         ----------
-        X : pandas.DataFrame
+        X : array-like
             Training data.
 
-        causal_graph : array-like of shape (n_features, _features)
+        causal_graph : array-like
             Causal graph.
 
-        models : dict of string -> object, default=None
-            Dictionary about models of variables. Models are cloned internaly
+        cd_algo_name : str
+            Algorithm type.
+
+        models : dict, default=None
+            Dictionary about the model of a variable in X. Models are cloned internaly
             and are trained to infer functioal relations. Given instances of
             the model are cloned to estimate the functional relation between
             variables.
@@ -66,39 +59,20 @@ class CausalBasedSimulator:
         self : Object
         """
 
-        # checking inputs
-        data, cat_map = self._check_data(X)
+        if cd_algo_name is None:
+            cd_algo_name = "DirectLiNGAM"
+        if not isinstance(cd_algo_name, str):
+            raise TypeError("cd_algo_name must be str or None.")
 
-        causal_graph = self._check_causal_graph(causal_graph, data.shape[1])
+        impl_constructor = self._dispatch_impl(cd_algo_name)
+        impl = impl_constructor(X, causal_graph, is_discrete=is_discrete)
 
-        train_models = self._check_models(models, data.index, data.columns, cat_map)
+        train_models = self._check_models(models, impl.endog_names_, impl.discrete_endog_names_)
 
-        # training
-        train_results = self._train(data, cat_map, causal_graph, train_models)
+        train_result = self._train(train_models, causal_graph, impl)
 
-        residual_df = {}
-        for col_name in X.columns:
-            if len(train_results[col_name]) > 0:
-                series = self._concat_residuals(train_results, col_name, data.index)
-            else:
-                # node with no parent nodes
-                series = np.ones(data.shape[0]) * np.nan
-
-            residual_df[col_name] = series
-
-        residual_df = pd.DataFrame(residual_df)
-
-        # setting attributes
-        self.train_result_ = self._prep_to_expose_train(train_results, cat_map)
-        self.residual_ = residual_df
-        self.categorical_info_ = cat_map
-
-        # setting information
-        self._data = data
-        self._train_results = train_results
-        self._causal_graph = causal_graph
-        self._causal_order = None
-
+        self._impl = impl
+        self._train_result = train_result
         return self
 
     def run(
@@ -115,23 +89,25 @@ class CausalBasedSimulator:
         specifiyig changes in fucitonal relation to ``change_models``
         effects simulated data.
         Residuals to simulate variables are shuffled using radom_state
-        if ``shuffle_residual`` is True. ``simulated_data_`` will be
-        expose after excuting train().
+        if ``shuffle_residual`` is True.
 
         Parameters
         ----------
-        changing_exog : dict of string -> array-like, default=None
+        changing_exog : dict, default=None
             Dictioary about exogeous variables which keys are variable
             names and values are data of variables. That variable name
             should be a one of column names of X and the length should
             be same as X.
 
-        changing_model : list of dict, default=None
-            List of the changing models which elements are dictionary. that
-            keys should be name, condition, and model. For name and
-            condition, refer to ``train_result_`` and set the values
-            corresponding to the conditions you wish to change. For model,
-            you must provide a trained machine learning instance.
+        changing_model : dict, default=None
+            Dictionary about the changing models which elements are dictionary.
+            The key is the name of the target variable and that value is
+            a dictionary for that model. This dictionary contains three keys,
+            parant_names, coef and model. parent_names is the mandatory key and
+            whose value is the list of parent names. coef and model are selective. 
+            coef is the list of the coefficients of the parent variables, which
+            must be same lenght as parent_names. The value of model must be
+            a trained machine laerning instance.
 
         shuffle_residual : bool, default=True
             If True, residuals are shuffled.
@@ -145,94 +121,66 @@ class CausalBasedSimulator:
             simulated data.
         """
 
-        if self._train_results is None:
-            raise RuntimeError("run() shall be executed after train() is executed")
+        if self._train_result is None:
+            raise RuntimeError("run() must be executed after train() is executed")
 
-        # checking inputs
-        changing_exog_df = self._check_changing_exog(
-            changing_exog, self._data.index, self._data.columns, self.categorical_info_
+        random_state = check_random_state(random_state)
+
+        # check inputs
+        changing_exog = self._check_changing_exog(
+            changing_exog,
+            self._impl.exog_length_,
+            self._impl.endog_names_,
+            self._impl.discrete_endog_names_
         )
-        changing_models2 = self._check_changing_models(
-            changing_models, self.categorical_info_, self._train_results
+
+        changing_models = self._check_changing_models(
+            changing_models,
+            self._impl.endog_names_,
+            self._impl.discrete_endog_names_
         )
 
-        # calculating causal_order if it has not been calculated
-        if self._causal_order is not None:
-            causal_order = self._causal_order
-        else:
-            causal_order = self._get_causal_order(self._causal_graph)
-
-        simulated_df = self._simulate(
-            self._data,
-            self._causal_graph,
-            causal_order,
-            self.categorical_info_,
-            changing_exog_df,
-            changing_models2,
-            self._train_results,
+        simulated_data = self._simulate(
+            changing_exog,
+            changing_models,
+            self._impl,
+            self._train_result,
             shuffle_residual,
             random_state,
         )
 
-        # set attributes
-        self.simulated_data_ = simulated_df
+        return simulated_data
 
-        # set information
-        self._changing_exog = changing_exog_df
-        self._changing_models = changing_models2
-        if self._causal_order is None:
-            self._causal_order = causal_order
+    @property
+    def train_result_(self):
+        return self._train_result
 
-        return self.simulated_data_
-
-    def _check_data(self, X):
-        if not isinstance(X, pd.DataFrame):
-            raise RuntimeError("X shall be a pandas.DataFrame.")
-
-        cat_map = {}
-        for c, is_cat in zip(X.columns, X.dtypes.values == "category"):
-            if not is_cat:
-                continue
-
-            cat_map[c] = np.unique(X[c]).tolist()
-            X[c] = X[c].apply(lambda x: cat_map[c].index(x))
-
-        return X, cat_map
-
-    def _check_causal_graph(self, causal_graph, col_num):
-        graph = check_array(causal_graph)
-
-        if graph.shape[0] != col_num or graph.shape[1] != col_num:
-            raise RuntimeError("causal_graph.shape shall be square.")
-
-        return graph
-
-    def _check_model_instance(self, model, col_name, cat_map):
-        if col_name not in cat_map.keys():
-            model_type = RegressorMixin
+    def _check_model_instance(self, model, var_name, discrete_endog_names):
+        if var_name not in discrete_endog_names:
+            check_model_type = is_regressor
         else:
-            model_type = ClassifierMixin
+            check_model_type = is_classifier
 
         if isinstance(model, Pipeline):
-            if not isinstance(model.steps[-1][-1], model_type):
+            if not check_model_type(model.steps[-1][-1]):
                 raise RuntimeError(
                     "The last step in Pipeline should be an "
                     + "instance of a regression/classification model."
                 )
         elif isinstance(model, BaseSearchCV):
-            if not isinstance(model.get_params()["estimator"], model_type):
+            if not check_model_type(model.get_params()["estimator"]):
                 raise RuntimeError(
                     "The type of the estimator shall be an "
                     + "instance of a regression/classification model."
                 )
         else:
-            if not isinstance(model, model_type):
+            if not check_model_type(model):
                 raise RuntimeError(
                     "The type of the estimator shall be an "
                     + "instance of a regression/classification model."
                 )
 
-        if model_type == ClassifierMixin:
+        if check_model_type == is_classifier:
             try:
                 func = getattr(model, "predict_proba")
                 if not callable(func):
@@ -242,88 +190,462 @@ class CausalBasedSimulator:
                     "Classification models shall have " + "predict_proba()."
                 )
 
-    def _check_models(self, models, index, columns, cat_map):
+    def _check_models(self, models, endog_names, discrete_endog_names):
         if models is None:
             return {}
 
         if not isinstance(models, dict):
-            raise RuntimeError("models shall be a dictionary.")
+            raise RuntimeError("models must be a dictionary.")
 
-        for col_name, model in models.items():
-            if col_name not in columns:
-                raise RuntimeError(f"Unknown column name ({col_name})")
+        for var_name, model in models.items():
+            if var_name not in endog_names:
+                raise RuntimeError(f"Unknown variable name ({var_name})")
 
-            self._check_model_instance(model, col_name, cat_map)
+            self._check_model_instance(model, var_name, discrete_endog_names)
 
         return models
 
-    def _check_changing_exog(self, changing_exog, index, columns, cat_map):
+    def _check_changing_exog(self, changing_exog, n_samples, endog_names, discrete_endog_names):
         if changing_exog is None:
-            return pd.DataFrame()
+            return {}
 
         if not isinstance(changing_exog, dict):
-            raise RuntimeError("changing_exog shall be a dictionary.")
+            raise RuntimeError("changing_exog must be a dictionary.")
 
-        changing_exog_df = {}
-        for col_name, values in changing_exog.items():
-            if col_name not in columns:
-                raise RuntimeError(f"Unknown key in changing_exog. ({col_name})")
+        changing_exog_ = {}
+        for var_name, values in changing_exog.items():
+            if var_name not in endog_names:
+                raise RuntimeError(f"Unknown key in changing_exog. ({var_name})")
 
-            if col_name in cat_map.keys():
+            if var_name in discrete_endog_names:
                 raise RuntimeError(
-                    f"Category variables shall not be specified. ({col_name})"
+                    f"Discrete variables shall not be specified. ({var_name})"
                 )
 
-            s = check_array(values, ensure_2d=False, dtype=None).flatten()
-            if s.shape[0] != len(index):
-                raise RuntimeError(f"Wrong length. ({s.shape[0]} != {len(index)})")
+            s = check_array(values, ensure_2d=False, dtype=None).ravel()
+            if s.shape[0] != n_samples:
+                raise RuntimeError(f"Wrong length. ({s.shape[0]} != {n_samples})")
 
-            changing_exog_df[col_name] = pd.Series(values, index=index)
-        changing_exog_df = pd.DataFrame(changing_exog_df).loc[index, :]
+            changing_exog_[var_name] = values
 
-        return changing_exog_df
+        return changing_exog_
 
-    def _check_changing_models(self, changing_models, cat_map, train_results):
+    def _check_changing_models(self, changing_models, endog_names, discrete_endog_names):
         if changing_models is None:
             return {}
 
-        if not isinstance(changing_models, list):
-            raise RuntimeError("changing_models shall be a list.")
+        if not isinstance(changing_models, dict):
+            raise RuntimeError("changing_models shall be list.")
 
-        changing_models_ = []
-        for model_info in changing_models:
+        changing_models_ = {}
+        for target_name, model_info in changing_models.items():
             if not isinstance(model_info, dict):
-                raise RuntimeError("changing_models shall be a list of dictionaries.")
+                raise RuntimeError("changing_models shall be list of dictionaries.")
 
-            missing_keys = set(ChangingModels._fields) - set(model_info.keys())
-            if len(missing_keys) > 0:
-                raise RuntimeError("Missing key on model_info. " + str(missing_keys))
+            # check target_name
+            if not isinstance(target_name, str):
+                raise TypeError("Key of changing_models must be str.")
+            if target_name not in endog_names:
+                raise RuntimeError(f"Unknown name. ({target_name})")
 
-            name = model_info["name"]
-            if name not in train_results.keys():
-                raise RuntimeError(f"Unknown name. ({name})")
+            # parent_names key
+            if "parent_names" not in model_info.keys():
+                raise KeyError("model_info must have parent_names key.")
 
-            condition = model_info["condition"]
-            conditions = [cond_result.condition for cond_result in train_results[name]]
-            if condition not in conditions:
-                raise RuntimeError("Not-exsitent consition. " + str(condition))
+            parent_names = model_info["parent_names"]
+            if not isinstance(parent_names, list):
+                raise KeyError("parent_names must be list.")
+
+            for parent_name in model_info["parent_names"]:
+                if parent_name not in endog_names:
+                    raise RuntimeError(f"Unknown name. ({name})")
+
+            if len(parent_names) == 0:
+                changing_models_[target_name] = {"parent_names": []}
+                continue
+
+            # coef and model key
+            if "coef" not in model_info.keys() and "model" not in model_info.keys():
+                raise KeyError("Elements of changing_models must have coef or model key when parent_names is set.")
+
+            # coef key
+            if "coef" in model_info.keys():
+                coef = check_array(model_info["coef"], ensure_2d=False, ensure_min_samples=0)
+                if len(coef) != len(parent_names):
+                    raise ValueError("len(coef) != len(parent_names)")
+
+                if target_name not in discrete_endog_names:
+                    model = _LinearRegression(coef)
+                else:
+                    model = _LogisticRegression(coef)
+                
+                changing_models_[target_name] = {"parent_names": parent_names, "model": model}
+                continue
+                
+            # model key
+            if "model" not in model_info.keys() or model_info["model"] is None:
+                raise KeyError("model must be set when coef isn't set.")
 
             model = model_info["model"]
-            self._check_model_instance(model, name, cat_map)
+            self._check_model_instance(model, target_name, discrete_endog_names)
 
-            changing_models_.append(
-                ChangingModels(name=name, condition=condition, model=model)
-            )
+            changing_models_[target_name] = {"parent_names": parent_names, "model": model}
+
         return changing_models_
 
-    def _get_causal_order(self, causal_graph):
+    def _dispatch_impl(self, cd_algo_name):
+        if cd_algo_name is None:
+            return CBSILiNGAM
+        elif cd_algo_name == DirectLiNGAM.__name__:
+            return CBSILiNGAM
+        elif cd_algo_name == ICALiNGAM.__name__:
+            return CBSILiNGAM
+        elif cd_algo_name == BottomUpParceLiNGAM.__name__:
+            return CBSIUnobsCommonCauseLiNGAM
+        elif cd_algo_name == VARLiNGAM.__name__:
+            return CBSITimeSeriesLiNGAM
+        else:
+            raise ValueError("Unknown cd_algo_name")
+
+    def _train(self, models, causal_graph, impl):
+        train_result = {}
+
+        for target_name in impl.endog_names_:
+            y = impl.get_data(target_name)
+            y = y.ravel()
+
+            parent_names = impl.get_parent_names(target_name)
+            if len(parent_names) == 0:
+                train_result[target_name] = {
+                    "model": None,
+                    "parent_names": [],
+                    "predicted": None,
+                    "residual": y,
+                }
+                continue
+
+            X = impl.get_data(parent_names)
+
+            is_classifier = target_name in impl.discrete_endog_names_
+
+            # select a model to train
+            if target_name in models.keys():
+                model = clone(models[target_name])
+            else:
+                if is_classifier:
+                    model = LogisticRegression()
+                else:
+                    model = LinearRegression()
+
+            model.fit(X, y)
+            predicted = model.predict(X)
+            predicted = predicted.ravel()
+
+            # compute residuals
+            if not is_classifier:
+                residual = (y - predicted).ravel()
+            else:
+                residual = None
+
+            train_result[target_name] = {
+                "model": model,
+                "parent_names": parent_names,
+                "predicted": predicted,
+                "residual": residual,
+            }
+
+        return train_result
+
+    def _simulate(
+        self,
+        changing_exog,
+        changing_models,
+        impl,
+        train_result,
+        shuffle_residual,
+        random_state,
+    ):
+        simulated = pd.DataFrame(index=np.arange(impl.exog_length_), columns=impl.endog_names_)
+
+        if shuffle_residual:
+            shuffle_index = random_state.choice(
+                np.arange(impl.exog_length_),
+                size=impl.exog_length_,
+                replace=False
+            )
+
+        # modify causal order
+        changing_edges = {}
+        for target_name, info in changing_models.items():
+            changing_edges[target_name] = info["parent_names"]
+        causal_order = self._impl.get_causal_order(changing_edges)
+
+        # predict from upstream to downstream
+        for target_name in causal_order:
+            is_classifier = target_name in impl.discrete_endog_names_
+
+            # data
+            parent_names = impl.get_parent_names(target_name)
+            if target_name in changing_models.keys():
+                parent_names_ = changing_models[target_name]["parent_names"]
+                if parent_names_ is not None:
+                    parent_names = parent_names_
+
+            # error
+            if target_name not in changing_exog.keys():
+                error = train_result[target_name]["residual"]
+            else:
+                error = changing_exog[target_name].ravel()
+
+            if shuffle_residual and error is not None:
+                error = error[shuffle_index]
+
+            # exogenous variable
+            if len(parent_names) == 0:
+                if not is_classifier:
+                    simulated[target_name] = error
+                else:
+                    simulated[target_name] = impl.get_data(target_name)
+                continue
+
+            # model
+            if target_name not in changing_models.keys():
+                model = train_result[target_name]["model"]
+            else:
+                model = changing_models[target_name]["model"]
+
+            # predict
+            predicted = model.predict(simulated[parent_names].values)
+
+            predicted = predicted.ravel()
+            if not is_classifier:
+                predicted = predicted + error
+
+            simulated[target_name] = predicted
+
+        return simulated
+
+
+class CBSImpl(metaclass=ABCMeta):
+    """ Class for handling a given causal_graph and data
+    """
+
+    def __init__(self, X, causal_graph, is_discrete=None):
+        """ Constructor
+
+        Constructor must expose properties below.
+        """
+        raise NotImplementedError
+
+    @property
+    def endog_names_(self):
+        """ List of endogenous variable names
+        Names of variables must be unique.
+        """
+        raise NotImplementedError
+
+    @property
+    def discrete_endog_names_(self):
+        """ List of discrete endogenous variable names
+        """
+        raise NotImplementedError
+
+    @property
+    def causal_order_(self):
+        """ List showing the causal order in a given causal graph.
+        """
+        raise NotImplementedError
+
+    @property
+    def exog_length_(self):
+        """ Length of a estiamted residual data.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_parent_names(self, var_name):
+        """ Return parent names of var_name.
+
+        Parameters
+        ----------
+        var_name : str
+            Target variable name.
+
+        Returns
+        -------
+        parent_names : list
+            List contains parent names of var_name.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_data(self, var_names):
+        """ Return data of var_names
+
+        Parameters
+        ----------
+        var_names : list
+            List of target variable names.
+
+        Returns
+        -------
+        data : numpy.ndarray
+            Data of var_names.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_causal_order(self, changing_edges=None):
+        """ Return a causal order in a given causal_graph and changing_edges
+
+        Parameters
+        ----------
+        changing_edges : dict, default=None
+            Dictaionry about edge modifications. Key is a target endogenous variable name and
+            value is a list of parent names of the target endogenous variable.
+
+        Returns
+        -------
+        causal_order : list
+            List of endogenous variable names.
+        """
+        raise NotImplementedError
+
+
+class CBSILiNGAM(CBSImpl):
+    """ Class for data handling for ICALiNGAM and DirectLiNGAM. """
+
+    def __init__(self, X, causal_graph, is_discrete=None):
+        X_ = check_array(X)
+
+        n_samples, n_features = X_.shape
+
+        causal_graph = self._check_causal_graph(causal_graph, X_)
+
+        endog_names, discrete_endog_names = self._make_var_names(causal_graph, X, is_discrete)
+
+        causal_order = self._calc_causal_order(causal_graph)
+        if causal_order is None:
+            raise ValueError("causal_graph must be acyclic.")
+        causal_order = [endog_names[n] for n in causal_order]
+
+        self._X = X_
+        self._exog_length = n_samples
+        self._is_discrete = is_discrete
+        self._endog_names = endog_names
+        self._discrete_endog_names = discrete_endog_names
+        self._causal_graph = causal_graph
+        self._causal_order = causal_order
+
+    @property
+    def causal_order_(self):
+        return self._causal_order
+
+    @property
+    def endog_names_(self):
+        return self._endog_names
+
+    @property
+    def discrete_endog_names_(self):
+        return self._discrete_endog_names
+
+    @property
+    def exog_length_(self):
+        return self._exog_length
+
+    def get_parent_names(self, var_name):
+        if var_name not in self._endog_names:
+            raise ValueError(f"Unknown variable. {var_name}")
+
+        causal_graph = ~np.isclose(self._causal_graph, 0)
+
+        index = self._endog_names.index(var_name)
+        parent_indices = np.argwhere(causal_graph[index, :]).ravel()
+        parent_names = np.array(self._endog_names)[parent_indices].tolist()
+
+        return parent_names
+
+    def get_data(self, var_names):
+        if isinstance(var_names, str):
+            var_names = [var_names]
+
+        var_indices = []
+        for var_name in var_names:
+            index = self._endog_names.index(var_name)
+            var_indices.append(index)
+        data = self._X[:, var_indices]
+        
+        return data
+
+    def get_causal_order(self, changing_edges=None):
+        if changing_edges is None:
+            changing_edges = {}
+
+        causal_graph = self._causal_graph.copy()
+
+        for target_name, parent_names in changing_edges.items():
+            row = self._endog_names.index(target_name)
+            cols = [self._endog_names.index(parent_name) for parent_name in parent_names]
+
+            causal_graph[row, :] = 0
+            causal_graph[row, cols] = 1
+
+        causal_order = self._calc_causal_order(causal_graph)
+        if causal_order is None:
+            raise ValueError("causal_graph updated by changing_models is cyclic."
+                + "changing_models must be set so that causal graph does not cycle.")
+        causal_order = [self._endog_names[n] for n in causal_order]
+
+        return causal_order
+
+    def _check_causal_graph(self, causal_graph, X):
+        try:
+            causal_graph = check_array(causal_graph, copy=True)
+
+            n_features = X.shape[1]
+            if causal_graph.shape != (n_features, n_features):
+                raise ValueError("The shape of causal_graph must be (n_features, n_features)")
+        except Exception as e:
+            raise ValueError("causal_graph has an error: " + str(e))
+
+        return causal_graph
+
+    def _make_var_names(self, causal_graph, X, is_discrete):
+        n_features = len(causal_graph)
+
+        if isinstance(X, pd.DataFrame):
+            endog_names = check_array(X.columns, ensure_2d=False, dtype=None, copy=True)
+            endog_names = [str(endog_name) for endog_name in endog_names]
+        else:
+            endog_names = [f"{i:d}" for i in range(n_features)]
+
+        if is_discrete is None:
+            is_discrete = [False for _ in range(n_features)]
+
+        discrete_endog_names = np.array(endog_names)[is_discrete].tolist()
+
+        return endog_names, discrete_endog_names
+
+    def _calc_causal_order(self, causal_graph):
+        """Obtain a causal order from the given causal_graph strictly.
+
+        Parameters
+        ----------
+        causal_graph : array-like, shape (n_features, n_samples)
+            Target causal_graph.
+
+        Return
+        ------
+        causal_order : array, shape [n_features, ]
+            A causal order of the given causal_graph on success, None otherwise.
+        """
         causal_order = []
 
         row_num = causal_graph.shape[0]
         original_index = np.arange(row_num)
 
         while 0 < len(causal_graph):
-            # finding rows where the elements are all zeros
+            # find a row all of which elements are zero
             row_index_list = np.where(np.sum(np.abs(causal_graph), axis=1) == 0)[0]
             if len(row_index_list) == 0:
                 break
@@ -334,350 +656,134 @@ class CausalBasedSimulator:
             causal_order.append(original_index[target_index])
             original_index = np.delete(original_index, target_index, axis=0)
 
-            # remove i-th row and i-th column from matrix
+            # remove the i-th row and the i-th column from causal_graph
             mask = np.delete(np.arange(len(causal_graph)), target_index, axis=0)
             causal_graph = causal_graph[mask][:, mask]
 
         if len(causal_order) != row_num:
             causal_order = None
 
-        return np.array(causal_order)
+        return causal_order
 
-    def _get_train_data(self, data, X_cols, y_col, cat_map, changing_exog_df=None):
-        train_data_list = []
+class CBSIUnobsCommonCauseLiNGAM(CBSILiNGAM):
+    """ Class for data handling for BottomUpParceLiNGAM. """
 
-        # column names of categorical variables in X_columns
-        X_cols_cat = set(X_cols) & set(cat_map.keys())
-        X_cols_cat = sorted(X_cols_cat, key=lambda x: list(X_cols).index(x))
-
-        # no categorical variable in X
-        if len(X_cols_cat) == 0:
-            X = data.loc[:, X_cols].copy()
-            y = data.loc[:, y_col].copy()
-
-            # overwrite with exogenous
-            if changing_exog_df is not None:
-                for col, series in changing_exog_df.items():
-                    if col in X.columns.tolist():
-                        X[col] = series
-
-            train_data_list.append(TrainData(condition=None, X=X, y=y))
-            return train_data_list
-
-        # column names of non-categorical variables in X_columns
-        X_cols_num = set(X_cols) - set(cat_map.keys())
-        X_cols_num = sorted(X_cols_num, key=lambda x: list(X_cols).index(x))
-
-        # unique conditions by categorical parent nodes
-        uniq_conds = np.unique(data.loc[:, X_cols_cat].values.tolist(), axis=0)
-
-        for uniq_cond in uniq_conds:
-            # filter by the condition
-            target_index = np.argwhere(
-                np.all(data.loc[:, X_cols_cat].values == uniq_cond, axis=1)
-            ).flatten()
-
-            X_filtered = data.iloc[target_index, :].loc[:, X_cols_num].copy()
-            y_filtered = data.iloc[target_index, :].loc[:, y_col].copy()
-
-            # overwrite with exogenous
-            if changing_exog_df is not None:
-                for col, series in changing_exog_df.items():
-                    if col in X.columns.tolist():
-                        X_filtered[col] = series.loc[target_index]
-
-            condition = {}
-            for col_name, value in zip(X_cols_cat, uniq_cond):
-                condition[col_name] = cat_map[col_name][value]
-
-            train_data_list.append(
-                TrainData(condition=condition, X=X_filtered, y=y_filtered)
-            )
-
-        return train_data_list
-
-    def _predict_reg_model(self, X, model):
+    def _check_causal_graph(self, causal_graph, X):
         try:
-            predicted = model.predict(X.values)
+            # fill nan with zeros
+            causal_graph = check_array(causal_graph, force_all_finite="allow-nan", copy=True)
+
+            n_features = X.shape[1]
+            if causal_graph.shape != (n_features, n_features):
+                raise RuntimeError("The shape of causal_graph must be (n_features, n_features)")
+            
+            causal_graph[np.isnan(causal_graph)] = 0
         except Exception as e:
-            raise RuntimeError(
-                "An exception occurred during predict() of the model. " + str(e)
-            )
+            raise ValueError("causal_graph has an error: " + str(e))
 
-        return np.array(predicted)
+        return causal_graph
 
-    def _train_reg_model(self, X, y, model):
+class CBSITimeSeriesLiNGAM(CBSILiNGAM):
+    """ Class for data handling for VARLiNGAM. """
+
+    def __init__(self, X, causal_graph, is_discrete=None):
+        super().__init__(X, causal_graph, is_discrete=is_discrete)
+
+        # data is shortened to make lags
+        self._exog_length = self._exog_length - self._n_lags
+
+    def get_data(self, var_names):
+        n_features = self._X.shape[1]
+
+        if isinstance(var_names, str):
+            var_names = [var_names]
+
+        X_ = []
+        for var_name in var_names:
+            index = self._endog_names.index(var_name)
+            X_index = index % n_features
+            lag = index // n_features
+
+            data = self._X[self._n_lags - lag:-lag if lag != 0 else None, X_index]
+
+            X_.append(data)
+        X_ = np.vstack(X_).T
+
+        return X_
+
+    def _check_causal_graph(self, causal_graph, X):
         try:
-            model.fit(X.values, y.values)
+            causal_graph = check_array(causal_graph, allow_nd=True, copy=True)
+            if len(causal_graph.shape) != 3:
+                raise ValueError("causal_graph must be 3 dimentional array.")
+
+            n_features = X.shape[1]
+            if causal_graph.shape[1:] != (n_features, n_features):
+                raise ValueError("The shape of causal_graph must be (n_lags+1, n_features, n_features)")
         except Exception as e:
-            raise RuntimeError(
-                "An exception occurred during fit() of the model. " + str(e)
-            )
+            raise ValueError("causal_graph has an error: " + str(e))
 
-        predicted = self._predict_reg_model(X, model)
-        predicted = pd.Series(predicted, index=X.index, dtype=y.dtype)
+        coef = np.concatenate(causal_graph, axis=1)
 
-        resid = y - predicted
+        causal_graph_ = np.zeros((coef.shape[1], coef.shape[1]))
+        causal_graph_[:len(coef)] = coef
 
-        return model, predicted, resid
+        self._n_lags = len(causal_graph) - 1
 
-    def _predict_clf_model(self, X, model):
-        try:
-            proba = model.predict_proba(X.values)
-        except Exception as e:
-            raise RuntimeError(
-                "An exception occurred during predict_proba() of the model. " + str(e)
-            )
+        return causal_graph_
 
-        # sampling values based on predicted probability
-        predicted = []
-        for proba_ in proba:
-            predicted.append(np.random.choice(model.classes_, p=proba_))
+    def _make_var_names(self, causal_graph, X, is_discrete):
+        n_features = X.shape[1]
 
-        return np.array(predicted)
+        if isinstance(X, pd.DataFrame):
+            endog_names_ = X.columns.tolist()
+        else:
+            endog_names_ = [f"{i:d}" for i in range(n_features)]
 
-    def _train_clf_model(self, X, y, model, cat_map):
-        try:
-            model.fit(X.values, y.values)
-        except Exception as e:
-            raise RuntimeError(
-                "An exception occurred during fit() of the model. " + str(e)
-            )
+        endog_names = []
+        for i in range(self._n_lags + 1):
+            if i == 0:
+                index_format = f"[t]"
+            else:
+                index_format = f"[t-{i}]"
+            endog_names += [name + index_format for name in endog_names_]
 
-        predicted = self._predict_clf_model(X, model)
-        predicted = pd.Series(predicted, index=X.index, dtype=y.dtype)
+        if is_discrete is None:
+            is_discrete = [False for _ in range(n_features)]
+            is_discrete *= self._n_lags + 1
+        else:
+            is_discrete = is_discrete * (self._n_lags + 1)
 
-        # classifier doesn't have residuals
-        resid = None
-        return model, predicted, resid
+        discrete_endog_names = np.array(endog_names)[is_discrete].tolist()
 
-    def _concat_residuals(self, train_results, to_name, index):
-        ret = []
+        return endog_names, discrete_endog_names
 
-        cond_results = train_results[to_name]
+class _LinearRegression():
+    """ Linear regression model with configurable coefficients """
 
-        for cond_result in cond_results:
-            series = getattr(cond_result, "residual")
+    def __init__(self, coef):
+        self._coef = np.array(coef)
 
-            if series is None:
-                predicted = getattr(cond_result, "predicted")
-                series = pd.Series(
-                    np.ones(predicted.shape[0]) * np.nan, index=predicted.index
-                )
+    def predict(self, X):
+        if len(self._coef) == 0:
+            return np.zeros((len(X), 1))
+        return (self._coef @ X.T).T
 
-            ret.append(series)
+    @property
+    def coef_(self):
+        return coef_
 
-        # concat and sort by original index
-        ret = pd.concat(ret, axis=0).loc[index]
+class _LogisticRegression():
+    """ Logistic regression model with configurable coefficients """
 
-        return ret
+    def __init__(self, coef):
+        self._coef = np.array(coef)
 
-    def _concat_predicts(self, train_results, to_name, index):
-        ret = []
+    def predict(self, X):
+        if len(self._coef) == 0:
+            return np.zeros((len(X), 1))
+        return expit((self._coef @ X.T).T) >= 0.5
 
-        cond_results = train_results[to_name]
-        for cond_result in cond_results:
-            series = getattr(cond_result, "predicted")
-            ret.append(series)
-        ret = pd.concat(ret, axis=0).loc[index]
-
-        return ret
-
-    def _prep_to_expose_train(self, train_results, cat_map):
-        train_results_ = {}
-
-        for to_name, cond_results in train_results.items():
-            train_result_ = []
-
-            for result in cond_results:
-                result_ = {}
-
-                if result.condition is None:
-                    result_["condition"] = None
-                else:
-                    result_["condition"] = {k: v for k, v in result.condition.items()}
-
-                result_["model"] = result.model
-
-                result_["exp_columns"] = result.exp_columns
-
-                if to_name not in cat_map.keys():
-                    # non categorical
-                    result_["predicted"] = result.predicted
-                else:
-                    # categorical
-                    result_["predicted"] = result.predicted.map(
-                        lambda x: cat_map[to_name][x]
-                    )
-
-                result_["residual"] = result.residual
-
-                train_result_.append(result_)
-            train_results_[to_name] = train_result_
-
-        return train_results_
-
-    def _train(self, data, cat_map, graph, models):
-        train_results = {}
-
-        for to_index, graph_row in enumerate(graph):
-            cond_results = []
-
-            from_indices = np.argwhere(~np.isclose(graph_row, 0)).flatten()
-
-            # get column names
-            to_name = data.columns[to_index]
-            from_names = data.columns[from_indices]
-            from_names_num = sorted(
-                set(from_names) - set(cat_map.keys()),
-                key=lambda x: list(data.columns).index(x),
-            )
-
-            # making data list splitted by conditions
-            cond_tr_data = self._get_train_data(data, from_names, to_name, cat_map)
-
-            # node with no parents
-            if len(from_names) == 0:
-                train_results[to_name] = []
-                continue
-
-            # node with parents
-            for tr_data in cond_tr_data:
-                # selecting a model to train
-                if to_name in models.keys():
-                    model = clone(models[to_name])
-                else:
-                    if len(from_names_num) > 0:
-                        # default
-                        if to_name in cat_map.keys():
-                            model = LogisticRegression()
-                        else:
-                            model = LinearRegression()
-                    else:
-                        # no non-categorical parents
-                        if to_name in cat_map.keys():
-                            model = DummyClassifier(strategy="uniform")
-                        else:
-                            model = DummyRegressor()
-
-                # train model
-                if to_name in cat_map.keys():
-                    model, predicted, resid = self._train_clf_model(
-                        tr_data.X, tr_data.y, model, cat_map
-                    )
-                else:
-                    model, predicted, resid = self._train_reg_model(
-                        tr_data.X, tr_data.y, model
-                    )
-
-                cond_results.append(
-                    TrainResult(
-                        condition=tr_data.condition,
-                        model=model,
-                        exp_columns=from_names_num,
-                        predicted=predicted,
-                        residual=resid,
-                    )
-                )
-            train_results[to_name] = cond_results
-
-        return train_results
-
-    def _select_changing_model(self, changing_models, to_name, condition):
-        for model_info in changing_models:
-            if model_info.name != to_name:
-                continue
-            elif model_info.condition != condition:
-                continue
-
-            return model_info.model
-        return None
-
-    def _simulate(
-        self,
-        data,
-        causal_graph,
-        causal_order,
-        cat_map,
-        changing_exog_df,
-        changing_models,
-        train_results,
-        shuffle_residual,
-        random_state,
-    ):
-        sim_df = pd.DataFrame(index=data.index)
-
-        # predicting from upstream to downstream
-        for to_index in causal_order:
-            # input nodes of node i are nonzero variables of i-th row of graph
-            from_indices = causal_graph[to_index, :]
-            from_indices = np.argwhere(~np.isclose(from_indices, 0)).flatten()
-
-            to_name = data.columns[to_index]
-            from_names = [data.columns[from_index] for from_index in from_indices]
-
-            # assigning values without predicting if to_name has no parents.
-            if len(from_names) == 0:
-                sim_df[to_name] = data[to_name].copy()
-                continue
-
-            if to_name in changing_exog_df.columns:
-                error = changing_exog_df[to_name]
-            elif to_name not in cat_map.keys():
-                error = self._concat_residuals(train_results, to_name, data.index)
-
-            X = sim_df[from_names]
-
-            # simulation for each conditions
-            y_sim = []
-            for cond_result in train_results[to_name]:
-                X_ = X
-
-                if cond_result.condition is not None:
-                    # filter rows by a condition
-                    filter_ = []
-                    for key, value in cond_result.condition.items():
-                        filter_.append(X_[key] == cat_map[key].index(value))
-                    filter_ = np.all(filter_, axis=0)
-                    X_ = X_.loc[filter_, :]
-
-                # filter columns by explanatories
-                if len(cond_result.exp_columns) > 0:
-                    X_ = X_.loc[:, cond_result.exp_columns]
-                else:
-                    # dummy data when all parent nodes are categorical
-                    X_ = pd.DataFrame(
-                        np.ones(X_.shape[0]).reshape(X_.shape[0]) * np.nan,
-                        index=X_.index,
-                        columns=[to_name],
-                    )
-
-                # selecting a model for the simulation
-                model = self._select_changing_model(
-                    changing_models, to_name, cond_result.condition
-                )
-                if model is None:
-                    model = cond_result.model
-
-                if to_name in cat_map.keys():
-                    y_hat = self._predict_clf_model(X_, model)
-                else:
-                    y_hat = self._predict_reg_model(X_, model)
-
-                    cond_error = error.loc[X_.index]
-                    if shuffle_residual is True:
-                        cond_error = cond_error.sample(
-                            frac=1, random_state=random_state
-                        )
-                    y_hat += cond_error
-
-                y_sim.append(pd.Series(y_hat, index=X_.index))
-            sim_df[to_name] = pd.concat(y_sim, axis=0).loc[data.index]
-        sim_df = sim_df.loc[data.index, data.columns]
-
-        # decoding categorical values
-        for col_name, categories in cat_map.items():
-            sim_df[col_name] = sim_df[col_name].map(lambda idx: categories[idx])
-            sim_df[col_name] = sim_df[col_name].astype("category")
-
-        return sim_df
+    @property
+    def coef_(self):
+        return coef_
