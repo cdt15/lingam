@@ -1,17 +1,13 @@
-import json
 import pytest
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.dummy import DummyRegressor, DummyClassifier
-from sklearn.svm import SVR, SVC
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 from scipy.special import expit
 
-import os, sys
+import os
+import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lingam.causal_based_simulator import CausalBasedSimulator
 from lingam.causal_based_simulator import CBSILiNGAM
@@ -21,7 +17,8 @@ from lingam.causal_based_simulator import CBSITimeSeriesLiNGAM
 
 @pytest.fixture
 def init():
-    return lambda :np.random.seed(0)
+    return lambda : np.random.seed(0)
+
 
 @pytest.fixture
 def test_data():
@@ -33,9 +30,10 @@ def test_data():
         [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
         [0.0, 0.0, 0.0, 6.0, 0.0, 0.0],
         [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [8.0, 0.0,-1.0, 0.0, 0.0, 0.0],
+        [8.0, 0.0, -1.0, 0.0, 0.0, 0.0],
         [4.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     ])
+
     def _is_correct_co(causal_order):
         truth = [{"3"}, {"0", "2"}, {"1", "4", "5"}]
         target = [
@@ -51,17 +49,19 @@ def test_data():
 
     return X, causal_graph, _is_correct_co
 
+
 @pytest.fixture
 def test_data_unobs():
     np.random.seed(0)
 
     N = 1000
-    causal_graph = np.array([[0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
-                  [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
-                  [0.0, 0.0, 0.0, 6.0, 0.0, 0.0],
-                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                  [8.0, 0.0,-1.0, 0.0, 0.0, 0.0],
-                  [4.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
+    causal_graph = np.array([
+        [0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
+        [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 6.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [8.0, 0.0, -1.0, 0.0, 0.0, 0.0],
+        [4.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
 
     e = np.random.uniform(-np.sqrt(3), np.sqrt(3), size=(len(causal_graph), N))
     X = np.linalg.pinv(np.eye(len(causal_graph)) - causal_graph) @ e
@@ -76,27 +76,29 @@ def test_data_unobs():
 
     return X, causal_graph
 
+
 @pytest.fixture
 def test_data_ts():
     np.random.seed(0)
 
     N = 1000
     causal_graph = np.array([[
-        [0,-0.12,0,0,0],
-        [0,0,0,0,0],
-        [-0.41,0.01,0,-0.02,0],
-        [0.04,-0.22,0,0,0],
-        [0.15,0,-0.03,0,0],
+        [0, -0.12, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [-0.41, 0.01, 0, -0.02, 0],
+        [0.04, -0.22, 0, 0, 0],
+        [0.15, 0, -0.03, 0, 0],
     ], [
-        [-0.32,0,0.12,0.32,0],
-        [0,-0.35,-0.1,-0.46,0.4],
-        [0,0,0.37,0,0.46],
-        [-0.38,-0.1,-0.24,0,-0.13],
-        [0,0,0,0,0],
+        [-0.32, 0, 0.12, 0.32, 0],
+        [0, -0.35, -0.1, -0.46, 0.4],
+        [0, 0, 0.37, 0, 0.46],
+        [-0.38, -0.1, -0.24, 0, -0.13],
+        [0, 0, 0, 0, 0],
     ]])
+
     def _is_correct_co(causal_order):
         truth = [
-            {"0[t-1]", "1[t-1]", "2[t-1]", "3[t-1]", "4[t-1]"}, 
+            {"0[t-1]", "1[t-1]", "2[t-1]", "3[t-1]", "4[t-1]"},
             {"1[t]"}, {"0[t]"}, {"3[t]"}, {"2[t]"}, {"4[t]"},
         ]
         target = [
@@ -117,7 +119,7 @@ def test_data_ts():
 
     n_lags = len(causal_graph) - 1
     size = N + n_lags
-    
+
     errors = np.random.uniform(-np.sqrt(3), np.sqrt(3), size=(causal_graph.shape[1], size))
 
     # initial data
@@ -130,6 +132,7 @@ def test_data_ts():
 
     return X, causal_graph, _is_correct_co
 
+
 @pytest.fixture
 def test_data_discrete():
     np.random.seed(0)
@@ -140,7 +143,7 @@ def test_data_discrete():
         [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
         [0.0, 0.0, 0.0, 6.0, 0.0, 0.0],
         [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [8.0, 0.0,-1.0, 0.0, 0.0, 0.0],
+        [8.0, 0.0, -1.0, 0.0, 0.0, 0.0],
         [4.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     ])
     discrete_indices = [0, 1]
@@ -155,7 +158,9 @@ def test_data_discrete():
         ]
         return truth == target
 
-    e = lambda: np.random.uniform(-np.sqrt(3), np.sqrt(3), size=N)
+    def e():
+        return np.random.uniform(-np.sqrt(3), np.sqrt(3), size=N)
+
     X = np.zeros((len(causal_graph), N))
 
     for co in causal_order:
@@ -175,6 +180,7 @@ def test_data_discrete():
     is_discrete[discrete_indices] = True
 
     return X, causal_graph, _is_correct_co, is_discrete
+
 
 def test_cbs_success(test_data, test_data_unobs, test_data_ts, test_data_discrete):
     models = {"0": LinearRegression()}
@@ -215,6 +221,7 @@ def test_cbs_success(test_data, test_data_unobs, test_data_ts, test_data_discret
     sim.run()
     sim.run(changing_models=changing_models, changing_exog=changing_exog)
 
+
 def test_cbs_exception(test_data):
     X, causal_graph, _ = test_data
 
@@ -223,29 +230,30 @@ def test_cbs_exception(test_data):
     # cd_algo_name
     try:
         sim.train(X, causal_graph, cd_algo_name=1234)
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
 
     try:
         sim.train(X, causal_graph, cd_algo_name="UnknownAlgoName")
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
 
     # changing_models makes causal_graph cyclic
     changing_models = {
-        "x3": { "parent_names": ["x0"] }
+        "x3": {"parent_names" : ["x0"]}
     }
     sim.train(X, causal_graph)
     try:
         sim.run(changing_models=changing_models)
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
+
 
 def test_cbsi_lingam_success(test_data, test_data_discrete):
     X, causal_graph, is_correct_co = test_data
@@ -280,6 +288,7 @@ def test_cbsi_lingam_success(test_data, test_data_discrete):
     causal_order = impl.get_causal_order()
     assert is_correct_co(causal_order)
 
+
 def test_cbsi_lingam_success2(test_data_discrete):
     X, causal_graph, is_correct_co, is_discrete = test_data_discrete
 
@@ -313,13 +322,14 @@ def test_cbsi_lingam_success2(test_data_discrete):
     causal_order = impl.get_causal_order()
     assert is_correct_co(causal_order)
 
+
 def test_cbsi_lingam_exception(test_data):
     X, causal_graph, _ = test_data
 
     # X: wrong dim
     try:
         CBSILiNGAM(X.reshape(1, *X.shape), causal_graph)
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
@@ -329,15 +339,15 @@ def test_cbsi_lingam_exception(test_data):
     X_[0, 0] = np.nan
     try:
         CBSILiNGAM(X_, causal_graph)
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
 
     # causal_graph: wrong shape
     try:
-        CBSILiNGAM(X, np.concatenate([causal_graph]*2))
-    except:
+        CBSILiNGAM(X, np.concatenate([causal_graph] * 2))
+    except Exception:
         pass
     else:
         raise AssertionError
@@ -345,7 +355,7 @@ def test_cbsi_lingam_exception(test_data):
     # causal_graph: wrong dim
     try:
         CBSILiNGAM(X, causal_graph.reshape(1, *causal_graph.shape))
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
@@ -355,7 +365,7 @@ def test_cbsi_lingam_exception(test_data):
     causal_graph_cyclic[3, 5] = 1
     try:
         CBSILiNGAM(X, causal_graph_cyclic)
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
@@ -364,10 +374,11 @@ def test_cbsi_lingam_exception(test_data):
     is_discrete = [False for i in range(len(causal_graph) + 1)]
     try:
         CBSILiNGAM(X, causal_graph, is_discrete=is_discrete)
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
+
 
 def test_cbsi_unobs_success(test_data_unobs):
     X, causal_graph = test_data_unobs
@@ -378,6 +389,7 @@ def test_cbsi_unobs_success(test_data_unobs):
     # X is pandas.DataFrame
     X_df = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
     CBSIUnobsCommonCauseLiNGAM(X_df, causal_graph)
+
 
 def test_cbsi_ts_success(test_data_ts):
     X, causal_graph, is_correct_co = test_data_ts
@@ -411,13 +423,14 @@ def test_cbsi_ts_success(test_data_ts):
     causal_order = impl.get_causal_order()
     assert is_correct_co(causal_order)
 
+
 def test_cbsi_ts_exception(test_data_ts):
     X, causal_graph, is_correct_co = test_data_ts
 
     # X: wrong dim
     try:
         CBSITimeSeriesLiNGAM(X.reshape(1, *X.shape), causal_graph)
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
@@ -426,7 +439,7 @@ def test_cbsi_ts_exception(test_data_ts):
     X_ = np.concatenate([X, X], axis=1)
     try:
         CBSITimeSeriesLiNGAM(X_, causal_graph)
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
@@ -434,17 +447,16 @@ def test_cbsi_ts_exception(test_data_ts):
     # causal_graph: wrong dim
     try:
         CBSITimeSeriesLiNGAM(X, causal_graph.reshape(1, *causal_graph.shape))
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
 
     # causal_graph: wrong length
-    causal_graph_ = np.concatenate([causal_graph]*2, axis=1)
+    causal_graph_ = np.concatenate([causal_graph] * 2, axis=1)
     try:
         CBSITimeSeriesLiNGAM(X, causal_graph_)
-    except:
+    except Exception:
         pass
     else:
         raise AssertionError
-
