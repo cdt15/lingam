@@ -13,14 +13,11 @@ from scipy.special import expit
 
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from lingam.causal_based_simulator import CausalBasedSimulator, TrainResult
+from lingam.causal_based_simulator import CausalBasedSimulator
+from lingam.causal_based_simulator import CBSILiNGAM
+from lingam.causal_based_simulator import CBSIUnobsCommonCauseLiNGAM
+from lingam.causal_based_simulator import CBSITimeSeriesLiNGAM
 
-DATA_DIR_PATH = os.path.dirname(__file__) + "/test_causal_based_simulator"
-
-ENABLE_CAPTURE = False
-if ENABLE_CAPTURE:
-    if not os.path.isdir(DATA_DIR_PATH):
-        os.mkdir(DATA_DIR_PATH)
 
 @pytest.fixture
 def init():
@@ -31,917 +28,423 @@ def test_data():
     np.random.seed(0)
 
     N = 1000
+    causal_graph = np.array([
+        [0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
+        [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 6.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [8.0, 0.0,-1.0, 0.0, 0.0, 0.0],
+        [4.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ])
+    def _is_correct_co(causal_order):
+        truth = [{"3"}, {"0", "2"}, {"1", "4", "5"}]
+        target = [
+            {*causal_order[:1]},
+            {*causal_order[1:3]},
+            {*causal_order[3:]}
+        ]
+        return truth == target
 
-    G = np.array([[0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
+    e = np.random.uniform(-np.sqrt(3), np.sqrt(3), size=(len(causal_graph), N))
+    X = np.linalg.pinv(np.eye(len(causal_graph)) - causal_graph) @ e
+    X = X.T
+
+    return X, causal_graph, _is_correct_co
+
+@pytest.fixture
+def test_data_unobs():
+    np.random.seed(0)
+
+    N = 1000
+    causal_graph = np.array([[0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
                   [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
                   [0.0, 0.0, 0.0, 6.0, 0.0, 0.0],
                   [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                   [8.0, 0.0,-1.0, 0.0, 0.0, 0.0],
                   [4.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
-    X = {}
-    X["x3"] = np.random.uniform(size=N)
-    X["x2"] = G[2, 3] * X["x3"] + np.random.uniform(size=N)
-    X["x0"] = G[0, 3] * X["x3"] + np.random.uniform(size=N)
-    X["x4"] = G[4, 2] * X["x2"] + G[4, 0] * X["x0"] + np.random.uniform(size=N)
-    X["x1"] = G[1, 2] * X["x2"] + G[1, 0] * X["x0"] + np.random.uniform(size=N)
-    X["x5"] = G[5, 0] * X["x0"] + np.random.uniform(size=N)
-    X = dict(sorted(X.items()))
-    X = pd.DataFrame(X)
 
-    return X, G
+    e = np.random.uniform(-np.sqrt(3), np.sqrt(3), size=(len(causal_graph), N))
+    X = np.linalg.pinv(np.eye(len(causal_graph)) - causal_graph) @ e
+    X = X.T
+
+    delete_index = 3
+    causal_graph = np.delete(causal_graph, delete_index, axis=0)
+    causal_graph = np.delete(causal_graph, delete_index, axis=1)
+    X = np.delete(X, delete_index, axis=1)
+    causal_graph[0, 2] = np.nan
+    causal_graph[2, 0] = np.nan
+
+    return X, causal_graph
 
 @pytest.fixture
-def test_data2():
+def test_data_ts():
     np.random.seed(0)
 
     N = 1000
+    causal_graph = np.array([[
+        [0,-0.12,0,0,0],
+        [0,0,0,0,0],
+        [-0.41,0.01,0,-0.02,0],
+        [0.04,-0.22,0,0,0],
+        [0.15,0,-0.03,0,0],
+    ], [
+        [-0.32,0,0.12,0.32,0],
+        [0,-0.35,-0.1,-0.46,0.4],
+        [0,0,0.37,0,0.46],
+        [-0.38,-0.1,-0.24,0,-0.13],
+        [0,0,0,0,0],
+    ]])
+    def _is_correct_co(causal_order):
+        truth = [
+            {"0[t-1]", "1[t-1]", "2[t-1]", "3[t-1]", "4[t-1]"}, 
+            {"1[t]"}, {"0[t]"}, {"3[t]"}, {"2[t]"}, {"4[t]"},
+        ]
+        target = [
+            {*causal_order[:5]},
+            {*causal_order[5:6]},
+            {*causal_order[6:7]},
+            {*causal_order[7:8]},
+            {*causal_order[8:9]},
+            {*causal_order[9:10]},
+        ]
+        return truth == target
 
-    G = np.array([[0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
-                  [3.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-                  [0.0, 0.0, 0.0, 1.5, 0.0, 0.0],
-                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                  [8.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-                  [4.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
-    
-    X = {}
-    
-    X["x3"] = np.random.uniform(size=N)
-    
-    X["x2"] = np.empty(N).astype(str)
-    for i in range(N):
-        prob_a = expit(G[2, 3] * X["x3"][i] - 0.5)
-        X["x2"][i] = np.random.choice(["a", "b"], p=[prob_a, 1 - prob_a])
-    
-    X["x0"] = G[0, 3] * X["x3"] + np.random.uniform(size=N)
-    
-    X["x4"] = np.empty(N)
-    for i in range(N):
-        if X["x2"][i] == "a":
-            X["x4"][i] = 8.0 * X["x0"][i] + np.random.uniform()
-        elif X["x2"][i] == "b":
-            X["x4"][i] = 4.0 * X["x0"][i] + np.random.uniform()
-    
-    X["x1"] = np.empty(N)
-    for i in range(N):
-        if X["x2"][i] == "a":
-            X["x1"][i] = 3.0 * X["x0"][i] + np.random.uniform()
-        elif X["x2"][i] == "b":
-            X["x1"][i] = 1.5 * X["x0"][i] + np.random.uniform()
-    
-    X["x5"] = G[5, 0] * X["x0"] + np.random.uniform(size=1000)
-    
-    X = dict(sorted(X.items()))
-    X = pd.DataFrame(X)
-    X["x2"] = X["x2"].astype("category")
+    def _x_t(X, e, causal_graph):
+        _, n_features, _ = causal_graph.shape
+        term = np.linalg.pinv(np.eye(n_features) - causal_graph[0])
+        term2 = np.hstack(causal_graph[1:]) @ np.hstack(X[:, ::-1][:, :len(causal_graph) - 1]).reshape(n_features, 1) + e
+        return term @ term2
 
-    return X, G
+    n_lags = len(causal_graph) - 1
+    size = N + n_lags
+    
+    errors = np.random.uniform(-np.sqrt(3), np.sqrt(3), size=(causal_graph.shape[1], size))
+
+    # initial data
+    X = errors[:, :n_lags]
+
+    for t in range(n_lags, size):
+        new_data = _x_t(X[:, :t], errors[:, [t]], causal_graph)
+        X = np.append(X, new_data, axis=1)
+    X = X[:, n_lags:].T
+
+    return X, causal_graph, _is_correct_co
 
 @pytest.fixture
-def test_data3():
+def test_data_discrete():
     np.random.seed(0)
 
-    G = np.array([[0.0, 0.0, 0.0],
-                  [2.0, 0.0, 0.0],
-                  [2.0, 0.0, 0.0]])
-
     N = 1000
-    
-    X = {}
-    
-    X["x0"] = np.random.choice(["a", "b"], p=[0.75, 0.25], size=N)
-    
-    X["x1"] = []
-    for i in range(N):
-        if X["x0"][i] == "a":
-            X["x1"].append(np.random.uniform() * 2)
-        elif X["x0"][i] == "b":
-            X["x1"].append(np.random.uniform())
-            
-    X["x2"] = []
-    for i in range(N):
-        if X["x0"][i] == "a":
-            X["x2"].append(np.random.choice(["c", "d"], p=[0.75, 0.25]))
-        elif X["x0"][i] == "b":
-            X["x2"].append(np.random.choice(["c", "d"], p=[0.25, 0.75]))
-            
-            
-    X = pd.DataFrame(X)
-    X["x0"] = X["x0"].astype("category")
-    X["x2"] = X["x2"].astype("category")
-    X = X[sorted(X.columns)]
+    causal_graph = np.array([
+        [0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
+        [3.0, 0.0, 2.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 6.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [8.0, 0.0,-1.0, 0.0, 0.0, 0.0],
+        [4.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ])
+    discrete_indices = [0, 1]
+    causal_order = [3, 0, 2, 1, 4, 5]
 
-    return X, G
+    def _is_correct_co(causal_order):
+        truth = [{"3"}, {"0", "2"}, {"1", "4", "5"}]
+        target = [
+            {*causal_order[:1]},
+            {*causal_order[1:3]},
+            {*causal_order[3:]}
+        ]
+        return truth == target
 
-def test_check_data(init, test_data, test_data2):
-    init()
+    e = lambda: np.random.uniform(-np.sqrt(3), np.sqrt(3), size=N)
+    X = np.zeros((len(causal_graph), N))
 
-    X, causal_graph = test_data
-    X2, causal_graph2 = test_data2
+    for co in causal_order:
+        coefs = causal_graph[co]
+        is_exog = np.all(np.isclose(coefs, 0))
+        if is_exog:
+            X[co] = e()
+            continue
 
-    # Normal
+        X[co] = coefs @ X + e()
+        if co in discrete_indices:
+            X[co] = (expit(X[co]) > np.random.uniform(size=N)).astype(int)
+
+    X = X.T
+
+    is_discrete = np.array([False for _ in range(len(causal_graph))])
+    is_discrete[discrete_indices] = True
+
+    return X, causal_graph, _is_correct_co, is_discrete
+
+def test_cbs_success(test_data, test_data_unobs, test_data_ts, test_data_discrete):
+    models = {"0": LinearRegression()}
+    models_d = {"0": LogisticRegression()}
+    models_ts = {"0[t]": LinearRegression()}
+    changing_models = {"0": {"parent_names": []}}
+    changing_models_ts = {"0[t]": {"parent_names": []}}
+    changing_exog = {"2": np.random.uniform(-10, 10, size=1000)}
+    changing_exog_ts = {"2[t]": np.random.uniform(-10, 10, size=999)}
+
     sim = CausalBasedSimulator()
-    try:
-        X_, categorical_info = sim._check_data(X)
-    except RuntimeError:
-        raise AssertionError
-    else:
-        pass
 
-    # Normal2: categorical variable
-    sim = CausalBasedSimulator()
-    try:
-        X2_, categorical_info = sim._check_data(X2)
-    except RuntimeError:
-        raise AssertionError
-    else:
-        pass
-
-    # Exception: wrog type
-    X3 = np.ones((10, 5))
-    sim = CausalBasedSimulator()
-    try:
-        X3_, categorical_info = sim._check_data(X3)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception2: wrong type
-    X4 = np.ones((10, 5)).tolist()
-    sim = CausalBasedSimulator()
-    try:
-        X4_, categorical_info = sim._check_data(X4)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-def test_check_causal_graph(init, test_data):
-    init()
-
-    X, causal_graph = test_data
-
-    # Normal
-    sim = CausalBasedSimulator()
-    try:
-        causal_graph = sim._check_causal_graph(causal_graph, 6)
-    except RuntimeError:
-        raise AssertionError
-    else:
-        pass
-
-    # Exception: wrong type
-    sim = CausalBasedSimulator()
-    try:
-        causal_graph_ = sim._check_causal_graph("not array", 3)
-    except ValueError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: wrong shape
-    causal_graph2 = np.ones((3, 4))
-    sim = CausalBasedSimulator()
-    try:
-        causal_graph2_ = sim._check_causal_graph(causal_graph2, 3)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-def test_check_models(init, test_data2):
-    init()
-
-    X, causal_graph = test_data2
-    categorical_info = {"x2":["a", "b"]}
-
-    # Normal
-    sim = CausalBasedSimulator()
-    models = {
-        "x0": SVR(kernel="linear"),
-        "x2": SVC(kernel="linear", probability=True),
-        "x4": SVR(kernel="linear"),
-    }
-    try:
-        sim._check_models(models, X.index, X.columns, categorical_info)
-    except:
-        raise AssertionError
-    else:
-        pass
-
-    # Normal: Pipeline
-    sim = CausalBasedSimulator()
-    models = {
-        "x0": Pipeline([
-            ("preprocess", StandardScaler()),
-            ("estimator", SVR(kernel="linear")),
-        ]),
-        "x2": SVC(kernel="linear", probability=True),
-        "x4": SVR(kernel="linear"),
-    }
-    try:
-        sim._check_models(models, X.index, X.columns, categorical_info)
-    except:
-        raise AssertionError
-    else:
-        pass
-
-    # Normal: GridSearchCV
-    sim = CausalBasedSimulator()
-    models = {
-        "x0": GridSearchCV(SVR(kernel="linear"), {"C": [0.1**i for i in range(3)]}),
-        "x2": SVC(kernel="linear", probability=True),
-        "x4": SVR(kernel="linear"),
-    }
-    try:
-        sim._check_models(models, X.index, X.columns, categorical_info)
-    except:
-        raise AssertionError
-    else:
-        pass
-
-    # Exception: wrong type
-    sim = CausalBasedSimulator()
-    models = (
-        ("x0", SVR(kernel="linear")),
-        ("x2", SVC(kernel="linear", probability=True)),
-        ("x4", SVR(kernel="linear")),
-    )
-    try:
-        sim._check_models(models, X.index, X.columns, categorical_info)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: wrong task type
-    sim = CausalBasedSimulator()
-    models = {
-        "x0": SVC(kernel="linear", probability=True),
-        "x2": SVC(kernel="linear", probability=True),
-        "x4": SVR(kernel="linear"),
-    }
-    try:
-        sim._check_models(models, X.index, X.columns, categorical_info)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-
-    # Exception: non existent variable name
-    sim = CausalBasedSimulator()
-    models = {
-        "x0": SVR(kernel="linear"),
-        "x2": SVC(kernel="linear", probability=True),
-        "x6": SVR(kernel="linear"),
-    }
-    try:
-        sim._check_models(models, X.index, X.columns, categorical_info)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: not instance
-    sim = CausalBasedSimulator()
-    models = {
-        "x0": SVR(kernel="linear"),
-        "x2": LogisticRegression,
-        "x4": SVR(kernel="linear"),
-    }
-    try:
-        sim._check_models(models, X.index, X.columns, categorical_info)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: Pipeline, wrong task
-    sim = CausalBasedSimulator()
-    models = {
-        "x0": Pipeline([
-            ("preprocess", StandardScaler()),
-            ("estimator", SVC(kernel="linear", probability=True)),
-        ]),
-        "x2": SVC(kernel="linear", probability=True),
-        "x4": SVR(kernel="linear"),
-    }
-    try:
-        sim._check_models(models, X.index, X.columns, categorical_info)
-    except:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: GridSearchCV, wrong task
-    sim = CausalBasedSimulator()
-    models = {
-        "x0": GridSearchCV(SVC(kernel="linear", probability=True), {"C": [0.1**i for i in range(3)]}),
-        "x2": SVC(kernel="linear", probability=True),
-        "x4": SVR(kernel="linear"),
-    }
-    try:
-        sim._check_models(models, X.index, X.columns, categorical_info)
-    except:
-        pass
-    else:
-        raise AssertionError
-
-def test_changing_exog(init, test_data2):
-    init()
-
-    X, causal_graph = test_data2
-    categorical_info = {"x2": ["a", "b"]}
-
-    # Normal
-    sim = CausalBasedSimulator()
-    changing_exog = {
-        "x0": np.random.uniform(size=X.shape[0]),
-        "x1": np.random.uniform(size=X.shape[0]),
-        "x3": np.random.uniform(size=X.shape[0]),
-    }
-    try:
-        sim._check_changing_exog(changing_exog, X.index, X.columns, categorical_info)
-    except RuntimeError:
-        raise AssertionError
-    else:
-        pass
-
-    # Exception: wrong type
-    sim = CausalBasedSimulator()
-    changing_exog = (
-        ("x0", np.random.uniform(size=X.shape[0])),
-        ("x1", np.random.uniform(size=X.shape[0])),
-        ("x3", np.random.uniform(size=X.shape[0])),
-    )
-    try:
-        sim._check_changing_exog(changing_exog, X.index, X.columns, categorical_info)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: non existent variable name
-    sim = CausalBasedSimulator()
-    changing_exog = {
-        "x0": np.random.uniform(size=X.shape[0]),
-        "x1": np.random.uniform(size=X.shape[0]),
-        "x6": np.random.uniform(size=X.shape[0]),
-    }
-    try:
-        sim._check_changing_exog(changing_exog, X.index, X.columns, categorical_info)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: can't specify to categorical variable
-    sim = CausalBasedSimulator()
-    changing_exog = {
-        "x2": np.random.choice(["a", "b"], size=X.shape[0]),
-    }
-    try:
-        sim._check_changing_exog(changing_exog, X.index, X.columns, categorical_info)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: wrong shape
-    sim = CausalBasedSimulator()
-    changing_exog = {
-        "x0": np.random.uniform(size=X.shape[0]),
-        "x1": np.random.uniform(size=X.shape[0] + 1),
-        "x3": np.random.uniform(size=X.shape[0]),
-    }
-    try:
-        sim._check_changing_exog(changing_exog, X.index, X.columns, categorical_info)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-def test_changing_models(init, test_data2):
-    init()
-
-    X, causal_graph = test_data2
-    categorical_info = {"x2": ["a", "b"]}
-    X["x2"] = X["x2"].apply(lambda x: categorical_info["x2"].index(x)).astype(int)
-    train_results = {
-        "x0": [
-            TrainResult(condition=None, exp_columns=["x3"], model=None, predicted=None, residual=None),
-        ],
-        "x1": [
-            TrainResult(condition={"x2": "a"}, exp_columns=["x0"], model=None, predicted=None, residual=None),
-            TrainResult(condition={"x2": "b"}, exp_columns=["x0"], model=None, predicted=None, residual=None)
-        ],
-        "x2": [
-            TrainResult(condition=None, exp_columns=["x3"], model=None, predicted=None, residual=None),
-        ],
-        "x3": [],
-        "x4": [],
-        "x5": [],
-    }
-    x0_model = LinearRegression()
-    x0_model.fit(X[train_results["x0"][0].exp_columns].values, X["x0"] * 10)
-    X_a = X[X["x2"] == categorical_info["x2"].index("a")]
-    x1_model_a = LinearRegression()
-    x1_model_a.fit(X_a[train_results["x1"][0].exp_columns].values, X_a["x1"] * 10)
-    X_b = X[X["x2"] == categorical_info["x2"].index("b")]
-    x1_model_b = LinearRegression()
-    x1_model_b.fit(X_b[train_results["x1"][1].exp_columns].values, X_b["x1"] * 10)
-    x2_model = LogisticRegression()
-    x2_model.fit(X[train_results["x2"][0].exp_columns].values, X["x2"] * 10)
-    x0_pipe = Pipeline([("estimator", LinearRegression())])
-    x0_pipe.fit(X[train_results["x0"][0].exp_columns].values, X["x0"] * 10)
-    x0_gs = GridSearchCV(SVR(kernel="linear"), {"C": [0.1**i for i in range(3)]})
-    x0_gs.fit(X[train_results["x0"][0].exp_columns].values, X["x0"] * 10)
-
-    # Normal
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "name": "x0",
-            "condition": None,
-            "model": x0_model
-        },
-        {
-            "name": "x1",
-            "condition": {"x2": "a"},
-            "model": x1_model_a
-        },
-        {
-            "name": "x1",
-            "condition": {"x2": "b"},
-            "model": x1_model_b
-        },
-        {
-            "name": "x2",
-            "condition": None,
-            "model": x2_model
-        }
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        raise AssertionError
-    else:
-        pass
-
-    # Normal: Pipeline
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "name": "x0",
-            "condition": None,
-            "model": x0_pipe
-        },
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        raise AssertionError
-    else:
-        pass
-
-    # Normal: GridSearchCV
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "name": "x0",
-            "condition": None,
-            "model": x0_gs
-        },
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        raise AssertionError
-    else:
-        pass
-
-    # Exception: type
-    sim = CausalBasedSimulator()
-    changing_models = {
-        "x0": {
-            "name": "x0",
-            "condition": None,
-            "model": x0_model
-        },
-    }
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: list of element
-    sim = CausalBasedSimulator()
-    changing_models = [
-        "x0"
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: lack of key
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "condition": None,
-            "model": x0_model
-        },
- 
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: lask of key
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "name": "x0",
-            "model": x0_model
-        },
- 
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: lackk of key
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "name": "x0",
-            "condition": None,
-        },
- 
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: non existent variable name
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "name": "x6",
-            "condition": None,
-            "model": x0_model
-        },
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: on existent condition
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "name": "x1",
-            "condition": {"x2":"c"},
-            "model": x1_model_a
-        },
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: model is None
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "name": "x1",
-            "condition": None,
-            "model": None
-        },
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: wrong task type
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "name": "x1",
-            "condition": None,
-            "model": x2_model
-        },
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-    # Exception: wrong model type
-    sim = CausalBasedSimulator()
-    changing_models = [
-        {
-            "name": "x0",
-            "condition": None,
-            "model": x2_model
-        },
-    ]
-    try:
-        sim._check_changing_models(changing_models, categorical_info, train_results)
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError
-
-def test_get_causal_order(init, test_data):
-    init()
-    X, causal_graph = test_data
-
-    # Normal
-    sim = CausalBasedSimulator()
-    ret = sim._get_causal_order(causal_graph)
-    assert ret.tolist() == [3, 0, 2, 1, 4, 5]
-
-def _extract_model_params(train_result):
-    model_params = {c: {} for c in train_result.keys()}
-
-    for col, conds in train_result.items():
-        for cond in conds:
-            condition = str(cond["condition"])
-
-            if hasattr(cond["model"], "intercept_"):
-                params = {
-                    "coef": cond["model"].coef_.tolist(),
-                    "intercept": cond["model"].intercept_.tolist(),
-                }
-            elif isinstance(cond["model"], DummyRegressor):
-                params = {
-                    "expected_value": cond["model"].constant_.tolist(),
-                }
-            elif isinstance(cond["model"], DummyClassifier):
-                params = {
-                    "classes": cond["model"].classes_.tolist(),
-                    "p": cond["model"].class_prior_.tolist(),
-                }
-            else:
-                raise AssertionError
-
-            model_params[col][condition] = params
-            
-    return model_params
-
-def _read_train_result_attrs(name, sim):
-    get_fname = lambda x: f"{DATA_DIR_PATH}/{name}_{x}.json"
-    fname_resid = get_fname("resid")
-    fname_params = get_fname("params")
-
-    if ENABLE_CAPTURE:
-        residual = sim.residual_
-        with open(fname_resid, "w") as f:
-            r = residual.to_dict("list")
-            f.write(json.dumps(r))
-
-        model_params = _extract_model_params(sim.train_result_)
-        with open(fname_params, "w") as f:
-            f.write(json.dumps(model_params))
-
-    with open(fname_resid, "r") as f:
-        residual = pd.DataFrame(json.loads(f.read()))
-
-    with open(fname_params, "r") as f:
-        model_params = json.loads(f.read())
-
-    return residual, model_params
-
-def _is_same_data(df, df2, exclude_cols=[], nan_cols=[]):
-    if df.shape != df2.shape:
-        raise AssertionError
-
-    if (df.index != df2.index).any():
-        raise AssertionError
-
-    if (df.columns != df2.columns).any():
-        raise AssertionError
-
-    if (df.dtypes != df2.dtypes).any():
-        raise AssertionError
-
-    # numeric
-    non_cat = df.dtypes != "category"
-    non_cat2 = df2.dtypes != "category"
-    if list(non_cat) != list(non_cat2):
-        raise AssertionError
-
-    removes = exclude_cols + nan_cols
-    for c in removes:
-        non_cat[list(df.columns).index(c)] = False
-        non_cat2[list(df2.columns).index(c)] = False
-    assert (np.isclose(df.loc[:, non_cat], df2.loc[:, non_cat2])).all()
-
-    # categorical
-    cat = df.dtypes == "category"
-    cat2 = df2.dtypes == "category"
-    if list(cat) != list(cat2):
-        raise AssertionError
-    if len(cat) == 0 and len(cat2) == 0:
-        assert np.all(df.loc[:, cat] == df2.loc[:, cat2])
-
-def _is_same_coef_intercept(model_params, model_params2):
-    if len(set(model_params.keys()) - set(model_params2)) != 0:
-        raise AssertionError
-
-    for column in model_params.keys():
-        for cond, result in model_params[column].items():
-            result2 = model_params[column][cond]
-            coef, intercept = result["coef"], result["intercept"]
-            coef2, intercept2 = result2["coef"], result2["intercept"]
-
-            assert np.isclose(coef, coef2).all()
-            assert np.isclose(intercept, intercept2).all()
-
-def test_train(init, test_data, test_data2, test_data3):
-    init()
-
-    X, causal_graph = test_data
-    X2, causal_graph2 = test_data2
-    X3, causal_graph3 = test_data3
-
-    # Normal
-    sim = CausalBasedSimulator()
+    # normal data
+    X, causal_graph, _ = test_data
     sim.train(X, causal_graph)
-
-    residual, model_params = _read_train_result_attrs("test_train", sim)
-    model_params2 = _extract_model_params(sim.train_result_)
-
-    _is_same_data(residual, sim.residual_, nan_cols=["x3"])
-    _is_same_coef_intercept(model_params, model_params2)
-
-    # Normal2
-    sim = CausalBasedSimulator()
-    models = {
-        "x0": SVR(kernel="linear"),
-        "x2": SVR(kernel="linear"),
-        "x4": SVR(kernel="linear"),
-    }
     sim.train(X, causal_graph, models=models)
-
-    residual, model_params = _read_train_result_attrs("test_train2", sim)
-    model_params2 = _extract_model_params(sim.train_result_)
-
-    _is_same_data(residual, sim.residual_, nan_cols=["x3"])
-    _is_same_coef_intercept(model_params, model_params2)
-
-    # Normal3
-    sim = CausalBasedSimulator()
-    sim.train(X2, causal_graph2)
-
-    residual, model_params = _read_train_result_attrs("test_train3", sim)
-    model_params2 = _extract_model_params(sim.train_result_)
-
-    _is_same_data(residual, sim.residual_, nan_cols=["x2", "x3"])
-    _is_same_coef_intercept(model_params, model_params2)
-
-    # Normal4
-    sim = CausalBasedSimulator()
-    sim.train(X3, causal_graph3)
-
-    residual, model_params = _read_train_result_attrs("test_train4", sim)
-    model_params2 = _extract_model_params(sim.train_result_)
-
-    _is_same_data(residual, sim.residual_, nan_cols=["x0", "x2"])
-    for cond in model_params2["x1"]:
-        assert np.isclose(model_params["x1"][cond]["expected_value"], model_params2["x1"][cond]["expected_value"])
-    for cond in model_params2["x2"]:
-        assert np.all(model_params["x2"][cond]["classes"] == model_params2["x2"][cond]["classes"])
-        assert np.all(np.isclose(model_params["x2"][cond]["p"], model_params2["x2"][cond]["p"]))
-
-def test_run(init, test_data, test_data2, test_data3):
-    init()
-
-    X, causal_graph = test_data
-    X2, causal_graph2 = test_data2
-    X3, causal_graph3 = test_data3
-
-    # Normal: no optios
-    sim = CausalBasedSimulator()
-    sim.train(X, causal_graph)
     sim.run()
+    sim.run(changing_models=changing_models, changing_exog=changing_exog)
 
-    if ENABLE_CAPTURE:
-        sim.simulated_data_.to_csv(f"{DATA_DIR_PATH}/test_run-simulated_data.csv", index=None)
+    # unobserved
+    X, causal_graph = test_data_unobs
+    sim.train(X, causal_graph, cd_algo_name="BottomUpParceLiNGAM")
+    sim.train(X, causal_graph, cd_algo_name="BottomUpParceLiNGAM", models=models)
+    sim.run()
+    sim.run(changing_models=changing_models, changing_exog=changing_exog)
 
-    truth_df = pd.read_csv(f"{DATA_DIR_PATH}/test_run-simulated_data.csv")
-    _is_same_data(sim.simulated_data_, truth_df)
+    # time series
+    X, causal_graph, _ = test_data_ts
+    sim.train(X, causal_graph, cd_algo_name="VARLiNGAM")
+    sim.train(X, causal_graph, cd_algo_name="VARLiNGAM", models=models_ts)
+    sim.run()
+    sim.run(changing_models=changing_models_ts, changing_exog=changing_exog_ts)
 
-    # Normal: only exogeous
+    # discrete
+    X, causal_graph, _, is_discrete = test_data_discrete
+    sim.train(X, causal_graph, is_discrete=is_discrete)
+    sim.train(X, causal_graph, is_discrete=is_discrete, models=models_d)
+    sim.run()
+    sim.run(changing_models=changing_models, changing_exog=changing_exog)
+
+def test_cbs_exception(test_data):
+    X, causal_graph, _ = test_data
+
     sim = CausalBasedSimulator()
-    sim.train(X, causal_graph)
-    changing_exog = {
-        "x0": 2 * X["x0"].copy(),
+
+    # cd_algo_name
+    try:
+        sim.train(X, causal_graph, cd_algo_name=1234)
+    except:
+        pass
+    else:
+        raise AssertionError
+
+    try:
+        sim.train(X, causal_graph, cd_algo_name="UnknownAlgoName")
+    except:
+        pass
+    else:
+        raise AssertionError
+
+    # changing_models makes causal_graph cyclic
+    changing_models = {
+        "x3": { "parent_names": ["x0"] }
     }
-    sim.run(changing_exog=changing_exog)
-
-    if ENABLE_CAPTURE:
-        sim.simulated_data_.to_csv(f"{DATA_DIR_PATH}/test_run2-simulated_data.csv", index=None)
-
-    truth_df = pd.read_csv(f"{DATA_DIR_PATH}/test_run2-simulated_data.csv")
-    _is_same_data(sim.simulated_data_, truth_df)
-
-    # Normal: only models
-    sim = CausalBasedSimulator()
     sim.train(X, causal_graph)
-    train_x = X[sim.train_result_["x2"][0]["exp_columns"]].copy()
-    train_x["x3"] /= 4
-    train_y = X["x2"]
-    model = LinearRegression()
-    model.fit(train_x.values, train_y.values)
-    changing_models = [
-        {
-            "name": "x2",
-            "condition": None,
-            "model": model
-        }
-    ]
-    sim.run(changing_models=changing_models)
+    try:
+        sim.run(changing_models=changing_models)
+    except:
+        pass
+    else:
+        raise AssertionError
 
-    if ENABLE_CAPTURE:
-        sim.simulated_data_.to_csv(f"{DATA_DIR_PATH}/test_run3-simulated_data.csv", index=None)
+def test_cbsi_lingam_success(test_data, test_data_discrete):
+    X, causal_graph, is_correct_co = test_data
 
-    truth_df = pd.read_csv(f"{DATA_DIR_PATH}/test_run3-simulated_data.csv")
-    _is_same_data(sim.simulated_data_, truth_df)
+    # constructor
 
-    # Normal: exogenous and models
-    sim = CausalBasedSimulator()
-    sim.train(X, causal_graph)
-    exp_columns_x2 = sim.train_result_["x2"][0]["exp_columns"]
-    train_x = X[exp_columns_x2].copy()
-    train_x["x3"] /= 4
-    train_y = X["x2"]
-    model = LinearRegression()
-    model.fit(train_x.values, train_y.values)
-    changing_models = [
-        {
-            "name": "x2",
-            "condition": None,
-            "model": model
-        }
-    ]
-    changing_exog = {
-        "x2": train_y - model.predict(X[exp_columns_x2].values)
-    }
-    sim.run(changing_exog=changing_exog, changing_models=changing_models)
+    # X
+    CBSILiNGAM(X, causal_graph)
 
-    if ENABLE_CAPTURE:
-        sim.simulated_data_.to_csv(f"{DATA_DIR_PATH}/test_run4-simulated_data.csv", index=None)
+    # X is pandas.DataFrame
+    X_df = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    CBSILiNGAM(X_df, causal_graph)
 
-    truth_df = pd.read_csv(f"{DATA_DIR_PATH}/test_run4-simulated_data.csv")
-    _is_same_data(sim.simulated_data_, truth_df)
+    # properties
+    impl = CBSILiNGAM(X, causal_graph)
+    assert is_correct_co(impl.causal_order_)
+    assert impl.endog_names_ == [f"{i}" for i in range(len(causal_graph))]
+    assert impl.discrete_endog_names_ == []
+    assert impl.exog_length_ == len(X)
 
-    # Normal: no options
-    sim = CausalBasedSimulator()
-    sim.train(X2, causal_graph2)
-    sim.run()
+    # get_paraent_names
+    parent = impl.get_parent_names("1")
+    assert parent == ["0", "2"]
+    parent = impl.get_parent_names("3")
+    assert parent == []
 
-    if ENABLE_CAPTURE:
-        sim.simulated_data_.to_csv(f"{DATA_DIR_PATH}/test_run5-simulated_data.csv", index=None)
+    # get_data
+    data = impl.get_data("0")
+    assert np.all(data == X[:, [0]])
 
-    truth_df = pd.read_csv(f"{DATA_DIR_PATH}/test_run5-simulated_data.csv")
-    truth_df["x2"] = truth_df["x2"].astype("category")
-    _is_same_data(sim.simulated_data_, truth_df)
+    # get_causal_order
+    causal_order = impl.get_causal_order()
+    assert is_correct_co(causal_order)
 
-    # Normal: no optios
-    sim = CausalBasedSimulator()
-    sim.train(X3, causal_graph3)
-    sim.run()
+def test_cbsi_lingam_success2(test_data_discrete):
+    X, causal_graph, is_correct_co, is_discrete = test_data_discrete
 
-    if ENABLE_CAPTURE:
-        sim.simulated_data_.to_csv(f"{DATA_DIR_PATH}/test_run6-simulated_data.csv", index=None)
+    # constructor
 
-    truth_df = pd.read_csv(f"{DATA_DIR_PATH}/test_run6-simulated_data.csv")
-    truth_df["x0"] = truth_df["x0"].astype("category")
-    truth_df["x2"] = truth_df["x2"].astype("category")
-    _is_same_data(sim.simulated_data_, truth_df)
+    # X
+    CBSILiNGAM(X, causal_graph, is_discrete=is_discrete)
+
+    # X is pandas.DataFrame
+    X_df = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    CBSILiNGAM(X_df, causal_graph, is_discrete)
+
+    # properties
+
+    impl = CBSILiNGAM(X, causal_graph, is_discrete=is_discrete)
+    assert is_correct_co(impl.causal_order_)
+    assert impl.endog_names_ == [f"{i}" for i in range(len(causal_graph))]
+    assert len(impl.discrete_endog_names_) == 2
+
+    # get_paraent_names
+    parent = impl.get_parent_names("1")
+    assert parent == ["0", "2"]
+    parent = impl.get_parent_names("3")
+    assert parent == []
+
+    # get_data
+    data = impl.get_data("0")
+    assert np.all(data == X[:, [0]])
+
+    # get_causal_order
+    causal_order = impl.get_causal_order()
+    assert is_correct_co(causal_order)
+
+def test_cbsi_lingam_exception(test_data):
+    X, causal_graph, _ = test_data
+
+    # X: wrong dim
+    try:
+        CBSILiNGAM(X.reshape(1, *X.shape), causal_graph)
+    except:
+        pass
+    else:
+        raise AssertionError
+
+    # X: nan
+    X_ = X.copy()
+    X_[0, 0] = np.nan
+    try:
+        CBSILiNGAM(X_, causal_graph)
+    except:
+        pass
+    else:
+        raise AssertionError
+
+    # causal_graph: wrong shape
+    try:
+        CBSILiNGAM(X, np.concatenate([causal_graph]*2))
+    except:
+        pass
+    else:
+        raise AssertionError
+
+    # causal_graph: wrong dim
+    try:
+        CBSILiNGAM(X, causal_graph.reshape(1, *causal_graph.shape))
+    except:
+        pass
+    else:
+        raise AssertionError
+
+    # causal_graph: cyclic
+    causal_graph_cyclic = causal_graph.copy()
+    causal_graph_cyclic[3, 5] = 1
+    try:
+        CBSILiNGAM(X, causal_graph_cyclic)
+    except:
+        pass
+    else:
+        raise AssertionError
+
+    # is_discrete: wrong length
+    is_discrete = [False for i in range(len(causal_graph) + 1)]
+    try:
+        CBSILiNGAM(X, causal_graph, is_discrete=is_discrete)
+    except:
+        pass
+    else:
+        raise AssertionError
+
+def test_cbsi_unobs_success(test_data_unobs):
+    X, causal_graph = test_data_unobs
+
+    # X
+    CBSIUnobsCommonCauseLiNGAM(X, causal_graph)
+
+    # X is pandas.DataFrame
+    X_df = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    CBSIUnobsCommonCauseLiNGAM(X_df, causal_graph)
+
+def test_cbsi_ts_success(test_data_ts):
+    X, causal_graph, is_correct_co = test_data_ts
+
+    # constructor
+
+    # X
+    CBSITimeSeriesLiNGAM(X, causal_graph)
+
+    # X is pandas.DataFrame
+    X_df = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    CBSITimeSeriesLiNGAM(X_df, causal_graph)
+
+    # properties
+
+    impl = CBSITimeSeriesLiNGAM(X, causal_graph)
+    assert impl.endog_names_ == [*[f"{i}[t]" for i in range(X.shape[1])], *[f"{i}[t-1]" for i in range(X.shape[1])]]
+
+    # get_paraent_names
+    parent = impl.get_parent_names("1[t]")
+    assert parent == ["1[t-1]", "2[t-1]", "3[t-1]", "4[t-1]"]
+    parent = impl.get_parent_names("1[t-1]")
+    assert parent == []
+
+    # get_data
+    data = impl.get_data("1[t]")
+    n_lags = len(causal_graph) - 1
+    assert data.shape == (len(X) - n_lags, 1)
+
+    # get_causal_order
+    causal_order = impl.get_causal_order()
+    assert is_correct_co(causal_order)
+
+def test_cbsi_ts_exception(test_data_ts):
+    X, causal_graph, is_correct_co = test_data_ts
+
+    # X: wrong dim
+    try:
+        CBSITimeSeriesLiNGAM(X.reshape(1, *X.shape), causal_graph)
+    except:
+        pass
+    else:
+        raise AssertionError
+
+    # X: wrong n_features
+    X_ = np.concatenate([X, X], axis=1)
+    try:
+        CBSITimeSeriesLiNGAM(X_, causal_graph)
+    except:
+        pass
+    else:
+        raise AssertionError
+
+    # causal_graph: wrong dim
+    try:
+        CBSITimeSeriesLiNGAM(X, causal_graph.reshape(1, *causal_graph.shape))
+    except:
+        pass
+    else:
+        raise AssertionError
+
+    # causal_graph: wrong length
+    causal_graph_ = np.concatenate([causal_graph]*2, axis=1)
+    try:
+        CBSITimeSeriesLiNGAM(X, causal_graph_)
+    except:
+        pass
+    else:
+        raise AssertionError
+
