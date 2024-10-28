@@ -2,16 +2,14 @@ from .direct_lingam import DirectLiNGAM
 from .ica_lingam import ICALiNGAM
 from .bottom_up_parce_lingam import BottomUpParceLiNGAM
 from .var_lingam import VARLiNGAM
-from .longitudinal_lingam import LongitudinalLiNGAM
 
 from abc import ABCMeta, abstractmethod
-import numbers
 
 import numpy as np
 import pandas as pd
 from scipy.special import expit
 
-from sklearn.utils import check_array, check_scalar, check_random_state
+from sklearn.utils import check_array, check_random_state
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.base import clone, is_regressor, is_classifier
 from sklearn.pipeline import Pipeline
@@ -104,7 +102,7 @@ class CausalBasedSimulator:
             The key is the name of the target variable and that value is
             a dictionary for that model. This dictionary contains three keys,
             parant_names, coef and model. parent_names is the mandatory key and
-            whose value is the list of parent names. coef and model are selective. 
+            whose value is the list of parent names. coef and model are selective.
             coef is the list of the coefficients of the parent variables, which
             must be same lenght as parent_names. The value of model must be
             a trained machine laerning instance.
@@ -163,22 +161,19 @@ class CausalBasedSimulator:
 
         if isinstance(model, Pipeline):
             if not check_model_type(model.steps[-1][-1]):
-                raise RuntimeError(
-                    "The last step in Pipeline should be an "
-                    + "instance of a regression/classification model."
-                )
+                mes = "The last step in Pipeline should be an "
+                mes += "instance of a regression/classification model."
+                raise RuntimeError(mes)
         elif isinstance(model, BaseSearchCV):
             if not check_model_type(model.get_params()["estimator"]):
-                raise RuntimeError(
-                    "The type of the estimator shall be an "
-                    + "instance of a regression/classification model."
-                )
+                mes = "The type of the estimator shall be an "
+                mes += "instance of a regression/classification model."
+                raise RuntimeError(mes)
         else:
             if not check_model_type(model):
-                raise RuntimeError(
-                    "The type of the estimator shall be an "
-                    + "instance of a regression/classification model."
-                )
+                mes = "The type of the estimator shall be an "
+                mes += "instance of a regression/classification model."
+                raise RuntimeError(mes)
 
         if check_model_type == is_classifier:
             try:
@@ -186,9 +181,9 @@ class CausalBasedSimulator:
                 if not callable(func):
                     raise Exception
             except Exception:
-                raise RuntimeError(
-                    "Classification models shall have " + "predict_proba()."
-                )
+                mes = "Classification models shall have "
+                mes += "predict_proba()."
+                raise RuntimeError(mes)
 
     def _check_models(self, models, endog_names, discrete_endog_names):
         if models is None:
@@ -258,7 +253,7 @@ class CausalBasedSimulator:
 
             for parent_name in model_info["parent_names"]:
                 if parent_name not in endog_names:
-                    raise RuntimeError(f"Unknown name. ({name})")
+                    raise RuntimeError(f"Unknown name. ({parent_name})")
 
             if len(parent_names) == 0:
                 changing_models_[target_name] = {"parent_names": []}
@@ -278,10 +273,10 @@ class CausalBasedSimulator:
                     model = _LinearRegression(coef)
                 else:
                     model = _LogisticRegression(coef)
-                
+
                 changing_models_[target_name] = {"parent_names": parent_names, "model": model}
                 continue
-                
+
             # model key
             if "model" not in model_info.keys() or model_info["model"] is None:
                 raise KeyError("model must be set when coef isn't set.")
@@ -574,7 +569,7 @@ class CBSILiNGAM(CBSImpl):
             index = self._endog_names.index(var_name)
             var_indices.append(index)
         data = self._X[:, var_indices]
-        
+
         return data
 
     def get_causal_order(self, changing_edges=None):
@@ -592,8 +587,9 @@ class CBSILiNGAM(CBSImpl):
 
         causal_order = self._calc_causal_order(causal_graph)
         if causal_order is None:
-            raise ValueError("causal_graph updated by changing_models is cyclic."
-                + "changing_models must be set so that causal graph does not cycle.")
+            mes = "causal_graph updated by changing_models is cyclic."
+            mes += " changing_models must be set so that causal graph does not cycle."
+            raise ValueError(mes)
         causal_order = [self._endog_names[n] for n in causal_order]
 
         return causal_order
@@ -665,6 +661,7 @@ class CBSILiNGAM(CBSImpl):
 
         return causal_order
 
+
 class CBSIUnobsCommonCauseLiNGAM(CBSILiNGAM):
     """ Class for data handling for BottomUpParceLiNGAM. """
 
@@ -676,12 +673,13 @@ class CBSIUnobsCommonCauseLiNGAM(CBSILiNGAM):
             n_features = X.shape[1]
             if causal_graph.shape != (n_features, n_features):
                 raise RuntimeError("The shape of causal_graph must be (n_features, n_features)")
-            
+
             causal_graph[np.isnan(causal_graph)] = 0
         except Exception as e:
             raise ValueError("causal_graph has an error: " + str(e))
 
         return causal_graph
+
 
 class CBSITimeSeriesLiNGAM(CBSILiNGAM):
     """ Class for data handling for VARLiNGAM. """
@@ -743,7 +741,7 @@ class CBSITimeSeriesLiNGAM(CBSILiNGAM):
         endog_names = []
         for i in range(self._n_lags + 1):
             if i == 0:
-                index_format = f"[t]"
+                index_format = "[t]"
             else:
                 index_format = f"[t-{i}]"
             endog_names += [name + index_format for name in endog_names_]
@@ -758,6 +756,7 @@ class CBSITimeSeriesLiNGAM(CBSILiNGAM):
 
         return endog_names, discrete_endog_names
 
+
 class _LinearRegression():
     """ Linear regression model with configurable coefficients """
 
@@ -771,7 +770,8 @@ class _LinearRegression():
 
     @property
     def coef_(self):
-        return coef_
+        return self._coef
+
 
 class _LogisticRegression():
     """ Logistic regression model with configurable coefficients """
@@ -786,4 +786,4 @@ class _LogisticRegression():
 
     @property
     def coef_(self):
-        return coef_
+        return self._coef
