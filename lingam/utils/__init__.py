@@ -182,7 +182,7 @@ def get_exo_variables(adjacency_matrix):
     return exo_vars
 
 
-def remove_effect(X, remove_features, return_coef=False):
+def remove_effect(X, remove_features, return_coefs=False):
     """Create a dataset that removes the effects of features by linear regression.
 
     Parameters
@@ -190,26 +190,29 @@ def remove_effect(X, remove_features, return_coef=False):
     X : array-like, shape (n_samples, n_features)
         Data, where ``n_samples`` is the number of samples
         and ``n_features`` is the number of features.
-    remove_features : array-like
+    remove_features : array-like, shape (n_removes,)
         List of features(index) to remove effects.
-    return_coef : bool, optional (default=False)
+    return_coefs : bool, optional (default=False)
         Return regression coefficients or not.
 
     Returns
     -------
     X : array-like, shape (n_samples, n_features)
         Data after removing effects of ``remove_features``.
+    coefs : array-like, shape (n_features, n_removes), optional
+        Coefficients estimated by linear regression.
+        Only provided if return_coefs is True.
     """
     X = np.copy(check_array(X))
-    coef = []
+    coefs = []
     features_ = [i for i in np.arange(X.shape[1]) if i not in remove_features]
     for feature in features_:
         reg = linear_model.LinearRegression()
         reg.fit(X[:, remove_features], X[:, feature])
         X[:, feature] = X[:, feature] - reg.predict(X[:, remove_features])
-        coef.append(reg.coef_)
-    if return_coef:
-        return X, np.array(coef)
+        coefs.append(reg.coef_)
+    if return_coefs:
+        return X, np.array(coefs)
     return X
 
 
