@@ -202,8 +202,9 @@ def remove_effect(X, remove_features, return_coefs=False):
     coefs : dict, optional
         Coefficients estimated by linear regression.
         The keys are indices of remaining features and
-        the values are coefficients of removed features.
-        Only provided if return_coefs is True.
+        the values are lists of coefficients of removed features.
+        The order of the coefficients in the list is the same
+        as in remove_features. Only provided if return_coefs is True.
     """
     X = np.copy(check_array(X))
     coefs = {}
