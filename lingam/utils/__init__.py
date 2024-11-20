@@ -199,20 +199,22 @@ def remove_effect(X, remove_features, return_coefs=False):
     -------
     X : array-like, shape (n_samples, n_features)
         Data after removing effects of ``remove_features``.
-    coefs : array-like, shape (n_features, n_removes), optional
+    coefs : dict, optional
         Coefficients estimated by linear regression.
+        The keys are indices of remaining features and
+        the values are coefficients of removed features.
         Only provided if return_coefs is True.
     """
     X = np.copy(check_array(X))
-    coefs = []
+    coefs = {}
     features_ = [i for i in np.arange(X.shape[1]) if i not in remove_features]
     for feature in features_:
         reg = linear_model.LinearRegression()
         reg.fit(X[:, remove_features], X[:, feature])
         X[:, feature] = X[:, feature] - reg.predict(X[:, remove_features])
-        coefs.append(reg.coef_)
+        coefs[feature] = reg.coef_
     if return_coefs:
-        return X, np.array(coefs)
+        return X, coefs
     return X
 
 
