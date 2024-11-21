@@ -84,6 +84,17 @@ def test_remove_effect():
 
     remove_effect(X, remove_features=[0])
 
+    # return_coefs
+    remove_features = [0]
+    remaining_features = [1, 2, 3]
+    _, coefs = remove_effect(X, remove_features=remove_features, return_coefs=True)
+
+    if list(coefs.keys()) != remaining_features:
+        raise AssertionError
+
+    for _, coef_list in coefs.items():
+        if len(coef_list) != len(remove_features):
+            raise AssertionError
 
 def test_make_dot():
     # default
