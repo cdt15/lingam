@@ -84,7 +84,7 @@ class LongitudinalLiNGAM:
             (self._T, 1 + self._n_lags, self._p, self._p)
         )
         self._adjacency_matrices[:, :] = np.nan
-        for t in range(1, self._T):
+        for t in range(self._n_lags, self._T):
             self._adjacency_matrices[t, 0] = B_t[t]
             for l in range(self._n_lags):
                 if t - l != 0:
@@ -312,26 +312,17 @@ class LongitudinalLiNGAM:
         N_t = np.zeros((self._T, self._p, self._n))
         N_t[:, :, :] = np.nan
 
-        for t in range(1, self._T):
-            # predictors
-            X_predictors = np.zeros((self._n, self._p * (1 + self._n_lags)))
-            for tau in range(self._n_lags):
-                pos = self._p * tau
-                X_predictors[:, pos : pos + self._p] = X_t[t - (tau + 1)].T
+        X_t = np.array(X_t)
 
-            # estimate M(t,t-τ) by regression
-            X_target = X_t[t].T
-            for i in range(self._p):
-                reg = LinearRegression()
-                reg.fit(X_predictors, X_target[:, i])
-                for tau in range(self._n_lags):
-                    pos = self._p * tau
-                    M_tau[t, tau, i] = reg.coef_[pos : pos + self._p]
+        for t in range(self._n_lags, self._T):
+            X = np.vstack(X_t[t - self._n_lags:t])
+            y = X_t[t]
 
-            # Compute N(t)
-            N_t[t] = X_t[t]
-            for tau in range(self._n_lags):
-                N_t[t] = N_t[t] - np.dot(M_tau[t, tau], X_t[t - (tau + 1)])
+            reg = LinearRegression()
+            reg.fit(X.T, y.T)
+
+            M_tau[t, :self._n_lags] = np.split(reg.coef_, self._n_lags, axis=1)
+            N_t[t] = X_t[t] - reg.coef_ @ X
 
         return M_tau, N_t
 
@@ -339,7 +330,7 @@ class LongitudinalLiNGAM:
         """Estimate instantaneous effects B(t,t) by applying LiNGAM"""
         causal_orders = [[np.nan] * self._p]
         B_t = np.zeros((self._T, self._p, self._p))
-        for t in range(1, self._T):
+        for t in range(self._n_lags, self._T):
             model = DirectLiNGAM(measure=self._measure)
             model.fit(N_t[t].T)
             causal_orders.append(model.causal_order_)
@@ -349,7 +340,7 @@ class LongitudinalLiNGAM:
     def _estimate_lagged_effects(self, B_t, M_tau):
         """Estimate lagged effects B(t,t-τ)"""
         B_tau = np.zeros((self._T, self._n_lags, self._p, self._p))
-        for t in range(self._T):
+        for t in range(self._n_lags, self._T):
             for tau in range(self._n_lags):
                 B_tau[t, tau] = np.dot(np.eye(self._p) - B_t[t], M_tau[t, tau])
         return B_tau
