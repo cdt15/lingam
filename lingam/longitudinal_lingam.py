@@ -328,7 +328,7 @@ class LongitudinalLiNGAM:
 
     def _estimate_instantaneous_effects(self, N_t):
         """Estimate instantaneous effects B(t,t) by applying LiNGAM"""
-        causal_orders = [[np.nan] * self._p]
+        causal_orders = [[np.nan] * self._p for _ in range(self._n_lags)]
         B_t = np.zeros((self._T, self._p, self._p))
         for t in range(self._n_lags, self._T):
             model = DirectLiNGAM(measure=self._measure)
