@@ -70,6 +70,10 @@ def test_fit_success():
     p_values = model.get_error_independence_p_values()
     resid = model.residuals_
 
+    # prior knowledge
+    pk = np.ones((3, 2, 4, 4)) * -1
+    model = LongitudinalLiNGAM(prior_knowledge=pk)
+    model.fit(X_list)
 
 def test_fit_invalid_data():
     # Different features
@@ -234,6 +238,17 @@ def test_fit_invalid_data():
 
     try:
         model = LongitudinalLiNGAM()
+        model.fit(X_list)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # prior knowledge
+    pk = np.ones((3, 2, 4, 4)) * -1
+    try:
+        # pk.shape[1] != n_lags + 1
+        model = LongitudinalLiNGAM(n_lags=10, prior_knowledge=pk)
         model.fit(X_list)
     except ValueError:
         pass
