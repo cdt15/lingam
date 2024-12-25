@@ -25,13 +25,21 @@ class LongitudinalLiNGAM:
        Workshop on Machine Learning for Signal Processing (MLSP2013), pp. 1--6, Southampton, United Kingdom, 2013.
     """
 
-    def __init__(self, n_lags=1, measure="pwling", random_state=None):
+    def __init__(self, n_lags=1, prior_knowledge=None, measure="pwling", random_state=None):
         """Construct a model.
 
         Parameters
         ----------
         n_lags : int, optional (default=1)
             Number of lags.
+        prior_knowledge : array-like, shape (T, n_lags + 1, n_features, n_features), optional (default=None)
+            Prior knowledge used for causal discovery, where ``n_features`` is the number of features.
+
+            The elements of prior knowledge matrix are defined as follows [1]_:
+
+            * ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
+            * ``1`` : :math:`x_i` has a directed path to :math:`x_j`
+            * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
         measure : {'pwling', 'kernel'}, default='pwling'
             Measure to evaluate independence : 'pwling' or 'kernel'.
         random_state : int, optional (default=None)
@@ -42,6 +50,12 @@ class LongitudinalLiNGAM:
         self._random_state = random_state
         self._causal_orders = None
         self._adjacency_matrices = None
+
+        if prior_knowledge is not None:
+            prior_knowledge = check_array(prior_knowledge, ensure_2d=False, allow_nd=True)
+            if len(prior_knowledge.shape) != 4:
+                raise ValueError("prior_knowledge must be 4D.")
+        self._Aknw = prior_knowledge
 
     def fit(self, X_list):
         """Fit the model to datasets.
@@ -75,25 +89,106 @@ class LongitudinalLiNGAM:
                 raise ValueError("X_list must be a list with the same shape")
             X_t.append(X.T)
 
-        M_tau, N_t = self._compute_residuals(X_t)
-        B_t, causal_orders = self._estimate_instantaneous_effects(N_t)
-        B_tau = self._estimate_lagged_effects(B_t, M_tau)
+        n_taus = self._n_lags + 1
 
-        # output B(t,t), B(t,t-τ)
-        self._adjacency_matrices = np.empty(
-            (self._T, 1 + self._n_lags, self._p, self._p)
-        )
-        self._adjacency_matrices[:, :] = np.nan
-        for t in range(self._n_lags, self._T):
-            self._adjacency_matrices[t, 0] = B_t[t]
-            for l in range(self._n_lags):
-                if t - l != 0:
-                    self._adjacency_matrices[t, l + 1] = B_tau[t, l]
+        if self._Aknw is None:
+            M_tau, N_t = self._compute_residuals(X_t)
+            B_t, causal_orders = self._estimate_instantaneous_effects(N_t)
+            B_tau = self._estimate_lagged_effects(B_t, M_tau)
 
-        self._residuals = np.zeros((self._T, self._n, self._p))
-        for t in range(self._T):
-            self._residuals[t] = N_t[t].T
-        self._causal_orders = causal_orders
+            # output B(t,t), B(t,t-τ)
+            self._adjacency_matrices = np.empty(
+                (self._T, n_taus, self._p, self._p)
+            )
+            self._adjacency_matrices[:, :] = np.nan
+            for t in range(self._n_lags, self._T):
+                self._adjacency_matrices[t, 0] = B_t[t]
+                for l in range(self._n_lags):
+                    if t - l != 0:
+                        self._adjacency_matrices[t, l + 1] = B_tau[t, l]
+
+            self._residuals = np.zeros((self._T, self._n, self._p))
+            for t in range(self._T):
+                self._residuals[t] = N_t[t].T
+            self._causal_orders = causal_orders
+        else:
+            if (self._T, n_taus, self._p, self._p) != self._Aknw.shape:
+                raise ValueError(
+                    "The shape of prior knowledge must be (T, n_lags + 1, n_features, n_features)"
+                )
+
+            X_t = np.vstack(X_t)
+
+            # estimate only instantaneous and lag effects
+            pk = np.zeros((self._T * self._p, self._T * self._p))
+            for t in range(self._T):
+                col_end = (t + 1) * self._p
+                col_start = max(col_end - self._p * n_taus, 0)
+                pk[
+                    t * self._p : (t + 1) * self._p,
+                    col_start : col_end
+                ] = -1
+
+            # apply the given prior knowledge
+            for t in range(self._T):
+                for tau in range(n_taus):
+                    if t < tau:
+                        continue
+
+                    ix = np.ix_(
+                        np.arange(
+                            t * self._p,
+                            (t + 1) * self._p
+                        ),
+                        np.arange(
+                            (t - tau) * self._p,
+                            (t - tau + 1) * self._p
+                        )
+                    )
+
+                    temp = pk[ix]
+                    temp[self._Aknw[t, tau] == 0] = 0
+                    temp[self._Aknw[t, tau] == 1] = 1
+                    pk[ix] = temp
+
+            model = DirectLiNGAM(
+                prior_knowledge=pk,
+                measure=self._measure,
+                random_state=self._random_state
+            )
+            model.fit(X_t.T)
+
+            # split the estimated adjacency matrix
+            adj = np.array(np.split(model.adjacency_matrix_, self._T, axis=1))
+            adj = np.array(np.split(adj, self._T, axis=1))
+
+            # construct output matrices
+            adjs = np.zeros((self._T, n_taus, self._p, self._p))
+            for t in range(self._n_lags, self._T):
+                for lag in range(n_taus):
+                    adjs[t, lag] = adj[t, t - lag]
+            adjs[:self._n_lags] = np.nan
+            adjs[:, 1:] = adjs[:, 1:][:, ::-1]
+
+            # make causal_orders
+            causal_orders = []
+            for t in range(self._T):
+                if t < self._n_lags:
+                    causal_orders.append([np.nan for _ in range(self._p)])
+                    continue
+
+                # extract causal_order at time t
+                targets = range(t * self._p, (t + 1) * self._p)
+                filter_ = list(map(lambda x: x in targets, model.causal_order_))
+                causal_order = np.array(model.causal_order_)[filter_]
+
+                # make numbers start from zero
+                causal_order = causal_order - min(causal_order)
+                causal_orders.append(causal_order.tolist())
+
+            self._adjacency_matrices = adjs
+            self._causal_orders = causal_orders
+
         return self
 
     def bootstrap(self, X_list, n_sampling, start_from_t=1):
