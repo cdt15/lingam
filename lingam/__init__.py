@@ -21,6 +21,7 @@ from .varma_lingam import VARMABootstrapResult, VARMALiNGAM
 from .lina import LiNA
 from .lina import MDLiNA
 from .high_dim_direct_lingam import HighDimDirectLiNGAM
+from .multi_group_camuv import MultiGroupCAMUV
 
 __all__ = [
     "ICALiNGAM",
@@ -44,6 +45,7 @@ __all__ = [
     "LiNA",
     "MDLiNA",
     "HighDimDirectLiNGAM",
+    "MultiGroupCAMUV",
 ]
 
 __version__ = "1.9.1"
