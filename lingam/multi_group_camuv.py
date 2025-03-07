@@ -8,14 +8,15 @@ import itertools
 
 import numpy as np
 from pygam import LinearGAM
+from scipy.stats import chi2
 from sklearn.utils import check_array
 
 from .hsic import hsic_test_gamma
 from .utils import f_correlation
 
 
-class CAMUV:
-    """Implementation of CAM-UV Algorithm [1]_ [2]_
+class MultiGroupCAMUV:
+    """Implementation of CAM-UV Algorithm with multiple groups [1]_ [2]_ [3]_
 
     References
     ----------
@@ -23,6 +24,7 @@ class CAMUV:
        In Proc. Thirty-Seventh Conference on Uncertainty in Artificial Intelligence (UAI). PMLR  161:97-106, 2021.
     .. [2] T. N. Maeda and S. Shimizu. Use of prior knowledge to discover causal additive models with unobserved
        variables and its application to time series data. Behaviormetrika, xx(xx): 1-19, 2024.
+    .. [3] S. Shimizu. Joint estimation of linear non-Gaussian acyclic models. Neurocomputing, 81: 104-107, 2012.
     """
 
     def __init__(
@@ -71,29 +73,29 @@ class CAMUV:
         self._ind_corr = ind_corr
         self._pk_dict = self._make_pk_dict(prior_knowledge)
 
-    def fit(self, X):
-        """Fit the model to X.
+    def fit(self, X_list):
+        """Fit the model to multiple datasets.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
-            Training data, where ``n_samples`` is the number of samples
-            and ``n_features`` is the number of features.
+        X_list : list, shape [X, ...]
+            Multiple datasets for training, where ``X`` is an dataset.
+            The shape of ''X'' is (n_samples, n_features),
+            where ``n_samples`` is the number of samples and ``n_features`` is the number of features.
 
         Returns
         -------
         self : object
             Returns the instance itself.
         """
-        X = check_array(X)
 
-        n = X.shape[0]
-        d = X.shape[1]
-        N = self._get_neighborhoods(X)
-        P = self._find_parents(X, self._num_explanatory_vals, N)
+        X_list = self._check_X_list(X_list)
+
+        d = X_list[0].shape[1]
+        N = self._get_neighborhoods(X_list)
+        P = self._find_parents(X_list, self._num_explanatory_vals, N)
 
         U = []
-
         for i in range(d):
             for j in range(d)[i + 1 :]:
                 if (i in P[j]) or (j in P[i]):
@@ -101,18 +103,23 @@ class CAMUV:
                 if (i not in N[j]) or (j not in N[i]):
                     continue
 
-                i_residual = self._get_residual(X, i, P[i])
-                j_residual = self._get_residual(X, j, P[j])
-                in_X = np.reshape(i_residual, [n, 1])
-                in_Y = np.reshape(j_residual, [n, 1])
-                if not self._is_independent(in_X, in_Y):
+                in_X_list = []
+                in_Y_list = []
+                for X in X_list:
+                    n = X.shape[0]
+                    i_residual = self._get_residual(X, i, P[i])
+                    j_residual = self._get_residual(X, j, P[j])
+                    in_X_list.append(np.reshape(i_residual, [n, 1]))
+                    in_Y_list.append(np.reshape(j_residual, [n, 1]))
+
+                if not self._is_independent(in_X_list, in_Y_list):
                     if not set([i, j]) in U:
                         U.append(set([i, j]))
 
         self._U = U
         self._P = P
 
-        return self._estimate_adjacency_matrix(X, P, U)
+        return self._estimate_adjacency_matrix(X_list[0], P, U)
 
     def _make_pk_dict(self, prior_knowledge):
         if prior_knowledge is None:
@@ -126,6 +133,27 @@ class CAMUV:
                 pk_dict[pair[1]].append(pair[0])
         return pk_dict
 
+    def _check_X_list(self, X_list):
+        """Check input X list."""
+        if not isinstance(X_list, list):
+            raise ValueError("X_list must be a list.")
+
+        if len(X_list) < 2:
+            raise ValueError("X_list must be a list containing at least two items")
+
+        self._k = len(X_list)
+        self._n_features = check_array(X_list[0]).shape[1]
+        X_list_ = []
+        for X in X_list:
+            X_ = check_array(X)
+            if X_.shape[1] != self._n_features:
+                raise ValueError(
+                    "X_list must be a list with the same number of features"
+                )
+            X_list_.append(X_)
+
+        return X_list_
+
     def _get_residual(self, X, explained_i, explanatory_ids):
         explanatory_ids = list(explanatory_ids)
 
@@ -136,43 +164,58 @@ class CAMUV:
             residual = X[:, explained_i] - gam.predict(X[:, explanatory_ids])
         return residual
 
-    def _is_independent(self, X, Y):
+    def _is_independent(self, X_list, Y_list):
         if self._independence == "hsic":
             threshold = self._alpha
         elif self._independence == "fcorr":
             threshold = self._ind_corr
-        is_independent, _ = self._is_independent_by(X, Y, threshold)
+        is_independent, _ = self._is_independent_by(X_list, Y_list, threshold)
         return is_independent
 
-    def _is_independent_by(self, X, Y, threshold):
+    def _is_independent_by(self, X_list, Y_list, threshold):
         is_independent = False
+        value = 0.0
         if self._independence == "hsic":
-            _, value = hsic_test_gamma(X, Y)
-            is_independent = value > threshold
+            fisher_stat = 0
+            for X, Y in zip(X_list, Y_list):
+                _, hsic_p = hsic_test_gamma(X, Y)
+                fisher_stat += np.inf if hsic_p == 0 else -2 * np.log(hsic_p)
+            fisher_p = chi2.sf(fisher_stat, df=2 * self._k)
+            is_independent = fisher_p > threshold
+            value = fisher_p
         elif self._independence == "fcorr":
-            value = f_correlation(X, Y)
-            is_independent = value < threshold
+            max_f_corr = 0.0
+            for X, Y in zip(X_list, Y_list):
+                f_corr = f_correlation(X, Y)
+                if f_corr > max_f_corr:
+                    max_f_corr = f_corr
+            is_independent = max_f_corr < threshold
+            value = max_f_corr
         return is_independent, value
 
-    def _get_neighborhoods(self, X):
-        n = X.shape[0]
-        d = X.shape[1]
+    def _get_neighborhoods(self, X_list):
+        d = X_list[0].shape[1]
         N = [set() for i in range(d)]
         for i in range(d):
             for j in range(d)[i + 1 :]:
-                in_X = np.reshape(X[:, i], [n, 1])
-                in_Y = np.reshape(X[:, j], [n, 1])
-                if not self._is_independent(in_X, in_Y):
+
+                in_X_list = []
+                in_Y_list = []
+                for X in X_list:
+                    n = X.shape[0]
+                    in_X_list.append(np.reshape(X[:, i], [n, 1]))
+                    in_Y_list.append(np.reshape(X[:, j], [n, 1]))
+
+                if not self._is_independent(in_X_list, in_Y_list):
                     N[i].add(j)
                     N[j].add(i)
         return N
 
-    def _find_parents(self, X, maxnum_vals, N):
-        n = X.shape[0]
-        d = X.shape[1]
+    def _find_parents(self, X_list, maxnum_vals, N):
+        d = X_list[0].shape[1]
         P = [set() for i in range(d)]  # Parents
         t = 2
-        Y = copy.deepcopy(X)
+        Y_list = [copy.deepcopy(X) for X in X_list]
 
         while True:
             changed = False
@@ -184,7 +227,7 @@ class CAMUV:
                     continue
 
                 child, is_independence_with_K = self._get_child(
-                    X, variables_set, P, N, Y
+                    X_list, variables_set, P, N, Y_list
                 )
                 if child is None:
                     continue
@@ -192,13 +235,16 @@ class CAMUV:
                     continue
 
                 parents = variables_set - {child}
-                if not self._check_independence_withou_K(parents, child, P, N, Y):
+                if not self._check_independence_withou_K(parents, child, P, N, Y_list):
                     continue
 
                 for parent in parents:
                     P[child].add(parent)
                     changed = True
-                    Y = self._get_residuals_matrix(X, Y, P, child)
+                    Y_list_ = []
+                    for X, Y in zip(X_list, Y_list):
+                        Y_list_.append(self._get_residuals_matrix(X, Y, P, child))
+                    Y_list = Y_list_
 
             if changed:
                 t = 2
@@ -210,11 +256,17 @@ class CAMUV:
         for i in range(d):
             non_parents = set()
             for j in P[i]:
-                residual_i = self._get_residual(X, i, P[i] - {j})
-                residual_j = self._get_residual(X, j, P[j])
-                in_X = np.reshape(residual_i, [n, 1])
-                in_Y = np.reshape(residual_j, [n, 1])
-                if self._is_independent(in_X, in_Y):
+
+                in_X_list = []
+                in_Y_list = []
+                for X in X_list:
+                    n = X.shape[0]
+                    residual_i = self._get_residual(X, i, P[i] - {j})
+                    residual_j = self._get_residual(X, j, P[j])
+                    in_X_list.append(np.reshape(residual_i, [n, 1]))
+                    in_Y_list.append(np.reshape(residual_j, [n, 1]))
+
+                if self._is_independent(in_X_list, in_Y_list):
                     non_parents.add(j)
             P[i] = P[i] - non_parents
 
@@ -232,9 +284,7 @@ class CAMUV:
         Y[:, child] = self._get_residual(X, child, P[child])
         return Y
 
-    def _get_child(self, X, variables_set, P, N, Y):
-        n = X.shape[0]
-
+    def _get_child(self, X_list, variables_set, P, N, Y_list):
         prev_independence = 0.0 if self._independence == "hsic" else 1.0
         max_independence_child = None
 
@@ -247,10 +297,17 @@ class CAMUV:
             if not self._check_correlation(child, parents, N):
                 continue
 
-            residual = self._get_residual(X, child, parents | P[child])
-            in_X = np.reshape(residual, [n, 1])
-            in_Y = np.reshape(Y[:, list(parents)], [n, len(parents)])
-            is_ind, value = self._is_independent_by(in_X, in_Y, prev_independence)
+            in_X_list = []
+            in_Y_list = []
+            for X, Y in zip(X_list, Y_list):
+                n = X.shape[0]
+                residual = self._get_residual(X, child, parents | P[child])
+                in_X_list.append(np.reshape(residual, [n, 1]))
+                in_Y_list.append(np.reshape(Y[:, list(parents)], [n, len(parents)]))
+
+            is_ind, value = self._is_independent_by(
+                in_X_list, in_Y_list, prev_independence
+            )
             if is_ind:
                 prev_independence = value
                 max_independence_child = child
@@ -262,12 +319,17 @@ class CAMUV:
 
         return max_independence_child, is_independent
 
-    def _check_independence_withou_K(self, parents, child, P, N, Y):
-        n = Y.shape[0]
+    def _check_independence_withou_K(self, parents, child, P, N, Y_list):
         for parent in parents:
-            in_X = np.reshape(Y[:, child], [n, 1])
-            in_Y = np.reshape(Y[:, parent], [n, 1])
-            if self._is_independent(in_X, in_Y):
+
+            in_X_list = []
+            in_Y_list = []
+            for Y in Y_list:
+                n = Y.shape[0]
+                in_X_list.append(np.reshape(Y[:, child], [n, 1]))
+                in_Y_list.append(np.reshape(Y[:, parent], [n, 1]))
+
+            if self._is_independent(in_X_list, in_Y_list):
                 return False
         return True
 

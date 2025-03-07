@@ -66,33 +66,39 @@ def create_data(n):
     return data
 
 def test_fit_success():
-    X = create_data(200)
-    model = lingam.CAMUV()
-    model.fit(X)
+    X1 = create_data(200)
+    X2 = create_data(200)
+    X_list = [X1, X2]
+    model = lingam.MultiGroupCAMUV()
+    model.fit(X_list)
     print(model.adjacency_matrix_)
 
     # f-correlation
-    model = lingam.CAMUV(independence="fcorr", ind_corr=0.5)
-    model.fit(X)
+    model = lingam.MultiGroupCAMUV(independence="fcorr", ind_corr=0.5)
+    model.fit(X_list)
 
     # prior_knowledge
-    model = lingam.CAMUV(prior_knowledge=[(1, 0)])
-    model.fit(X)
+    model = lingam.MultiGroupCAMUV(prior_knowledge=[(1, 0)])
+    model.fit(X_list)
 
 def test_fit_invalid():
     try:
-        X = create_data(200)
-        model = lingam.CAMUV(alpha=-1)
-        model.fit(X)
+        X1 = create_data(200)
+        X2 = create_data(200)
+        X_list = [X1, X2]
+        model = lingam.MultiGroupCAMUV(alpha=-1)
+        model.fit(X_list)
     except ValueError:
         pass
     else:
         raise AssertionError
 
     try:
-        X = create_data(200)
-        model = lingam.CAMUV(num_explanatory_vals=-1)
-        model.fit(X)
+        X1 = create_data(200)
+        X2 = create_data(200)
+        X_list = [X1, X2]
+        model = lingam.MultiGroupCAMUV(num_explanatory_vals=-1)
+        model.fit(X_list)
     except ValueError:
         pass
     else:
@@ -100,8 +106,8 @@ def test_fit_invalid():
 
     # Invalid value: independence
     try:
-        model = lingam.CAMUV(independence="lingam")
-        model.fit(X)
+        model = lingam.MultiGroupCAMUV(independence="lingam")
+        model.fit(X_list)
     except ValueError:
         pass
     else:
@@ -109,8 +115,8 @@ def test_fit_invalid():
 
     try:
         X = create_data(200)
-        model = lingam.CAMUV(ind_corr=-1.0)
-        model.fit(X)
+        model = lingam.MultiGroupCAMUV(ind_corr=-1.0)
+        model.fit(X_list)
     except ValueError:
         pass
     else:

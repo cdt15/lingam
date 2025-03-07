@@ -27,14 +27,15 @@ Contents:
     bottom_up_parce
     pk_bottom_up_parce
     rcd
-    draw_graph
+    camuv
+    multi_group_rcd
+    multi_group_camuv
     lina
     resit
     lim
-    camuv
-    multi_group_rcd
     extract_ancestors
     f_correlation
+    draw_graph
     visualize_nonlinear_causal_effect
     evaluate_model_fit
     bootstrap_with_imputation

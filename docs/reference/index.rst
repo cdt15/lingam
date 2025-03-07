@@ -9,6 +9,7 @@ API Reference
     ica_lingam
     direct_lingam
     multi_group_direct_lingam
+    high_dim_direct_lingam
     var_lingam
     varma_lingam
     longitudinal_lingam
@@ -18,12 +19,12 @@ API Reference
     longitudinal_bootstrap
     bottom_up_parce_lingam
     rcd
-    causal_effect
-    utils
+    camuv
+    multi_group_rcd
+    multi_group_camuv
     lina
     resit
     lim
-    camuv
-    multi_group_rcd
+    causal_effect
+    utils
     tools
-    high_dim_direct_lingam
