@@ -66,7 +66,7 @@ def create_data(n):
     return data
 
 def test_fit_success():
-    X = create_data(2000)
+    X = create_data(200)
     model = lingam.CAMUV()
     model.fit(X)
     print(model.adjacency_matrix_)
@@ -75,10 +75,13 @@ def test_fit_success():
     model = lingam.CAMUV(independence="fcorr", ind_corr=0.5)
     model.fit(X)
 
+    # prior_knowledge
+    model = lingam.CAMUV(prior_knowledge=[(1, 0)])
+    model.fit(X)
 
 def test_fit_invalid():
     try:
-        X = create_data(2000)
+        X = create_data(200)
         model = lingam.CAMUV(alpha=-1)
         model.fit(X)
     except ValueError:
@@ -87,7 +90,7 @@ def test_fit_invalid():
         raise AssertionError
 
     try:
-        X = create_data(2000)
+        X = create_data(200)
         model = lingam.CAMUV(num_explanatory_vals=-1)
         model.fit(X)
     except ValueError:
@@ -105,7 +108,7 @@ def test_fit_invalid():
         raise AssertionError
 
     try:
-        X = create_data(2000)
+        X = create_data(200)
         model = lingam.CAMUV(ind_corr=-1.0)
         model.fit(X)
     except ValueError:

@@ -3,7 +3,6 @@ Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 """
 
-
 import copy
 import itertools
 
@@ -16,16 +15,23 @@ from .utils import f_correlation
 
 
 class CAMUV:
-    """Implementation of CAM-UV Algorithm [1]_
+    """Implementation of CAM-UV Algorithm [1]_ [2]_
 
     References
     ----------
     .. [1] T.N.Maeda and S.Shimizu. Causal additive models with unobserved variables.
        In Proc. Thirty-Seventh Conference on Uncertainty in Artificial Intelligence (UAI). PMLR  161:97-106, 2021.
+    .. [2] T. N. Maeda and S. Shimizu. Use of prior knowledge to discover causal additive models with unobserved
+       variables and its application to time series data. Behaviormetrika, xx(xx): 1-19, 2024.
     """
 
     def __init__(
-        self, alpha=0.01, num_explanatory_vals=2, independence="hsic", ind_corr=0.5
+        self,
+        alpha=0.01,
+        num_explanatory_vals=2,
+        independence="hsic",
+        ind_corr=0.5,
+        prior_knowledge=None,
     ):
         """Construct a CAM-UV model.
 
@@ -41,6 +47,9 @@ class CAMUV:
         ind_corr : float, optional (default=0.5)
             The threshold value for determining independence by F-correlation;
             independence is determined when the value of F-correlation is below this threshold value.
+        prior_knowledge : array-like, shape ((index, index), ...), optional (default=None)
+            List of variable pairs indicating prior knowledge.
+            If (0, 3) is included , it means that X0 cannot be a cause of X3.
         """
 
         # Check parameters
@@ -60,8 +69,22 @@ class CAMUV:
         self._alpha = alpha
         self._independence = independence
         self._ind_corr = ind_corr
+        self._pk_dict = self._make_pk_dict(prior_knowledge)
 
     def fit(self, X):
+        """Fit the model to X.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Training data, where ``n_samples`` is the number of samples
+            and ``n_features`` is the number of features.
+
+        Returns
+        -------
+        self : object
+            Returns the instance itself.
+        """
         X = check_array(X)
 
         n = X.shape[0]
@@ -86,7 +109,22 @@ class CAMUV:
                     if not set([i, j]) in U:
                         U.append(set([i, j]))
 
+        self._U = U
+        self._P = P
+
         return self._estimate_adjacency_matrix(X, P, U)
+
+    def _make_pk_dict(self, prior_knowledge):
+        if prior_knowledge is None:
+            return None
+
+        pk_dict = dict()
+        for pair in prior_knowledge:
+            if not pair[1] in pk_dict:
+                pk_dict[pair[1]] = [pair[0]]
+            else:
+                pk_dict[pair[1]].append(pair[0])
+        return pk_dict
 
     def _get_residual(self, X, explained_i, explanatory_ids):
         explanatory_ids = list(explanatory_ids)
@@ -148,6 +186,8 @@ class CAMUV:
                 child, is_independence_with_K = self._get_child(
                     X, variables_set, P, N, Y
                 )
+                if child is None:
+                    continue
                 if not is_independence_with_K:
                     continue
 
@@ -180,6 +220,13 @@ class CAMUV:
 
         return P
 
+    def _check_prior_knowledge(self, xj_list, xi):
+        if self._pk_dict is not None:
+            for xj in xj_list:
+                if (xi in self._pk_dict) and (xj in self._pk_dict[xi]):
+                    return True
+        return False
+
     def _get_residuals_matrix(self, X, Y_old, P, child):
         Y = copy.deepcopy(Y_old)
         Y[:, child] = self._get_residual(X, child, P[child])
@@ -193,6 +240,9 @@ class CAMUV:
 
         for child in variables_set:
             parents = variables_set - {child}
+
+            if self._check_prior_knowledge(parents, child):
+                continue
 
             if not self._check_correlation(child, parents, N):
                 continue
