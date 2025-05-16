@@ -145,14 +145,15 @@ class VARLiNGAM:
         self.fit(X)
 
         fitted_ar_coefs = self._ar_coefs
-
+        residuals = self._residuals
+        
         total_effects = np.zeros(
             [n_sampling, n_features, n_features * (1 + self._lags)]
         )
 
         adjacency_matrices = []
         for i in range(n_sampling):
-            sampled_residuals = resample(self._residuals, n_samples=n_samples)
+            sampled_residuals = resample(residuals, n_samples=n_samples)
 
             resampled_X = np.zeros((n_samples, n_features))
             for j in range(n_samples):
