@@ -96,6 +96,10 @@ class VARLiNGAM:
         else:
             lags = M_taus.shape[0]
             residuals = self._calc_residuals(X, M_taus, lags)
+            
+        self._ar_coefs = M_taus
+        self._lags = lags
+        self._residuals = residuals
 
         model = lingam_model
         model.fit(residuals)
@@ -104,10 +108,6 @@ class VARLiNGAM:
 
         if self._prune:
             B_taus = self._pruning(X, B_taus, model.causal_order_)
-
-        self._ar_coefs = M_taus
-        self._lags = lags
-        self._residuals = residuals
 
         self._causal_order = model.causal_order_
         self._adjacency_matrices = B_taus
