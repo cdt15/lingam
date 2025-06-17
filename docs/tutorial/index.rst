@@ -32,6 +32,7 @@ Contents:
     multi_group_camuv
     lina
     resit
+    pk_resit
     lim
     extract_ancestors
     f_correlation
