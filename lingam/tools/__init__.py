@@ -275,7 +275,7 @@ def _check_cd_output(cd_output, n_repeats, n_features):
         raise ValueError("Elements of causal_order, the output of cd_model, must be unique and must be indicates a column number.")
 
     try:
-        adjacency_matrices = check_array(adjacency_matrices, allow_nd=True)
+        adjacency_matrices = check_array(adjacency_matrices, ensure_all_finite="allow-nan", allow_nd=True)
     except Exception as e:
         raise ValueError("adjacency_matrices, the output of cd_model, violates its specification: " + str(e))
 
