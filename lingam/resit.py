@@ -164,13 +164,13 @@ class RESIT(_BaseLiNGAM):
             for l in parents:
                 # Regress Xk on {Xi}
                 predictors = [i for i in pa[pi[k]] if i != l]
-                # if len(predictors) <= 1:
-                if len(predictors) < 1:
-                    continue
-                self._reg.fit(X[:, predictors], X[:, pi[k]])
-                residual = X[:, pi[k]] - self._reg.predict(X[:, predictors])
+                if len(predictors) >= 1:
+                    self._reg.fit(X[:, predictors], X[:, pi[k]])
+                    residual = X[:, pi[k]] - self._reg.predict(X[:, predictors])
+                else:
+                    residual = X[:, pi[k]]
                 # Measure dependence between residuals and {Xi}
-                _, hsic_p = hsic_test_gamma(residual, X[:, predictors])
+                _, hsic_p = hsic_test_gamma(residual, X[:, predictors+[l]])
                 # eliminate edge
                 if hsic_p > self._alpha:
                     pa[pi[k]].remove(l)
