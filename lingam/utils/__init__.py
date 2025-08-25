@@ -22,6 +22,7 @@ from sklearn.utils import check_array, check_scalar
 from ._rcd import extract_ancestors
 from ._f_correlation import f_correlation
 from ._visualize_nonlinear_causal_effect import visualize_nonlinear_causal_effect
+from ._common_edge import get_common_edge_probabilities, print_common_edge_directions, make_dot_for_nan_probability_matrix
 
 __all__ = [
     "print_causal_directions",
@@ -43,6 +44,9 @@ __all__ = [
     "evaluate_model_fit",
     "calculate_distance_from_root_nodes",
     "calculate_total_effect",
+    "get_common_edge_probabilities",
+    "print_common_edge_directions",
+    "make_dot_for_nan_probability_matrix",
 ]
 
 
