@@ -4,6 +4,7 @@ import networkx as nx
 from matplotlib.colors import is_color_like
 from sklearn.utils import check_array, check_scalar
 
+
 def get_common_edge_probabilities(bootstrap_results, mode='across'):
     """
     Calculate the probability of common edges across multiple bootstrap results.
@@ -20,82 +21,84 @@ def get_common_edge_probabilities(bootstrap_results, mode='across'):
 
     mode : str, optional
         The mode of calculation. Must be either:
-        - 'per': Computes common edge probabilities by extracting common edges at each bootstrap iteration.
-        - 'across': Computes common edge probabilities across all samples within each bootstrap result.
+
+        * 'per': Computes common edge probabilities by extracting common edges at each bootstrap iteration.
+        * 'across': Computes common edge probabilities across all samples within each bootstrap result.
 
     Returns
     -------
     common_edge_probabilities : np.ndarray
         A stacked array of shape (2, n, n), where:
-        - common_edge_probabilities[0] contains the probabilities of common edges.
-        - common_edge_probabilities[1] contains the probabilities of hidden common cause edges.
+
+        * common_edge_probabilities[0]: The probabilities of common edges.
+        * common_edge_probabilities[1]: The nan probabilities of hidden common cause.
     """
     # check parameters
     if not isinstance(bootstrap_results, list):
         raise ValueError("bootstrap_results must be a list.")
-        
+
     for bootstrap_result in bootstrap_results:
         if not hasattr(bootstrap_result, "adjacency_matrices_"):
-            raise AttributeError(f"The bootstrap_result must implement a callable 'adjacency_matrices_'.")
+            raise AttributeError("The bootstrap_result must implement a callable 'adjacency_matrices_'.")
 
     if mode == 'across':
         common_edge_prob_list = []
         hidden_common_edge_prob_list = []
-        
+
         for bootstrap_result in bootstrap_results:
             matrices = np.array(bootstrap_result.adjacency_matrices_)
-    
+
             # common edge: non-zero and not NaN
             valid_mask = ~np.isnan(matrices)
             nonzero_mask = (matrices != 0) & valid_mask
             common_edge_prob = nonzero_mask.sum(axis=0) / len(matrices)
             common_edge_prob_list.append(common_edge_prob)
-    
+
             # hidden common cause edges: NaN
             unobserved_prob = np.isnan(matrices).sum(axis=0) / len(matrices)
             hidden_common_edge_prob_list.append(unobserved_prob)
-    
+
         # Combine probabilities
         common_edge_prob = np.prod(common_edge_prob_list, axis=0)
         hidden_common_edge_prob = np.prod(hidden_common_edge_prob_list, axis=0)
-    
+
         # Stack into a single array of shape (2, n, n)
         common_edge_probabilities = np.stack((common_edge_prob, hidden_common_edge_prob), axis=0)
-        
+
     elif mode == 'per':
         n_samples = len(bootstrap_results[0].adjacency_matrices_)
         n_vars = bootstrap_results[0].adjacency_matrices_[0].shape[0]
         common_edge_counts = np.zeros((n_vars, n_vars))
         hidden_common_edge_counts = np.zeros((n_vars, n_vars))
-        
+
         # Extract common edges from each bootstrap iteration
         for i in range(n_samples):
             nonzero_masks = []
             nan_masks = []
             for bootstrap_result in bootstrap_results:
                 adj_matrix = bootstrap_result.adjacency_matrices_[i]
-                
+
                 # common edge: non-zero and not NaN
                 valid_mask = ~np.isnan(adj_matrix)
                 nonzero_mask = (adj_matrix != 0) & valid_mask
                 nonzero_masks.append(nonzero_mask)
-                
+
                 # hidden common cause edges: NaN
                 nan_mask = np.isnan(adj_matrix)
                 nan_masks.append(nan_mask)
-                
+
             common_nonzero_mask = np.logical_and.reduce(nonzero_masks)
             common_nan_mask = np.logical_and.reduce(nan_masks)
             common_edge_counts += common_nonzero_mask.astype(int)
             hidden_common_edge_counts += common_nan_mask.astype(int)
-        
+
         # Combine probabilities
         common_edge_prob = common_edge_counts / n_samples
         hidden_common_edge_prob = hidden_common_edge_counts / n_samples
-    
+
         # Stack into a single array of shape (2, n, n)
         common_edge_probabilities = np.stack((common_edge_prob, hidden_common_edge_prob), axis=0)
-        
+
     else:
         raise ValueError("Invalid mode. Choose 'per' or 'across'.")
 
@@ -117,7 +120,7 @@ def print_common_edge_directions(common_edge_probabilities, confidence_level=0.0
         A threshold between 0 and 1 (inclusive) used to determine whether a causal
         direction is considered statistically significant. Only edges with probabilities
         strictly greater than this value will be displayed.
-        
+
     labels : list of str, optional
         A list of variable names corresponding to the indices in the matrix.
         If provided, these labels will be used in the output instead of generic
@@ -156,16 +159,16 @@ def print_common_edge_directions(common_edge_probabilities, confidence_level=0.0
                 continue
             prob = joint_unobserved_prob[to, from_]
             if prob > confidence_level:
-                # In VAR-LiNGAM, due to mismatched matrix dimensions, diagonal elements are extracted within the range of square matrices
+                # In VAR-LiNGAM, due to mismatched matrix dimensions
                 if from_ < n_rows:
                     reverse_prob = joint_unobserved_prob[from_, to]
                     if prob == reverse_prob:
                         bidirectional.add((to, from_))
                         bidirectional.add((from_, to))
                 directions.append((from_, to, prob, "<-->"))
-                
+
     directions.sort(key=lambda x: -x[2])
-    
+
     for (from_, to, prob, edge_d) in directions:
         if labels:
             print(f"{labels[to]} {edge_d} {labels[from_]} ({100*prob:.1f}%)")
@@ -181,12 +184,12 @@ def make_dot_for_nan_probability_matrix(
     path_color=None,
     ignore_shape=False,
 ):
-    """Directed graph source code in the DOT language with specified adjacency matrix.
+    """Directed graph source code in the DOT language with specified nan probability matrix of hidden common cause.
 
     Parameters
     ----------
     adjacency_matrix : array-like with shape (n_features, n_features)
-        Probability matrix to make graph, where ``n_features`` is the number of features.
+        Nan probability matrix of hidden common cause to make graph, where ``n_features`` is the number of features.
     labels : array-like, optional (default=None)
         Label to use for graph features.
     lower_limit : float, optional (default=0.01)
@@ -276,4 +279,3 @@ def make_dot_for_nan_probability_matrix(
                 d.edge(names[from_], names[to], dir="both", label=f"{coef:.2f}", **kwargs)
 
     return d
-
