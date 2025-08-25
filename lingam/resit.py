@@ -170,7 +170,7 @@ class RESIT(_BaseLiNGAM):
                 else:
                     residual = X[:, pi[k]]
                 # Measure dependence between residuals and {Xi}
-                _, hsic_p = hsic_test_gamma(residual, X[:, predictors+[l]])
+                _, hsic_p = hsic_test_gamma(residual, X[:, parents])
                 # eliminate edge
                 if hsic_p > self._alpha:
                     pa[pi[k]].remove(l)
