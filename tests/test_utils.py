@@ -19,6 +19,9 @@ from lingam.utils import (
     evaluate_model_fit,
     calculate_distance_from_root_nodes,
     calculate_total_effect,
+    get_common_edge_probabilities,
+    print_common_edge_directions,
+    make_dot_for_nan_probability_matrix,
 )
 
 
@@ -501,3 +504,138 @@ def test_calculate_total_effect():
         pass
     else:
         raise AssertionError
+
+
+def test_get_common_edge_probabilities():
+    class TestBootstrapResult():
+        def __init__(self, adjacency_matrices):
+            self._adjacency_matrices = adjacency_matrices
+            
+        @property
+        def adjacency_matrices_(self):
+            return self._adjacency_matrices
+    
+    results = []
+    adjacency_matrices_1 = []
+    adjacency_matrices_1.append(
+        np.array([
+        [0, 0, np.nan],
+        [1, 0, 0],
+        [np.nan, 1, 0]]))
+    adjacency_matrices_1.append(
+        np.array([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 1, 0]]))
+    
+    adjacency_matrices_2 = []
+    adjacency_matrices_2.append(
+        np.array([
+        [0, 0, np.nan],
+        [0, 0, 0],
+        [np.nan, 1, 0]]))
+    adjacency_matrices_2.append(
+        np.array([
+        [0, 0, 0],
+        [1, 0, 0],
+        [0, 0, 0]]))
+    
+    results.append(TestBootstrapResult(adjacency_matrices_1))
+    results.append(TestBootstrapResult(adjacency_matrices_2))
+    cep = get_common_edge_probabilities(results, mode="across")
+    cep = get_common_edge_probabilities(results, mode="per")
+    
+    # invalid adjacency matrix
+    results = np.array([
+        [0, 0, np.nan],
+        [1, 0, 0],
+        [np.nan, 1, 0]])
+    try:
+        cep = get_common_edge_probabilities(results, mode="across")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+    
+    # invalid adjacency matrix
+    results = [adjacency_matrices_1, adjacency_matrices_2]
+    try:
+        cep = get_common_edge_probabilities(results, mode="across")
+    except AttributeError:
+        pass
+    else:
+        raise AssertionError
+
+def test_print_common_edge_directions():
+    cep = np.array([[
+        [0. , 0.5, 0.5, 0. , 0. , 0. ],
+        [0. , 0. , 0. , 0.5, 0. , 0. ],
+        [0. , 0.5, 0. , 0. , 0.5, 0. ],
+        [0. , 0. , 0. , 0. , 0. , 0. ],
+        [0. , 0.5, 0.5, 0.5, 0. , 0. ],
+        [0. , 0. , 0. , 0. , 0. , 0. ]],
+       [[0. , 0. , 0. , 0. , 0. , 0. ],
+        [0. , 0. , 0.5, 0. , 0. , 0. ],
+        [0. , 0.5, 0. , 0.5, 0. , 0. ],
+        [0. , 0. , 0.5, 0. , 0. , 0.5],
+        [0. , 0. , 0. , 0. , 0. , 0. ],
+        [0. , 0. , 0. , 0.5, 0. , 0. ]]])
+    print_common_edge_directions(cep)
+    print_common_edge_directions(cep, labels=["A", "B", "C", "D", "E", "F"])
+    print_common_edge_directions(cep, confidence_level=0.5)
+
+
+def test_make_dot_for_nan_probability_matrix():
+    # default
+    am = [
+        [0, 1, 1, 0],
+        [1, 0, 0, 1],
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+    ]
+    ev = make_dot_for_nan_probability_matrix(am, labels=["x0", "x1", "x2", "x3"])
+
+    # default
+    am = [
+        [0, 1, 1, 0],
+        [1, 0, 0, 1],
+        [1, 0, 0, np.nan],
+        [0, 1, np.nan, 0],
+    ]
+    ev = make_dot_for_nan_probability_matrix(am, labels=["x0", "x1", "x2", "x3"])
+
+    am = [
+        [0, 1, 1, 0],
+        [1, 0, 0, 1],
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+    ]
+    ev = make_dot_for_nan_probability_matrix(am, labels=["x0", "x1", "x2", "x3"], path=(3,1), path_color="red")
+
+    # invalid adjacency matrix
+    am = [
+        [0, 1, 1, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+    ]
+    try:
+        ev = make_dot_for_nan_probability_matrix(am, labels=["x0", "x1", "x2", "x3"])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # invalid label size
+    am = [
+        [0, 1, 1, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 1, 0, 0],
+    ]
+    try:
+        ev = make_dot_for_nan_probability_matrix(am, labels=["x0", "x1", "x2"])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
