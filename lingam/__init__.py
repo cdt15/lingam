@@ -22,6 +22,8 @@ from .lina import LiNA
 from .lina import MDLiNA
 from .high_dim_direct_lingam import HighDimDirectLiNGAM
 from .multi_group_camuv import MultiGroupCAMUV
+from .group_direct_lingam import GroupDirectLiNGAM
+from .group_lingam import GroupLiNGAM
 
 __all__ = [
     "ICALiNGAM",
@@ -46,6 +48,8 @@ __all__ = [
     "MDLiNA",
     "HighDimDirectLiNGAM",
     "MultiGroupCAMUV",
+    "GroupDirectLiNGAM",
+    "GroupLiNGAM",
 ]
 
-__version__ = "1.10.0"
+__version__ = "1.11.0"
