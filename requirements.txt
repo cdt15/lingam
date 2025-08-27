@@ -1,5 +1,5 @@
 numpy
-scipy
+scipy<=1.13.1
 scikit-learn>=1.2
 graphviz
 statsmodels
