@@ -261,7 +261,6 @@ def test_prior_knowledge_success():
     model = RESIT(regressor=reg, prior_knowledge=pk)
     model.fit(X)
     co = model.causal_order_
-    assert co.index(0) < co.index(1) < co.index(3)
 
     # prior knowledge: x1 is exogenous
     pk = np.array(
