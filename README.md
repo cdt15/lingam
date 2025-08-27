@@ -101,6 +101,11 @@ Should you use this package for performing **RESIT algorithm**, we kindly reques
 
 * J. Peters, J. M. Mooij, D. Janzing, and B. Schölkopf. **Causal Discovery with Continuous Additive Noise Models**. *Journal of Machine Learning Research*, 15(58): 2009--2053, 2014. [[PDF]](http://www.jmlr.org/papers/volume15/peters14a/peters14a.pdf)
 
+Should you use this package for performing **GroupDirectLiNGAM algorithm**, we kindly request you to cite the following paper:
+
+* D. Entner and P. O. Hoyer. **Estimating a causal order among groups of variables in linear models.** In Proc. 22nd International Conference on Artificial Neural Networks (ICANN2012), pp. 83--90, Lausanne, Switzerland, 2012. [[PDF]](https://link.springer.com/chapter/10.1007/978-3-642-33266-1_11)
+
+
 ### Time series
 
 Should you use this package for performing **VAR-LiNGAM**, we kindly request you to cite the following paper:
@@ -144,10 +149,6 @@ Should you use this package for performing **CAM-UV algorithm**, we kindly reque
 Should you use this package for performing **GroupLiNGAM algorithm**, we kindly request you to cite the following paper:
 
 * Y. Kawahara, K. Bollen, S. Shimizu and T. Washio. **GroupLiNGAM: Linear non-Gaussian acyclic models for sets of variables.** Arxiv preprint arXiv:1006.5041, 2010. [[PDF]](https://arxiv.org/abs/1006.5041)
-
-Should you use this package for performing **GroupDirectLiNGAM algorithm**, we kindly request you to cite the following paper:
-
-* D. Entner and P. O. Hoyer. **Estimating a causal order among groups of variables in linear models.** In Proc. 22nd International Conference on Artificial Neural Networks (ICANN2012), pp. 83--90, Lausanne, Switzerland, 2012. [[PDF]](https://link.springer.com/chapter/10.1007/978-3-642-33266-1_11)
 
 
 ### Causality and prediction
