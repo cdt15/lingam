@@ -25,6 +25,8 @@ API Reference
     lina
     resit
     lim
+    group_lingam
+    group_direct_lingam
     causal_effect
     utils
     tools

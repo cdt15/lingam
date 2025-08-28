@@ -3,8 +3,8 @@ GroupLiNGAM
 
 Model
 -------------------
-This method GroupLiNGAM (Group Linear Non-Gaussian Acyclic Model) [2]_ assumes an extension of the basic LiNGAM model [1]_ to a more general class of models, which can include latent confounding structures and grouped variable interactions.
-Similarly to the basic LiNGAM model [1]_, this method makes the following assumptions:
+This method GroupLiNGAM (Group Linear Non-Gaussian Acyclic Model) [1]_ assumes an extension of the basic LiNGAM model [2]_ to a more general class of models, which can include latent confounding structures and grouped variable interactions.
+Similarly to the basic LiNGAM model, this method makes the following assumptions:
 
 #. Linearity
 #. Non-Gaussian continuous error variables
@@ -16,12 +16,12 @@ The algorithm identifies exogenous blocks by evaluating the statistical independ
 
 References
 
-    .. [1] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
-       A linear non-gaussian acyclic model for causal discovery.
-       Journal of Machine Learning Research, 7:2003-2030, 2006.
-    .. [2] Y. Kawahara, K. Bollen, S. Shimizu, and T. Washio.
+    .. [1] Y. Kawahara, K. Bollen, S. Shimizu, and T. Washio.
        GroupLiNGAM: Linear non-Gaussian acyclic models for sets of variables.
        arXiv preprint arXiv:1006.5041, 2010.
+    .. [2] S. Shimizu, P. O. Hoyer, A. Hyvärinen, and A. J. Kerminen.
+       A linear non-gaussian acyclic model for causal discovery.
+       Journal of Machine Learning Research, 7:2003-2030, 2006.
 
 Import and settings
 -------------------
@@ -29,7 +29,7 @@ Import and settings
 In this example, we need to import ``numpy``, ``pandas``, and
 ``graphviz`` in addition to ``lingam``.
 
-.. code:: ipython3
+.. code-block:: python
 
     import numpy as np
     import pandas as pd
@@ -55,11 +55,12 @@ Test data
 
 First, we generate a causal structure with 5 variables. Then we create a
 dataset with 5 variables from x0 to x4.
+These variables are grouped as follows:
+  - Group 1: x0, x1
+  - Group 2: x2, x3
+  - Group 3: x4
 
-These variables are grouped as follows: - Group 1: x0, x1 - Group 2: x2,
-x3 - Group 3: x4
-
-.. code:: ipython3
+.. code-block:: python
 
     np.random.seed(100)
     n_samples=1000
@@ -78,7 +79,6 @@ x3 - Group 3: x4
     x3 = -1.98 * x0 + get_external_effect(n_samples)
     x4 = -0.55 * x1 - 0.50 * x2 - 1.16 * x3 + get_external_effect(n_samples)
 
-    # データフレームにまとめる
     X = pd.DataFrame(np.array([x0, x1, x2, x3, x4]).T, columns=['x0', 'x1', 'x2', 'x3', 'x4'])
 
     X.head()
@@ -90,16 +90,39 @@ x3 - Group 3: x4
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -157,10 +180,10 @@ x3 - Group 3: x4
       </tbody>
     </table>
     </div>
+    <br>
 
 
-
-.. code:: ipython3
+.. code-block:: python
 
     m = np.array([[   0.0,   0.0,   0.0,   0.0, 0.0],
                   [   0.0,   0.0,   0.0,   0.0, 0.0],
@@ -192,7 +215,7 @@ Causal Discovery
 To run causal discovery, we create a ``GroupLiNGAM`` object and call the
 ``fit`` method.
 
-.. code:: ipython3
+.. code-block:: python
 
     model = lingam.GroupLiNGAM()
     model.fit(X)
@@ -209,7 +232,7 @@ To run causal discovery, we create a ``GroupLiNGAM`` object and call the
 Using the ``causal_order_`` properties, we can see the causal order of
 the variables by group as a result of the causal discovery.
 
-.. code:: ipython3
+.. code-block:: python
 
     model.causal_order_
 
@@ -226,7 +249,7 @@ Also, using the ``adjacency_matrix_`` properties, we can see the
 adjacency matrix as a result of the causal discovery. The coefficients
 between variables estimated with the same group are np.nan.
 
-.. code:: ipython3
+.. code-block:: python
 
     model.adjacency_matrix_
 
@@ -243,7 +266,7 @@ between variables estimated with the same group are np.nan.
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     make_dot(model.adjacency_matrix_)
 
@@ -260,7 +283,7 @@ Bootstrapping
 We call ``bootstrap()`` method instead of ``fit()``. Here, the third
 argument specifies the number of bootstrap sampling.
 
-.. code:: ipython3
+.. code-block:: python
 
     model = lingam.GroupLiNGAM()
     result = model.bootstrap(X, 100)
@@ -275,13 +298,13 @@ to the causal directions of the top 8 rankings, and
 ``min_causal_effect`` option is limited to causal directions with a
 coefficient of 0.01 or more.
 
-.. code:: ipython3
+.. code-block:: python
 
     cdc = result.get_causal_direction_counts(n_directions=8, min_causal_effect=0.01, split_by_causal_effect_sign=True)
 
 We can check the result by utility function.
 
-.. code:: ipython3
+.. code-block:: python
 
     print_causal_directions(cdc, 100)
 
@@ -307,13 +330,13 @@ get the ranking of the DAGs extracted. In the following sample code,
 ``min_causal_effect`` option is limited to causal directions with a
 coefficient of 0.01 or more.
 
-.. code:: ipython3
+.. code-block:: python
 
     dagc = result.get_directed_acyclic_graph_counts(n_dags=3, min_causal_effect=0.01, split_by_causal_effect_sign=True)
 
 We can check the result by utility function.
 
-.. code:: ipython3
+.. code-block:: python
 
     print_dagc(dagc, 100)
 
@@ -340,7 +363,7 @@ Probability
 Using the ``get_probabilities()`` method, we can get the probability of
 bootstrapping.
 
-.. code:: ipython3
+.. code-block:: python
 
     prob = result.get_probabilities(min_causal_effect=0.01)
     print(prob)
@@ -355,7 +378,7 @@ bootstrapping.
      [0.1  0.3  0.3  0.37 0.  ]]
 
 
-.. code:: ipython3
+.. code-block:: python
 
     make_dot(prob)
 
@@ -375,7 +398,7 @@ type variable. We can display the list nicely by assigning it to
 pandas.DataFrame. Also, we have replaced the variable index with a label
 below.
 
-.. code:: ipython3
+.. code-block:: python
 
     causal_effects = result.get_total_causal_effects(min_causal_effect=0.01)
 
@@ -393,16 +416,39 @@ below.
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -496,12 +542,12 @@ below.
       </tbody>
     </table>
     </div>
-
+    <br>
 
 
 We can easily perform sorting operations with pandas.DataFrame.
 
-.. code:: ipython3
+.. code-block:: python
 
     df.sort_values('effect', ascending=False).head()
 
@@ -512,16 +558,39 @@ We can easily perform sorting operations with pandas.DataFrame.
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -573,10 +642,10 @@ We can easily perform sorting operations with pandas.DataFrame.
       </tbody>
     </table>
     </div>
+    <br>
 
 
-
-.. code:: ipython3
+.. code-block:: python
 
     df.sort_values('probability', ascending=True).head()
 
@@ -587,16 +656,39 @@ We can easily perform sorting operations with pandas.DataFrame.
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -648,14 +740,14 @@ We can easily perform sorting operations with pandas.DataFrame.
       </tbody>
     </table>
     </div>
-
+    <br>
 
 
 Because it holds the raw data of the total causal effect (the original
 data for calculating the median), it is possible to draw a histogram of
 the values of the causal effect, as shown below.
 
-.. code:: ipython3
+.. code-block:: python
 
     import matplotlib.pyplot as plt
     import seaborn as sns
@@ -691,7 +783,7 @@ each path. The path will be output as an array of variable indices. For
 example, the array ``[3, 0, 1]`` shows the path from variable X3 through
 variable X0 to variable X1.
 
-.. code:: ipython3
+.. code-block:: python
 
     from_index = 0 # index of x0
     to_index = 4 # index of x4
@@ -705,16 +797,39 @@ variable X0 to variable X1.
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -754,6 +869,6 @@ variable X0 to variable X1.
       </tbody>
     </table>
     </div>
-
+    <br>
 
 

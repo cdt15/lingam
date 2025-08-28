@@ -34,6 +34,8 @@ Contents:
     resit
     pk_resit
     lim
+    group_lingam
+    group_direct_lingam
     extract_ancestors
     f_correlation
     draw_graph

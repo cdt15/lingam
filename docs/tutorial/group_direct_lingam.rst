@@ -7,7 +7,7 @@ Import and settings
 In this example, we need to import ``numpy``, ``pandas``, and
 ``graphviz`` in addition to ``lingam``.
 
-.. code:: ipython3
+.. code-block:: python
 
     import numpy as np
     import pandas as pd
@@ -33,11 +33,13 @@ Test data
 
 First, we generate a causal structure with 6 variables. Then we create a
 dataset with 6 variables from x0 to x5.
+These variables are grouped as follows:
+  - Group 1: x0, x1
+  - Group 2: x2
+  - Group 3: x3, x4
+  - Group 4: x5
 
-These variables are grouped as follows: - Group 1: x0, x1 - Group 2: x2
-- Group 3: x3, x4 - Group 4: x5
-
-.. code:: ipython3
+.. code-block:: python
 
     np.random.seed(0)
 
@@ -61,16 +63,39 @@ These variables are grouped as follows: - Group 1: x0, x1 - Group 2: x2
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -134,10 +159,10 @@ These variables are grouped as follows: - Group 1: x0, x1 - Group 2: x2
       </tbody>
     </table>
     </div>
+    <br>
 
 
-
-.. code:: ipython3
+.. code-block:: python
 
     m = np.array([
         [  0,   0,   0,   0,   0, 0],
@@ -171,7 +196,7 @@ Causal Discovery
 To run causal discovery, we create a ``GroupDirectLiNGAM`` object and
 call the ``fit`` method.
 
-.. code:: ipython3
+.. code-block:: python
 
     model = lingam.GroupDirectLiNGAM()
     model.fit(X, groups)
@@ -188,7 +213,7 @@ call the ``fit`` method.
 Using the ``causal_order_`` properties, we can see the causal order of
 the groups as a result of the causal discovery.
 
-.. code:: ipython3
+.. code-block:: python
 
     model.causal_order_
 
@@ -203,7 +228,7 @@ the groups as a result of the causal discovery.
 
 The causal order of the variables is as follows:
 
-.. code:: ipython3
+.. code-block:: python
 
     [groups[group_idx] for group_idx in model.causal_order_]
 
@@ -219,7 +244,7 @@ The causal order of the variables is as follows:
 Also, using the ``adjacency_matrix_`` properties, we can see the
 adjacency matrix as a result of the causal discovery.
 
-.. code:: ipython3
+.. code-block:: python
 
     model.adjacency_matrix_
 
@@ -237,7 +262,7 @@ adjacency matrix as a result of the causal discovery.
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     make_dot(model.adjacency_matrix_)
 
@@ -254,7 +279,7 @@ Bootstrapping
 We call ``bootstrap()`` method instead of ``fit()``. Here, the third
 argument specifies the number of bootstrap sampling.
 
-.. code:: ipython3
+.. code-block:: python
 
     model = lingam.GroupDirectLiNGAM()
     result = model.bootstrap(X, groups, 100)
@@ -269,13 +294,13 @@ to the causal directions of the top 8 rankings, and
 ``min_causal_effect`` option is limited to causal directions with a
 coefficient of 0.01 or more.
 
-.. code:: ipython3
+.. code-block:: python
 
     cdc = result.get_causal_direction_counts(n_directions=8, min_causal_effect=0.01, split_by_causal_effect_sign=True)
 
 We can check the result by utility function.
 
-.. code:: ipython3
+.. code-block:: python
 
     print_causal_directions(cdc, 100)
 
@@ -301,13 +326,13 @@ get the ranking of the DAGs extracted. In the following sample code,
 ``min_causal_effect`` option is limited to causal directions with a
 coefficient of 0.01 or more.
 
-.. code:: ipython3
+.. code-block:: python
 
     dagc = result.get_directed_acyclic_graph_counts(n_dags=3, min_causal_effect=0.01, split_by_causal_effect_sign=True)
 
 We can check the result by utility function.
 
-.. code:: ipython3
+.. code-block:: python
 
     print_dagc(dagc, 100)
 
@@ -345,7 +370,7 @@ Probability
 Using the ``get_probabilities()`` method, we can get the probability of
 bootstrapping.
 
-.. code:: ipython3
+.. code-block:: python
 
     prob = result.get_probabilities(min_causal_effect=0.01)
     print(prob)
@@ -370,7 +395,7 @@ type variable. We can display the list nicely by assigning it to
 pandas.DataFrame. Also, we have replaced the variable index with a label
 below.
 
-.. code:: ipython3
+.. code-block:: python
 
     causal_effects = result.get_total_causal_effects(min_causal_effect=0.01)
 
@@ -388,16 +413,39 @@ below.
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -505,12 +553,12 @@ below.
       </tbody>
     </table>
     </div>
-
+    <br>
 
 
 We can easily perform sorting operations with pandas.DataFrame.
 
-.. code:: ipython3
+.. code-block:: python
 
     df.sort_values('effect', ascending=False).head()
 
@@ -521,16 +569,39 @@ We can easily perform sorting operations with pandas.DataFrame.
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -582,10 +653,10 @@ We can easily perform sorting operations with pandas.DataFrame.
       </tbody>
     </table>
     </div>
+    <br>
 
 
-
-.. code:: ipython3
+.. code-block:: python
 
     df.sort_values('probability', ascending=True).head()
 
@@ -596,16 +667,39 @@ We can easily perform sorting operations with pandas.DataFrame.
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -657,14 +751,14 @@ We can easily perform sorting operations with pandas.DataFrame.
       </tbody>
     </table>
     </div>
-
+    <br>
 
 
 Because it holds the raw data of the total causal effect (the original
 data for calculating the median), it is possible to draw a histogram of
 the values of the causal effect, as shown below.
 
-.. code:: ipython3
+.. code-block:: python
 
     import matplotlib.pyplot as plt
     import seaborn as sns
@@ -688,7 +782,7 @@ the values of the causal effect, as shown below.
 
 
 
-.. image:: ../image/group_lingam3.png
+.. image:: ../image/group_lingam3.svg
 
 
 Bootstrap Probability of Path
@@ -700,7 +794,7 @@ each path. The path will be output as an array of variable indices. For
 example, the array ``[3, 0, 1]`` shows the path from variable X3 through
 variable X0 to variable X1.
 
-.. code:: ipython3
+.. code-block:: python
 
     from_index = 0 # index of x0
     to_index = 5 # index of x5
@@ -714,16 +808,39 @@ variable X0 to variable X1.
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+        .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -769,6 +886,6 @@ variable X0 to variable X1.
       </tbody>
     </table>
     </div>
-
+    <br>
 
 
