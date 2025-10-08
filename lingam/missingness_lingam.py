@@ -22,15 +22,28 @@ class mLiNGAM(_BaseLiNGAM):
         prior_knowledge=None,
         apply_prior_knowledge_softly=False,
         missingness_knowledge=None,
-        missingness_mechanism_threshold=None,
-        top_down_sample_threshold=None
     ):
+        """Construct an m-LiNGAM model.
+
+        Parameters
+        ----------
+        random_state : int, optional (default=None)
+            ``random_state`` is the seed used by the random number generator.
+        prior_knowledge : array-like, shape (n_features, n_features), optional (default=None)
+            Prior knowledge used for causal discovery, where ``n_features`` is the number of features.
+
+            The elements of prior knowledge matrix are defined as follows [1]_:
+
+            * ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
+            * ``1`` : :math:`x_i` has a directed path to :math:`x_j`
+            * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
+        apply_prior_knowledge_softly : boolean, optional (default=False)
+            If True, apply prior knowledge softly.
+        """
         super().__init__(random_state)
         self._Aknw = prior_knowledge
         self._apply_prior_knowledge_softly = apply_prior_knowledge_softly
         self._missingness_knowledge=missingness_knowledge
-        self._missingness_threshold = missingness_mechanism_threshold
-        self.top_down_sample_threshold=top_down_sample_threshold
         self._missingness_mechanisms_parents = {}  # Dictionary. Key: partially observed variable index, Value: corresponding missingness mechanism's parents indexes (list) 
         self._missingness_mechanisms_coef = {}
         self.n_features = None
@@ -49,7 +62,7 @@ class mLiNGAM(_BaseLiNGAM):
         ----------
         X : array-like, shape (n_samples, n_features)
             Training data, where ``n_samples`` is the number of samples
-            and ``n_features`` is the number of features.
+            and ``n_features`` is the number of features. Missing values may be represented as NaN.
 
         Returns
         -------
@@ -59,9 +72,6 @@ class mLiNGAM(_BaseLiNGAM):
         # Check parameters
         X = check_array(X, ensure_all_finite='allow-nan')
         self.n_features = X.shape[1]
-
-        if self.top_down_sample_threshold==None:
-            self.top_down_sample_threshold = self.n_features+1
 
         # Check prior knowledge
         if self._Aknw is not None:
@@ -78,7 +88,6 @@ class mLiNGAM(_BaseLiNGAM):
         # Causal discovery
         U = np.arange(self.n_features)
         K = []
-        K_bottom = []
         X_ = np.copy(X)
 
         # Discover missingness mechanisms
@@ -88,53 +97,43 @@ class mLiNGAM(_BaseLiNGAM):
         self._missing_to_index = {i:m for m,i in enumerate(missing_column_indices)}
         self._descendants_mechanisms = -1*np.ones([len(missing_column_indices), self.n_features])
 
-        if self._missingness_knowledge==None:
-            R = {i:missing_mask[:,i] for i in missing_column_indices}
-            for k in R.keys():
-                # Find the parent nodes of the missingness mechanism
-                available_rows = ~np.any(np.isnan(np.delete(X_, k, axis=1)), axis=1)
+        R = {i:missing_mask[:,i] for i in missing_column_indices}
+        for k in R.keys():
+            # Find the parent nodes of the missingness mechanism
+            available_rows = ~np.any(np.isnan(np.delete(X_, k, axis=1)), axis=1)
 
-                X_lreg = np.delete(X_, k, axis=1)[available_rows]
-                scaler = StandardScaler()
-                X_lreg = scaler.fit_transform(X_lreg)
+            X_lreg = np.delete(X_, k, axis=1)[available_rows]
+            scaler = StandardScaler()
+            X_lreg = scaler.fit_transform(X_lreg)
 
-                best_coef, _, _, _, _ = bic_select_logistic_l1(X_lreg, R[k][available_rows], Cs=50, max_iter=1000)
-                
-                if self._missingness_threshold==None:
-                    self._missingness_mechanisms_parents[k] = list(np.arange(self.n_features)[np.where(best_coef!=0)])
-                else:
-                    self._missingness_mechanisms_parents[k] = list(np.arange(self.n_features)[np.where(np.abs(best_coef)>self._missingness_threshold)])
+            best_coef, _, _, _, _ = bic_select_logistic_l1(X_lreg, R[k][available_rows], Cs=50, max_iter=1000)
+            
+            self._missingness_mechanisms_parents[k] = list(np.arange(self.n_features)[np.where(best_coef!=0)])
+            self._missingness_mechanisms_parents[k] = [idx if idx<k else idx+1 for idx in self._missingness_mechanisms_parents[k]]
+            available_rows = ~np.any(np.isnan(X_[:,self._missingness_mechanisms_parents[k]]), axis=1)
 
-                self._missingness_mechanisms_parents[k] = [idx if idx<k else idx+1 for idx in self._missingness_mechanisms_parents[k]]
-                available_rows = ~np.any(np.isnan(X_[:,self._missingness_mechanisms_parents[k]]), axis=1)
-
-                if len(self._missingness_mechanisms_parents[k])==0:
-                    clf = LogisticRegression(
-                        penalty=None,
-                        solver='lbfgs',
-                        max_iter=1000,
-                        fit_intercept=False
-                    )
-                    #independent_vars = np.ones_like(R[k])
-                    independent_vars = np.ones_like(R[k]).reshape(-1, 1)
-                    clf.fit(independent_vars, R[k][available_rows])
-                    self._missingness_mechanisms_coef[k] = np.concatenate([clf.coef_.ravel()])
-                else:
-                    clf = LogisticRegression(
-                        penalty='l2',
-                        C=0.5,
-                        solver='lbfgs',
-                        max_iter=1000,
-                        fit_intercept=True
-                    )
-                    independent_vars = X_[:, self._missingness_mechanisms_parents[k]][available_rows]
-                    clf.fit(independent_vars, R[k][available_rows])
-                    self._missingness_mechanisms_coef[k] = np.concatenate([clf.intercept_, clf.coef_.ravel()])
-
-        else:
-            for k,parents,coef in self._missingness_knowledge:
-                self._missingness_mechanisms_parents[k] = parents
-                self._missingness_mechanisms_coef[k] = coef
+            if len(self._missingness_mechanisms_parents[k])==0:
+                clf = LogisticRegression(
+                    penalty=None,
+                    solver='lbfgs',
+                    max_iter=1000,
+                    fit_intercept=False
+                )
+                #independent_vars = np.ones_like(R[k])
+                independent_vars = np.ones_like(R[k]).reshape(-1, 1)
+                clf.fit(independent_vars, R[k][available_rows])
+                self._missingness_mechanisms_coef[k] = np.concatenate([clf.coef_.ravel()])
+            else:
+                clf = LogisticRegression(
+                    penalty='l2',
+                    C=0.5,
+                    solver='lbfgs',
+                    max_iter=1000,
+                    fit_intercept=True
+                )
+                independent_vars = X_[:, self._missingness_mechanisms_parents[k]][available_rows]
+                clf.fit(independent_vars, R[k][available_rows])
+                self._missingness_mechanisms_coef[k] = np.concatenate([clf.intercept_, clf.coef_.ravel()])
             
         # Estimate causal order
         X_top = X_.copy()
@@ -334,7 +333,7 @@ class mLiNGAM(_BaseLiNGAM):
         return Uc, Vj
 
     def _search_causal_order_top_down(self, X, U, min_samples=0):
-        """Search the causal ordering."""
+        """Search the causal ordering from top to bottom."""
         Uc, Vj = self._search_candidate_top_down(U)
         if len(Uc) == 1:
             return Uc[0]

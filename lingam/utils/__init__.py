@@ -1161,26 +1161,27 @@ def get_cuda_version():
         return False
     
 def bic_select_logistic_l1(X, y, Cs=50, max_iter=1000):
-    """Fit L1-regularized logistic regression over a path of Cs,
-    and select the model with lowest BIC.
+    """Select the best L1-regularized logistic regression model using BIC.
 
     Parameters
     ----------
         X : array-like, shape (n_samples, n_features)
-            Feature matrix
+            Feature matrix.
         y : array-like, shape (n_samples, ...)
-            Binary target vector
+            Binary target vector.
         Cs : int or array, optional (default=50)
-            Number of Cs or array of Cs to try (inverse regularization)
+             If an integer, defines the number of regularization strengths to test, 
+            logarithmically spaced between strong and weak regularization. 
+            If an array, provides explicit values of inverse regularization strengths to evaluate.
         max_iter : int, optional (default=1000)
             Maximum number of iterations
 
     Returns
     -------
         best_coef : array-like, shape (n_features, ...)
-            Best coefficients
+            Best coefficients according to BIC score.
         best_intercept : float
-            Best intercept
+            Best intercept according to BIC score.
         best_C : float
             Regularization strength selected
         bic_scores : list
@@ -1188,7 +1189,6 @@ def bic_select_logistic_l1(X, y, Cs=50, max_iter=1000):
         Cs : array-like
             The Cs tested
     """
-    # Run logistic regression path
     coefs, Cs, _ = _logistic_regression_path(
         X, y,
         penalty='l1',
@@ -1198,12 +1198,12 @@ def bic_select_logistic_l1(X, y, Cs=50, max_iter=1000):
         Cs=Cs
     )
 
-    n_samples, n_features = X.shape
+    n_samples, _ = X.shape
     bic_scores = []
     best_bic = np.inf
     best_index = None
 
-    for i, C in enumerate(Cs):
+    for i in range(len(Cs)):
         full_coef = coefs[i]    # shape: (n_features + 1,)
         coef = full_coef[:-1]
         intercept = full_coef[-1]
@@ -1214,7 +1214,7 @@ def bic_select_logistic_l1(X, y, Cs=50, max_iter=1000):
         # Compute Bernoulli log-likelihood.
         eps = 1e-15
         y_prob = np.clip(probs, eps, 1 - eps)
-        ll = np.sum(y * np.log(probs) + (1 - y) * np.log(1 - y_prob))
+        ll = np.sum(y * np.log(y_prob) + (1 - y) * np.log(1 - y_prob))
         k = np.sum(coef != 0) + 1   # non-zero weights + intercept
 
         # Compute BIC given log-likelihood, number of parameters, and sample size.
