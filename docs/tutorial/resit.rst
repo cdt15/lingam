@@ -7,7 +7,7 @@ RESIT [2]_ is an estimation algorithm for Additive Noise Model [1]_.
 
 This method makes the following assumptions. 
 
-#. Continouos variables
+#. Continuous variables
 #. Nonlinearity
 #. Additive noise
 #. Acyclicity
