@@ -10,13 +10,13 @@ It enables the identification of the true underlying causal structure and provid
 The model combines the principles of LiNGAM and the graphical representation of missingness mechanisms using *missingness graphs* (m-graphs) [2]_.  
 In this framework, variables can be fully observed or partially observed, and each partially observed variable is associated with a missingness mechanism and a proxy variable.  
 
-Let the set of variables be 
+Let the set of variables be:
 
 .. math::
 
-   V = V_o \cup V_m \cup U \cup V^* \cup R,
+   V = V_o \cup V_m \cup U \cup V^* \cup R
 
-where 
+where: 
 
 - :math:`V_o` are fully observed variables,  
 - :math:`V_m` are partially observed variables,  
@@ -24,7 +24,7 @@ where
 - :math:`V^*` are proxy variables (what is actually observed, corresponding to dataset columns with missing values)
 - :math:`R` are missingness mechanism.
 
-The induced subgraph :math:`G[V_o \cup V_m]` follows a LiNGAM model, meaning that for every variable :math:`X_i \in (V_o \cup V_m)`,
+The induced subgraph :math:`G[V_o \cup V_m]` follows a LiNGAM model, meaning that for every variable :math:`X_i \in (V_o \cup V_m)`:
 
 .. math::
 

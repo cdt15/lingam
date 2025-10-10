@@ -48,6 +48,7 @@ __all__ = [
     "get_common_edge_probabilities",
     "print_common_edge_directions",
     "make_dot_for_nan_probability_matrix",
+    "bic_select_logistic_l1"
 ]
 
 
