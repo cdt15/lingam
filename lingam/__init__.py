@@ -24,6 +24,7 @@ from .high_dim_direct_lingam import HighDimDirectLiNGAM
 from .multi_group_camuv import MultiGroupCAMUV
 from .group_direct_lingam import GroupDirectLiNGAM
 from .group_lingam import GroupLiNGAM
+from .missingness_lingam import mLiNGAM
 
 __all__ = [
     "ICALiNGAM",
@@ -50,6 +51,7 @@ __all__ = [
     "MultiGroupCAMUV",
     "GroupDirectLiNGAM",
     "GroupLiNGAM",
+    "mLiNGAM"
 ]
 
 __version__ = "1.11.0"

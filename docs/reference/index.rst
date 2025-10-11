@@ -27,6 +27,7 @@ API Reference
     lim
     group_lingam
     group_direct_lingam
+    missingness_lingam
     causal_effect
     utils
     tools

@@ -24,3 +24,4 @@ utils
 .. autofunction:: get_common_edge_probabilities
 .. autofunction:: print_common_edge_directions
 .. autofunction:: make_dot_for_nan_probability_matrix
+.. autofunction:: bic_select_logistic_l1

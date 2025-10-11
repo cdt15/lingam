@@ -18,6 +18,7 @@ from sklearn import linear_model
 from sklearn.linear_model import LassoLarsIC, LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import check_array, check_scalar
+from sklearn.linear_model._logistic import _logistic_regression_path
 
 from ._rcd import extract_ancestors
 from ._f_correlation import f_correlation
@@ -47,6 +48,7 @@ __all__ = [
     "get_common_edge_probabilities",
     "print_common_edge_directions",
     "make_dot_for_nan_probability_matrix",
+    "bic_select_logistic_l1"
 ]
 
 
@@ -1158,3 +1160,74 @@ def get_cuda_version():
     except Exception as e:
         print("CUDA not found or nvcc not in PATH:", e)
         return False
+    
+def bic_select_logistic_l1(X, y, Cs=50, max_iter=1000):
+    """Select the best L1-regularized logistic regression model using BIC.
+
+    Parameters
+    ----------
+        X : array-like, shape (n_samples, n_features)
+            Feature matrix.
+        y : array-like, shape (n_samples, ...)
+            Binary target vector.
+        Cs : int or array, optional (default=50)
+             If an integer, defines the number of regularization strengths to test, 
+            logarithmically spaced between strong and weak regularization. 
+            If an array, provides explicit values of inverse regularization strengths to evaluate.
+        max_iter : int, optional (default=1000)
+            Maximum number of iterations
+
+    Returns
+    -------
+        best_coef : array-like, shape (n_features, ...)
+            Best coefficients according to BIC score.
+        best_intercept : float
+            Best intercept according to BIC score.
+        best_C : float
+            Regularization strength selected
+        bic_scores : list
+            BIC for each C
+        Cs : array-like
+            The Cs tested
+    """
+    coefs, Cs, _ = _logistic_regression_path(
+        X, y,
+        penalty='l1',
+        solver='saga',
+        fit_intercept=True,
+        max_iter=max_iter,
+        Cs=Cs
+    )
+
+    n_samples, _ = X.shape
+    bic_scores = []
+    best_bic = np.inf
+    best_index = None
+
+    for i in range(len(Cs)):
+        full_coef = coefs[i]    # shape: (n_features + 1,)
+        coef = full_coef[:-1]
+        intercept = full_coef[-1]
+
+        logits = X @ coef + intercept
+        probs = 1 / (1 + np.exp(-logits))
+
+        # Compute Bernoulli log-likelihood.
+        eps = 1e-15
+        y_prob = np.clip(probs, eps, 1 - eps)
+        ll = np.sum(y * np.log(y_prob) + (1 - y) * np.log(1 - y_prob))
+        k = np.sum(coef != 0) + 1   # non-zero weights + intercept
+
+        # Compute BIC given log-likelihood, number of parameters, and sample size.
+        bic = -2 * ll + k * np.log(n_samples)
+        bic_scores.append(bic)
+
+        if bic < best_bic:
+            best_bic = bic
+            best_index = i
+
+    best_C = Cs[best_index]
+    best_coef = coefs[best_index, :-1]
+    best_intercept = coefs[best_index, -1]
+
+    return best_coef, best_intercept, best_C, bic_scores, Cs
