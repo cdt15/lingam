@@ -43,8 +43,8 @@ class mLiNGAM(_BaseLiNGAM):
         super().__init__(random_state)
         self._Aknw = prior_knowledge
         self._apply_prior_knowledge_softly = apply_prior_knowledge_softly
-        self._missingness_knowledge=missingness_knowledge
-        self._missingness_mechanisms_parents = {}  # Dictionary. Key: partially observed variable index, Value: corresponding missingness mechanism's parents indexes (list) 
+        self._missingness_knowledge = missingness_knowledge
+        self._missingness_mechanisms_parents = {}  # Dictionary. Key: partially observed variable index, Value: corresponding missingness mechanism's parents indexes (list)
         self._missingness_mechanisms_coef = {}
         self.n_features = None
         self._descendants_mechanisms = None
@@ -84,7 +84,6 @@ class mLiNGAM(_BaseLiNGAM):
                 if not self._apply_prior_knowledge_softly:
                     self._partial_orders = self._extract_partial_orders(self._Aknw)
 
-        
         # Causal discovery
         U = np.arange(self.n_features)
         K = []
@@ -94,10 +93,10 @@ class mLiNGAM(_BaseLiNGAM):
         missing_mask = np.isnan(X_)
         columns_with_missing = np.any(missing_mask, axis=0)
         missing_column_indices = np.where(columns_with_missing)[0]
-        self._missing_to_index = {i:m for m,i in enumerate(missing_column_indices)}
-        self._descendants_mechanisms = -1*np.ones([len(missing_column_indices), self.n_features])
+        self._missing_to_index = {i : m for m, i in enumerate(missing_column_indices)}
+        self._descendants_mechanisms = -1 * np.ones([len(missing_column_indices), self.n_features])
 
-        R = {i:missing_mask[:,i] for i in missing_column_indices}
+        R = {i : missing_mask[:, i] for i in missing_column_indices}
         for k in R.keys():
             # Find the parent nodes of the missingness mechanism
             available_rows = ~np.any(np.isnan(np.delete(X_, k, axis=1)), axis=1)
@@ -107,19 +106,19 @@ class mLiNGAM(_BaseLiNGAM):
             X_lreg = scaler.fit_transform(X_lreg)
 
             best_coef, _, _, _, _ = bic_select_logistic_l1(X_lreg, R[k][available_rows], Cs=50, max_iter=1000)
-            
-            self._missingness_mechanisms_parents[k] = list(np.arange(self.n_features)[np.where(best_coef!=0)])
-            self._missingness_mechanisms_parents[k] = [idx if idx<k else idx+1 for idx in self._missingness_mechanisms_parents[k]]
-            available_rows = ~np.any(np.isnan(X_[:,self._missingness_mechanisms_parents[k]]), axis=1)
 
-            if len(self._missingness_mechanisms_parents[k])==0:
+            self._missingness_mechanisms_parents[k] = list(np.arange(self.n_features)[np.where(best_coef != 0)])
+            self._missingness_mechanisms_parents[k] = [idx if idx < k else idx + 1 for idx in self._missingness_mechanisms_parents[k]]
+            available_rows = ~np.any(np.isnan(X_[:, self._missingness_mechanisms_parents[k]]), axis=1)
+
+            if len(self._missingness_mechanisms_parents[k]) == 0:
                 clf = LogisticRegression(
                     penalty=None,
                     solver='lbfgs',
                     max_iter=1000,
                     fit_intercept=False
                 )
-                #independent_vars = np.ones_like(R[k])
+                # independent_vars = np.ones_like(R[k])
                 independent_vars = np.ones_like(R[k]).reshape(-1, 1)
                 clf.fit(independent_vars, R[k][available_rows])
                 self._missingness_mechanisms_coef[k] = np.concatenate([clf.coef_.ravel()])
@@ -134,15 +133,15 @@ class mLiNGAM(_BaseLiNGAM):
                 independent_vars = X_[:, self._missingness_mechanisms_parents[k]][available_rows]
                 clf.fit(independent_vars, R[k][available_rows])
                 self._missingness_mechanisms_coef[k] = np.concatenate([clf.intercept_, clf.coef_.ravel()])
-            
+
         # Estimate causal order
         X_top = X_.copy()
 
         for _ in range(len(U)):
-            m = self._search_causal_order_top_down(X_top, U, min_samples=self.n_features+1)
+            m = self._search_causal_order_top_down(X_top, U, min_samples=self.n_features + 1)
             for i in U:
                 if i != m:
-                    X_top[:, i][~np.isnan(X[:,[i,m]]).any(axis=1)] = self._residual(X_top[:, i][~np.isnan(X[:,[i,m]]).any(axis=1)], X_top[:, m][~np.isnan(X[:,[i,m]]).any(axis=1)])
+                    X_top[:, i][~np.isnan(X[:, [i, m]]).any(axis=1)] = self._residual(X_top[:, i][~np.isnan(X[:, [i, m]]).any(axis=1)], X_top[:, m][~np.isnan(X[:, [i, m]]).any(axis=1)])
             K.append(m)
             U = U[U != m]
             # Update partial orders
@@ -152,7 +151,7 @@ class mLiNGAM(_BaseLiNGAM):
                 ]
 
         self._causal_order = K
-        
+
         # Estimate adjacency matrix
         if self._Aknw is not None:
             pk = self._Aknw.copy()
@@ -168,12 +167,12 @@ class mLiNGAM(_BaseLiNGAM):
             if self._Aknw is not None:
                 predictors = [p for p in predictors if pk[target, p] != 0]
 
-            while len(predictors)>0:
-                n_pred=len(predictors)
+            while len(predictors) > 0:
+                n_pred = len(predictors)
                 # Calculate coefficients of the original scale
-                involved_variables = set([target]+predictors)
+                involved_variables = set([target] + predictors)
                 num_involved = len(involved_variables)
-                while(True):
+                while True:
                     for j in involved_variables:
                         if j in self._missingness_mechanisms_parents.keys():
                             involved_variables = involved_variables.union(set(self._missingness_mechanisms_parents[j]))
@@ -182,7 +181,7 @@ class mLiNGAM(_BaseLiNGAM):
                     else:
                         num_involved = len(involved_variables)
                 X_m = X[~np.any(np.isnan(X[:, sorted(involved_variables)]), axis=1)]
-                sample_weight = np.prod([1/(1-self._logistic_prediction(X_m[:,self._missingness_mechanisms_parents[i]], self._missingness_mechanisms_coef[i])) for i in [target]+predictors if i in self._missingness_mechanisms_parents.keys()], axis=0)
+                sample_weight = np.prod([1 / (1 - self._logistic_prediction(X_m[:, self._missingness_mechanisms_parents[i]], self._missingness_mechanisms_coef[i])) for i in [target] + predictors if i in self._missingness_mechanisms_parents.keys()], axis=0)
 
                 # Standardize X
                 scaler = StandardScaler()
@@ -199,13 +198,13 @@ class mLiNGAM(_BaseLiNGAM):
                 pred = np.array(predictors)
                 predictors = list(pred[pruned_idx])
 
-                if len(predictors)==n_pred:
+                if len(predictors) == n_pred:
                     break
 
             # Calculate coefficients of the original scale
-            involved_variables = set([target]+predictors)
+            involved_variables = set([target] + predictors)
             num_involved = len(involved_variables)
-            while(True):
+            while True:
                 for j in involved_variables:
                     if j in self._missingness_mechanisms_parents.keys():
                         involved_variables = involved_variables.union(set(self._missingness_mechanisms_parents[j]))
@@ -214,9 +213,9 @@ class mLiNGAM(_BaseLiNGAM):
                 else:
                     num_involved = len(involved_variables)
             X_m = X[~np.any(np.isnan(X[:, sorted(involved_variables)]), axis=1)]
-            sample_weight = np.prod([1/(1-self._logistic_prediction(X_m[:,self._missingness_mechanisms_parents[i]], self._missingness_mechanisms_coef[i])) for i in [target]+predictors if i in self._missingness_mechanisms_parents.keys()], axis=0)
-            
-            if len(predictors)==0:
+            sample_weight = np.prod([1 / (1 - self._logistic_prediction(X_m[:, self._missingness_mechanisms_parents[i]], self._missingness_mechanisms_coef[i])) for i in [target] + predictors if i in self._missingness_mechanisms_parents.keys()], axis=0)
+
+            if len(predictors) == 0:
                 X_design = np.ones((X_m.shape[0], 1))
                 lr = LinearRegression(fit_intercept=False)
                 lr.fit(X_design, X_m[:, target], sample_weight=sample_weight)
@@ -228,12 +227,11 @@ class mLiNGAM(_BaseLiNGAM):
                 coef[pruned_idx] = lr.coef_
                 B[target, predictors] = coef
                 c[target] = lr.intercept_
-        
+
         self._adjacency_matrix = B
         self._intercept = c
 
         return self
-
 
     def _logistic_prediction(self, data, params):
         return 1 / (1 + np.exp(-np.dot(sm.add_constant(data), params)))
@@ -249,7 +247,7 @@ class mLiNGAM(_BaseLiNGAM):
             pairs, counts = np.unique(check_pairs, axis=0, return_counts=True)
             if len(pairs[counts > 1]) > 0:
                 raise ValueError(
-                    f"The prior knowledge contains inconsistencies at the following indices: {pairs[counts>1].tolist()}"
+                    f"The prior knowledge contains inconsistencies at the following indices: {pairs[counts > 1].tolist()}"
                 )
 
         # Check for inconsistencies in pairs without path.
@@ -343,9 +341,9 @@ class mLiNGAM(_BaseLiNGAM):
             M = 0
             for j in U:
                 if i != j:
-                    X_m = X[:,[i,j]].copy()
+                    X_m = X[:, [i, j]].copy()
                     X_m = X_m[~np.isnan(X_m).any(axis=1)]
-                    if X_m.shape[0]<min_samples:
+                    if X_m.shape[0] < min_samples:
                         return -1
                     xi_std = (X_m[:, 0] - np.mean(X_m[:, 0])) / np.std(X_m[:, 0])
                     xj_std = (X_m[:, 1] - np.mean(X_m[:, 1])) / np.std(X_m[:, 1])
