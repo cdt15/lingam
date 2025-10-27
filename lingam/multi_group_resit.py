@@ -4,6 +4,7 @@ The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 """
 
 import numbers
+import copy
 
 import numpy as np
 from sklearn.utils import check_array, resample
@@ -99,7 +100,7 @@ class MultiGroupRESIT:
         pa, pi = self._estimate_order(X_list)
 
         # Remove superfluous edges
-        pa_list = [self._remove_edges(X, pa, pi) for X in X_list]
+        pa_list = [self._remove_edges(X, copy.deepcopy(pa), pi) for X in X_list]
 
         # Create adjacency matrix from parent-child relationship
         am_list = []
