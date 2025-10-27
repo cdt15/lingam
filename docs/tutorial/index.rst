@@ -30,6 +30,7 @@ Contents:
     camuv
     multi_group_rcd
     multi_group_camuv
+    multi_group_resit
     lina
     resit
     pk_resit
