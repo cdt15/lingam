@@ -163,4 +163,8 @@ Should you use this package for performing **LiM algorithm**, we kindly request 
 
 * Y. Zeng, S. Shimizu, H. Matsui, F. Sun. **Causal discovery for linear mixed data**. In Proc. First Conference on Causal Learning and Reasoning (CLeaR2022). PMLR 177, pp. 994-1009, 2022. [[PDF]](https://proceedings.mlr.press/v177/zeng22a.html)
 
+### Missing data
 
+Should you use this package for performing the **Missingness-LiNGAM algorithm**, we kindly request you to cite the following paper:
+
+* M. Ceriscioli, S. Shimizu, and K. Mohan. **Discovering Linear Non-Gaussian Models for All Categories of Missing Data (Student Abstract)**. The 40th Annual AAAI Conference on Artificial Intelligence (AAAI-26) Student Abstract and Poster Program, 2026. [[PDF]](https://raw.githubusercontent.com/matteoceriscioli/matteoceriscioli.github.io/master/files/Discovering_Linear_NonGaussian_Models_for_All_Categories_of_Missing_Data_(Student_Abstract).pdf)
