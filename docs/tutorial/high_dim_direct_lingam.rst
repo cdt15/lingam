@@ -7,7 +7,7 @@ Import and settings
 In this example, we need to import ``numpy``, ``pandas``, and
 ``graphviz`` in addition to ``lingam``.
 
-.. code:: ipython3
+.. code-block:: python
 
     import numpy as np
     import pandas as pd
@@ -32,7 +32,7 @@ Test data
 
 We create test data consisting of 6 variables.
 
-.. code:: ipython3
+.. code-block:: python
 
     m = np.array([
         [ 0.000,  0.000,  0.000,  0.895,  0.000,  0.000],
@@ -149,7 +149,7 @@ Causal Discovery
 To run causal discovery, we create a ``HighDimDirectLiNGAM`` object and
 call the ``fit`` method.
 
-.. code:: ipython3
+.. code-block:: python
 
     model = HighDimDirectLiNGAM()
     model.fit(X)
@@ -166,7 +166,7 @@ call the ``fit`` method.
 Using the ``causal_order_`` properties, we can see the causal ordering
 as a result of the causal discovery.
 
-.. code:: ipython3
+.. code-block:: python
 
     model.causal_order_
 
@@ -182,7 +182,7 @@ as a result of the causal discovery.
 Also, using the ``adjacency_matrix_`` properties, we can see the
 adjacency matrix as a result of the causal discovery.
 
-.. code:: ipython3
+.. code-block:: python
 
     model.adjacency_matrix_
 
@@ -202,7 +202,7 @@ adjacency matrix as a result of the causal discovery.
 
 We can draw a causal graph by utility funciton.
 
-.. code:: ipython3
+.. code-block:: python
 
     make_dot(model.adjacency_matrix_)
 
