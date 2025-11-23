@@ -32,10 +32,7 @@ class MGGD:
             raise ValueError("cov must be a square matrix matching the length of mean.")
         if not np.allclose(self.cov, self.cov.T):
             raise ValueError("cov must be a symmetric matrix.")
-        if np.any(
-            np.linalg.eigvals(self.cov)
-            < self.tolerance * np.max(np.abs(np.linalg.eigvals(self.cov)))
-        ):
+        if np.any(np.linalg.eigvals(self.cov) < self.tolerance * np.max(np.abs(np.linalg.eigvals(self.cov)))):
             raise ValueError("cov must be a symmetric positive definite matrix.")
         if self.beta <= 0:
             raise ValueError("beta must be a positive value.")

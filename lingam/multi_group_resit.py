@@ -12,6 +12,7 @@ from sklearn.utils import check_array, resample
 from .bootstrap import BootstrapResult
 from .hsic import hsic_test_gamma
 
+
 class MultiGroupRESIT:
     """Implementation of RESIT(regression with subsequent independence test) Algorithm [1]_ with multiple groups
 
