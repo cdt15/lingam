@@ -8,6 +8,7 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 from sklearn.utils import check_array, check_scalar, check_random_state
+from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 
 from ..multi_group_direct_lingam import MultiGroupDirectLiNGAM
