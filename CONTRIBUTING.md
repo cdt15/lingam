@@ -25,7 +25,7 @@ In addition, we add the following guidelines:
 Coding style is checked with flake8.
 
 ``` sh
-flake8 lingam --count --ignore=E203,E741,C901 --max-line-length=127 --statistics
+flake8 lingam --count --ignore=E203,E501,E741,C901 --max-line-length=127 --statistics
 ```
 
 ## Documentation
@@ -35,9 +35,7 @@ When adding a new feature to lingam, you also need to document it in the referen
 To build the documentation, you use Sphinx. Run the following commands to install Sphinx and its extensions.
 
 ``` sh
-pip install sphinx
-pip install sphinxcontrib-napoleon
-pip install sphinx_rtd_theme
+pip install -r ./docs/requirements-doc.txt
 ```
 
 Then you can build the documentation in HTML format locally:

@@ -10,24 +10,16 @@ LiNGAM is a new method for estimating structural equation models or linear Bayes
 ## Requirements
 
 * Python3
-
 * numpy
-
 * scipy
-
 * scikit-learn
-
 * graphviz
-
 * statsmodels
-
-- networkx
-
-- pandas
-
-- itertools
-
-- semopy
+* networkx
+* pandas
+* itertools
+* semopy
+* autograd
 
 
 ## Installation
@@ -149,6 +141,10 @@ Should you use this package for performing **CAM-UV algorithm**, we kindly reque
 Should you use this package for performing **GroupLiNGAM algorithm**, we kindly request you to cite the following paper:
 
 * Y. Kawahara, K. Bollen, S. Shimizu and T. Washio. **GroupLiNGAM: Linear non-Gaussian acyclic models for sets of variables.** Arxiv preprint arXiv:1006.5041, 2010. [[PDF]](https://arxiv.org/abs/1006.5041)
+
+Should you use this package for performing **ABIC-LiNGAM algorithm**, we kindly request you to cite the following paper:
+
+* Y. Morinishi and S. Shimizu. **Differentiable causal discovery of linear non-Gaussian acyclic models under unmeasured confounding.** Transactions on Machine Learning Research (TMLR), 2025. [[PDF]](https://openreview.net/forum?id=HR7MFlW73I)
 
 
 ### Causality and prediction
