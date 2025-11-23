@@ -22,6 +22,8 @@ from lingam.utils import (
     get_common_edge_probabilities,
     print_common_edge_directions,
     make_dot_for_nan_probability_matrix,
+    MGGD,
+    MGGDEstimator,
 )
 
 
@@ -640,3 +642,46 @@ def test_make_dot_for_nan_probability_matrix():
         pass
     else:
         raise AssertionError
+
+def test_mggd_and_estimator():
+    mean = [0, 0, 0]
+    cov = np.eye(3)
+    beta = 1
+
+    mggd = MGGD(mean, cov, beta)
+    X = mggd.rvs(size=100)
+
+    est = MGGDEstimator()
+    est.fit(X)
+
+    try:
+        invalid_cov = [[1, 1], [0, 1]]
+        MGGD(mean, invalid_cov, beta)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    try:
+        invalid_cov = [[1, 0, 1], [1, 0, -1]]
+        MGGD(mean, invalid_cov, beta)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    try:
+        invalid_cov = [[0, 2], [-1, 0]]
+        MGGD(mean, invalid_cov, beta)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    try:
+        MGGD(mean, cov, -1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+

@@ -24,6 +24,7 @@ from ._rcd import extract_ancestors
 from ._f_correlation import f_correlation
 from ._visualize_nonlinear_causal_effect import visualize_nonlinear_causal_effect
 from ._common_edge import get_common_edge_probabilities, print_common_edge_directions, make_dot_for_nan_probability_matrix
+from ._mggd import MGGD, MGGDEstimator
 
 __all__ = [
     "print_causal_directions",
@@ -48,7 +49,9 @@ __all__ = [
     "get_common_edge_probabilities",
     "print_common_edge_directions",
     "make_dot_for_nan_probability_matrix",
-    "bic_select_logistic_l1"
+    "bic_select_logistic_l1",
+    "MGGD",
+    "MGGDEstimator",
 ]
 
 
