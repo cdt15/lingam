@@ -9,5 +9,6 @@ pygam
 matplotlib
 psy
 semopy
+autograd
 sphinx
 sphinx_rtd_theme

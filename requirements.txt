@@ -9,5 +9,6 @@ pygam
 matplotlib
 psy
 semopy
+autograd
 #optional (install if gpu and cuda is available)
 # culingam

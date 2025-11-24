@@ -2,6 +2,7 @@
 Python implementation of the LiNGAM algorithms.
 The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 """
+
 import numbers
 from abc import ABCMeta, abstractmethod
 
@@ -27,7 +28,7 @@ def bootstrap_with_imputation(
     cd_model=None,
     prior_knowledge=None,
     apply_prior_knowledge_softly=False,
-    random_state=None
+    random_state=None,
 ):
     """Discovering causal relations in data with missing values..
 
@@ -83,21 +84,11 @@ def bootstrap_with_imputation(
         Elements which are not NaN are the imputation values.
     """
     # check args
-    X = check_array(X, force_all_finite='allow-nan')
+    X = check_array(X, force_all_finite="allow-nan")
 
-    n_sampling = check_scalar(
-        n_sampling,
-        "n_sampling",
-        (numbers.Integral, np.integer),
-        min_val=1
-    )
+    n_sampling = check_scalar(n_sampling, "n_sampling", (numbers.Integral, np.integer), min_val=1)
 
-    n_repeats = check_scalar(
-        n_repeats,
-        "n_repeats",
-        (numbers.Integral, np.integer),
-        min_val=1
-    )
+    n_repeats = check_scalar(n_repeats, "n_repeats", (numbers.Integral, np.integer), min_val=1)
 
     if cd_model is not None and not isinstance(cd_model, BaseMultiGroupCDModel):
         raise ValueError("cd_model must be an instance of a subclass of BaseMultiGroupCDModel.")
@@ -120,7 +111,7 @@ def bootstrap_with_imputation(
         cd_model = _DefaultMultiGroupCDModel(
             prior_knowledge=prior_knowledge,
             apply_prior_knowledge_softly=apply_prior_knowledge_softly,
-            random_state=random_state
+            random_state=random_state,
         )
 
     resampled_indices = []
@@ -167,7 +158,7 @@ def bootstrap_with_imputation(
 
 
 class BaseMultipleImputation(metaclass=ABCMeta):
-    """ The abstract class of the causal discovery model for the multigroup data
+    """The abstract class of the causal discovery model for the multigroup data
 
     Inherit this abstract class and send that instance to ``bootstrap_with_imputation``
     if you need to customize the causal discovery model in ``bootstrap_with_imputation``.
@@ -198,7 +189,7 @@ def _check_imputer_outout(imp_output, n_samples, n_features):
         imputed_data = check_array(imp_output, allow_nd=True)
     except Exception as e:
         raise ValueError("The return value of imp violates its specification: " + str(e))
-    
+
     if imputed_data.shape[1:] != (n_samples, n_features):
         raise ValueError("The shape of the return value of imp must be (n_repeats, n_samples, n_fatures).")
 
@@ -208,7 +199,7 @@ def _check_imputer_outout(imp_output, n_samples, n_features):
 
 
 class BaseMultiGroupCDModel(metaclass=ABCMeta):
-    """ The abstract class of the causal discovery model for the multigroup data
+    """The abstract class of the causal discovery model for the multigroup data
 
     Inherit this abstract class and send that instance to ``bootstrap_with_imputation``
     if you need to customize the causal discovery model in ``bootstrap_with_imputation``.
@@ -286,7 +277,7 @@ def _check_cd_output(cd_output, n_repeats, n_features):
 
 
 class _DefaultMultipleImputation(metaclass=ABCMeta):
-    """ The default class for the multiple imputation """
+    """The default class for the multiple imputation"""
 
     def __init__(self, n_repeats, random_state):
         self._imp = IterativeImputer(sample_posterior=True, random_state=random_state)
@@ -302,13 +293,18 @@ class _DefaultMultipleImputation(metaclass=ABCMeta):
 
 
 class _DefaultMultiGroupCDModel(BaseMultiGroupCDModel):
-    """ The default class for the causal discovery on the multigroup data """
+    """The default class for the causal discovery on the multigroup data"""
 
-    def __init__(self, prior_knowledge=None, apply_prior_knowledge_softly=False, random_state=None):
+    def __init__(
+        self,
+        prior_knowledge=None,
+        apply_prior_knowledge_softly=False,
+        random_state=None,
+    ):
         self._model = MultiGroupDirectLiNGAM(
             prior_knowledge=prior_knowledge,
             apply_prior_knowledge_softly=apply_prior_knowledge_softly,
-            random_state=random_state
+            random_state=random_state,
         )
 
     def before_imputation(self, X):

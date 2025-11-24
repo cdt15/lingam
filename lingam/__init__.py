@@ -26,6 +26,7 @@ from .group_direct_lingam import GroupDirectLiNGAM
 from .group_lingam import GroupLiNGAM
 from .missingness_lingam import mLiNGAM
 from .multi_group_resit import MultiGroupRESIT
+from .abic_lingam import ABICLiNGAM
 
 __all__ = [
     "ICALiNGAM",
@@ -54,6 +55,7 @@ __all__ = [
     "GroupLiNGAM",
     "mLiNGAM",
     "MultiGroupRESIT",
+    "ABICLiNGAM",
 ]
 
 __version__ = "1.11.0"

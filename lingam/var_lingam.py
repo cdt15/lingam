@@ -96,7 +96,7 @@ class VARLiNGAM:
         else:
             lags = M_taus.shape[0]
             residuals = self._calc_residuals(X, M_taus, lags)
-            
+
         self._ar_coefs = M_taus
         self._lags = lags
         self._residuals = residuals
@@ -146,7 +146,7 @@ class VARLiNGAM:
 
         fitted_ar_coefs = self._ar_coefs
         residuals = self._residuals
-        
+
         total_effects = np.zeros(
             [n_sampling, n_features, n_features * (1 + self._lags)]
         )

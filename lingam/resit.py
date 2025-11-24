@@ -119,7 +119,7 @@ class RESIT(_BaseLiNGAM):
         for _ in range(X.shape[1]):
             Sc = self._search_candidate(S)
 
-            if len(Sc)==1:
+            if len(Sc) == 1:
                 k = Sc[0]
             else:
                 hsic_stats = []
