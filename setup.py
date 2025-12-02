@@ -26,6 +26,7 @@ setuptools.setup(
         'matplotlib',
         'psy',
         'semopy',
+        'autograd',
     ],
     url='https://github.com/cdt15/lingam',
     packages=setuptools.find_packages(exclude=['tests']),
