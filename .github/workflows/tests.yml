@@ -56,7 +56,10 @@ jobs:
 
       - name: Build sdist & wheel via setup.py
         run: |
+          python -m venv venv_b
+          source venv_b/bin/activate
           python -m pip install --upgrade pip setuptools wheel
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           python setup.py sdist bdist_wheel
           ls -la dist/
           echo "List sdist contents:"
