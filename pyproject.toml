@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lingam"
-description = "LiNGAM Python Package"
+description = "Python package for causal discovery based on LiNGAM."
 readme = "README.md"
 authors = [
     { name = "Takashi Ikeuchi" },
