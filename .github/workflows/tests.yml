@@ -54,13 +54,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
-      - name: Build sdist & wheel via setup.py
+      - name: Build sdist & wheel via pyproject.toml
         run: |
           python -m venv venv_b
           source venv_b/bin/activate
-          python -m pip install --upgrade pip setuptools wheel
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          python setup.py sdist bdist_wheel
+          python -m pip install --upgrade pip setuptools wheel build
+          python -m build
           ls -la dist/
           echo "List sdist contents:"
           tar -tf dist/*.tar.gz | head -n 50
