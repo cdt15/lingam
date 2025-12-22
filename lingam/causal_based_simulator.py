@@ -668,7 +668,7 @@ class CBSIUnobsCommonCauseLiNGAM(CBSILiNGAM):
     def _check_causal_graph(self, causal_graph, X):
         try:
             # fill nan with zeros
-            causal_graph = check_array(causal_graph, force_all_finite="allow-nan", copy=True)
+            causal_graph = check_array(causal_graph, ensure_all_finite="allow-nan", copy=True)
 
             n_features = X.shape[1]
             if causal_graph.shape != (n_features, n_features):

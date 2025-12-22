@@ -84,7 +84,7 @@ def bootstrap_with_imputation(
         Elements which are not NaN are the imputation values.
     """
     # check args
-    X = check_array(X, force_all_finite="allow-nan")
+    X = check_array(X, ensure_all_finite="allow-nan")
 
     n_sampling = check_scalar(n_sampling, "n_sampling", (numbers.Integral, np.integer), min_val=1)
 
