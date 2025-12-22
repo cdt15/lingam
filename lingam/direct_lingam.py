@@ -252,13 +252,20 @@ class DirectLiNGAM(_BaseLiNGAM):
             Returns the instance itself.
         mlist: causal ordering
         """
+        Uc, _ = self._search_candidate(U)
+        if len(Uc) == 1:
+            return Uc[0]
+
         cols = len(U)
         rows = len(X)
 
         arr = X[:, np.array(U)]
         from lingam_cuda import causal_order as causal_order_gpu
         mlist = causal_order_gpu(arr, rows, cols)
-        return U[np.argmax(mlist)]
+        M_list = np.asarray(mlist)
+        M_list = M_list[np.isin(U, Uc)]
+
+        return Uc[int(np.argmax(M_list))]
 
     def _mutual_information(self, x1, x2, param):
         """Calculate the mutual informations."""
