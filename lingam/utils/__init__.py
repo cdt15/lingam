@@ -990,8 +990,8 @@ def evaluate_model_fit(adjacency_matrix, X, is_ordinal=None):
                 if eta_name not in eta_names:
                     eta_names.append(eta_name)
             elif not np.isclose(elem, 0):
-                desc += f"{elem:f} * x{j:d} + "
-        desc = desc[: -len(" * ")] + "\n"
+                desc += f"x{j:d} + "
+        desc = desc[: -len(" + ")] + "\n"
 
     if len(eta_names) > 0:
         desc += "DEFINE(latent) " + " ".join(eta_names) + "\n"
