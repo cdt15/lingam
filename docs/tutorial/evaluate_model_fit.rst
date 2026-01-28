@@ -27,8 +27,8 @@ Import and settings
 
 .. parsed-literal::
 
-    ['1.24.4', '2.0.3', '1.8.2']
-
+    ['1.26.4', '2.3.3', '1.12.1']
+    
 
 When all variables are continuous data
 --------------------------------------
@@ -225,20 +225,20 @@ Calculate the model fit of the given adjacency matrix to given data.
       <tbody>
         <tr>
           <th>Value</th>
+          <td>9</td>
           <td>16</td>
-          <td>16</td>
-          <td>997.342767</td>
-          <td>0.0</td>
+          <td>11.129623</td>
+          <td>0.266928</td>
           <td>22997.243286</td>
-          <td>0.957298</td>
-          <td>0.956632</td>
-          <td>0.956632</td>
-          <td>0.956632</td>
-          <td>0.957298</td>
-          <td>0.247781</td>
-          <td>8.005314</td>
-          <td>32.544091</td>
-          <td>0.997343</td>
+          <td>0.999907</td>
+          <td>0.999516</td>
+          <td>0.99914</td>
+          <td>0.999516</td>
+          <td>0.999835</td>
+          <td>0.01539</td>
+          <td>23.977741</td>
+          <td>82.870804</td>
+          <td>0.01113</td>
         </tr>
       </tbody>
     </table>
@@ -417,20 +417,20 @@ nan represents having a hidden common cause.
       <tbody>
         <tr>
           <th>Value</th>
-          <td>3</td>
+          <td>-3</td>
           <td>15</td>
-          <td>1673.491434</td>
-          <td>0.0</td>
+          <td>1673.491733</td>
+          <td>NaN</td>
           <td>4158.502617</td>
-          <td>0.596841</td>
-          <td>0.597574</td>
-          <td>-1.012132</td>
-          <td>0.597574</td>
-          <td>-1.015796</td>
-          <td>0.746584</td>
-          <td>32.653017</td>
-          <td>120.992612</td>
-          <td>1.673491</td>
+          <td>0.595393</td>
+          <td>0.597573</td>
+          <td>3.012133</td>
+          <td>0.597573</td>
+          <td>3.023037</td>
+          <td>NaN</td>
+          <td>44.653017</td>
+          <td>162.439143</td>
+          <td>1.673492</td>
         </tr>
       </tbody>
     </table>
@@ -602,20 +602,20 @@ Specify whether each variable is an ordinal variable in `is_ordinal`.
       <tbody>
         <tr>
           <th>Value</th>
+          <td>9</td>
           <td>16</td>
-          <td>16</td>
-          <td>2239.89739</td>
-          <td>0.0</td>
+          <td>19.949525</td>
+          <td>0.018226</td>
           <td>2733.058196</td>
-          <td>0.181505</td>
-          <td>0.180443</td>
-          <td>0.180443</td>
-          <td>0.180443</td>
-          <td>0.181505</td>
-          <td>0.373005</td>
-          <td>5.520205</td>
-          <td>30.058982</td>
-          <td>2.239897</td>
+          <td>0.99597</td>
+          <td>0.992701</td>
+          <td>0.987023</td>
+          <td>0.992701</td>
+          <td>0.992836</td>
+          <td>0.034897</td>
+          <td>23.960101</td>
+          <td>82.853164</td>
+          <td>0.01995</td>
         </tr>
       </tbody>
     </table>
