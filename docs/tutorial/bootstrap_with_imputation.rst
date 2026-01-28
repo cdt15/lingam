@@ -28,8 +28,8 @@ Import and settings
 
 .. parsed-literal::
 
-    ['1.24.4', '1.8.3']
-
+    ['1.26.4', '1.12.1']
+    
 
 Test data
 ---------
@@ -311,12 +311,17 @@ results with no missing data.
 Median value of each element of the matrix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Median values of each element of the adjacency matrix estimated on the
-data with missing values are as follows:
+The following matrix shows the median of each adjacency matrix element
+across all bootstrap replicates. For each bootstrap replicate, its
+representative adjacency matrix is obtained by taking the median across
+its multiple imputations.
 
 .. code-block:: python
 
-    np.median(adj_matrices_list, axis=(0, 1))
+    adj_median_per_bootstrap = np.median(adj_matrices_list, axis=1)
+    adj_median_over_bootstrap = np.median(adj_median_per_bootstrap, axis=0)
+    
+    adj_median_over_bootstrap
 
 
 
@@ -327,8 +332,8 @@ data with missing values are as follows:
            [ 0.555,  0.   ,  0.381,  0.   ,  0.   ,  0.   ],
            [ 0.   ,  0.   ,  0.   ,  0.918,  0.   ,  0.   ],
            [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
-           [ 1.025,  0.   , -0.147,  0.   ,  0.   ,  0.   ],
-           [ 0.892,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
+           [ 1.026,  0.   , -0.148,  0.   ,  0.   ,  0.   ],
+           [ 0.893,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
 
 
 

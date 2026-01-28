@@ -15,6 +15,9 @@ In this example, we need to import ``numpy``, ``pandas``, and ``graphviz`` in ad
     import lingam
     from lingam.utils import print_causal_directions, print_dagc, make_dot
     
+    import warnings
+    warnings.filterwarnings("ignore")
+    
     print([np.__version__, pd.__version__, graphviz.__version__, lingam.__version__])
     
     np.set_printoptions(precision=3, suppress=True)
@@ -23,8 +26,8 @@ In this example, we need to import ``numpy``, ``pandas``, and ``graphviz`` in ad
 
 .. parsed-literal::
 
-    ['1.24.4', '2.0.3', '0.20.1', '1.8.3']
-
+    ['1.26.4', '2.3.3', '0.21', '1.12.1']
+    
 
 Test data
 ---------
@@ -174,8 +177,10 @@ We call :func:`~lingam.DirectLiNGAM.bootstrap` method instead of :func:`~lingam.
 
 .. code-block:: python
 
+    n_samples = 100
+    
     model = lingam.DirectLiNGAM()
-    result = model.bootstrap(X, n_sampling=100)
+    result = model.bootstrap(X, n_sampling=n_samples)
 
 Causal Directions
 -----------------
@@ -190,7 +195,7 @@ We can check the result by utility function.
 
 .. code-block:: python
 
-    print_causal_directions(cdc, 100)
+    print_causal_directions(cdc, n_samples)
 
 
 .. parsed-literal::
@@ -222,7 +227,7 @@ We can check the result by utility function.
 
 .. code-block:: python
 
-    print_dagc(dagc, 100)
+    print_dagc(dagc, n_samples)
 
 
 .. parsed-literal::
@@ -818,6 +823,80 @@ values of the causal effect, as shown below.
 
 .. image:: ../image/bootstrap_hist.png
 
+Furthermore, when we separate the bootstrap coefficient distributions
+into the three structural cases - X->Y, Y->X, and no directed edge between
+X and Y - the resulting histograms are shown below.
+
+.. code-block:: python
+
+    import matplotlib.ticker as ticker
+    
+    from_index, to_index = 0, 4
+    
+    te_xy = result.total_effects_[:, to_index, from_index]
+    te_yx = result.total_effects_[:, from_index, to_index]
+    
+    both_zero_mask = (te_xy == 0.0) & (te_yx == 0.0)
+    te_zero = result.total_effects_[both_zero_mask, to_index, from_index]
+    
+    te_xy = te_xy[te_xy != 0.0]
+    te_yx = te_yx[te_yx != 0.0]
+    
+    bins_count = int(np.ceil(1 + np.log2(max(n_samples, 1))))
+    
+    # calculate xmin, xmax
+    arr_list = [te_xy, te_yx, te_zero]
+    if any(a.size > 0 for a in arr_list):
+        vals = np.concatenate([a for a in arr_list if a.size > 0])
+    else:
+        vals = np.array([0.0])
+    
+    xmin, xmax = np.min(vals), np.max(vals)
+    if xmin == xmax:
+        eps = 1e-9 if xmin == 0 else abs(xmin) * 1e-3
+        xmin, xmax = xmin - eps, xmax + eps
+    
+    bin_edges = np.linspace(xmin, xmax, bins_count + 1)
+    
+    # calculate ymax
+    counts_xy, _ = np.histogram(te_xy, bins=bin_edges) if te_xy.size > 0 else (np.zeros(bins_count, dtype=int), None)
+    counts_yx, _ = np.histogram(te_yx, bins=bin_edges) if te_yx.size > 0 else (np.zeros(bins_count, dtype=int), None)
+    counts_zz, _ = np.histogram(te_zero, bins=bin_edges) if te_zero.size > 0 else (np.zeros(bins_count, dtype=int), None)
+    
+    ymax = int(max(counts_xy.max(initial=0), counts_yx.max(initial=0), counts_zz.max(initial=0)))
+    ymax = max(ymax, 1)
+    # If you want to set ymax to the number of bootstrap iterations, uncomment next line.
+    # ymax = n_samples
+    
+    # display histograms
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharex=True, sharey=True)
+    labels = [f'x{i}' for i in range(X.shape[1])]
+    
+    axes[0].hist(te_xy, bins=bin_edges)
+    axes[0].set_title(f"{labels[from_index]} -> {labels[to_index]}")
+    axes[0].yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    axes[0].set_xlim(xmin, xmax)
+    axes[0].set_ylim(0, ymax)
+    
+    axes[1].hist(te_yx, bins=bin_edges)
+    axes[1].set_title(f"{labels[to_index]} -> {labels[from_index]}")
+    axes[1].yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    axes[1].set_xlim(xmin, xmax)
+    axes[1].set_ylim(0, ymax)
+    
+    axes[2].hist(te_zero, bins=bin_edges)
+    axes[2].set_title("No directed edge between " + labels[from_index] + " and " + labels[to_index])
+    axes[2].yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    axes[2].set_xlim(xmin, xmax)
+    axes[2].set_ylim(0, ymax)
+    
+    plt.tight_layout()
+    plt.show()
+
+
+
+.. image:: ../image/bootstrap_hists.png
+
 Bootstrap Probability of Path
 -----------------------------
 
@@ -830,7 +909,7 @@ variable X0 to variable X1.
 .. code-block:: python
 
     from_index = 3 # index of x3
-    to_index = 1 # index of x0
+    to_index = 1 # index of x1
     
     pd.DataFrame(result.get_paths(from_index, to_index))
 
