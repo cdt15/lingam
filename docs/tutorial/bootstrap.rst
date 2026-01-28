@@ -36,12 +36,13 @@ We create test data consisting of 6 variables.
 
 .. code-block:: python
 
-    x3 = np.random.uniform(size=1000)
-    x0 = 3.0*x3 + np.random.uniform(size=1000)
-    x2 = 6.0*x3 + np.random.uniform(size=1000)
-    x1 = 3.0*x0 + 2.0*x2 + np.random.uniform(size=1000)
-    x5 = 4.0*x0 + np.random.uniform(size=1000)
-    x4 = 8.0*x0 - 1.0*x2 + np.random.uniform(size=1000)
+    _size = 100
+    x3 = np.random.uniform(size=_size)
+    x0 = 3.0*x3 + np.random.uniform(size=_size)
+    x2 = 6.0*x3 + np.random.uniform(size=_size)
+    x1 = 3.0*x0 + 2.0*x2 + np.random.uniform(size=_size)
+    x5 = 4.0*x0 + np.random.uniform(size=_size)
+    x4 = 8.0*x0 - 1.0*x2 + np.random.uniform(size=_size)
     X = pd.DataFrame(np.array([x0, x1, x2, x3, x4, x5]).T ,columns=['x0', 'x1', 'x2', 'x3', 'x4', 'x5'])
     X.head()
 
@@ -102,48 +103,48 @@ We create test data consisting of 6 variables.
       <tbody>
         <tr>
           <th>0</th>
-          <td>2.239321</td>
-          <td>15.340724</td>
-          <td>4.104399</td>
+          <td>2.324257</td>
+          <td>15.088680</td>
+          <td>3.604677</td>
           <td>0.548814</td>
-          <td>14.176947</td>
-          <td>9.249925</td>
+          <td>15.299760</td>
+          <td>9.698288</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>2.155632</td>
-          <td>16.630954</td>
-          <td>4.767220</td>
+          <td>2.415576</td>
+          <td>17.995735</td>
+          <td>4.987480</td>
           <td>0.715189</td>
-          <td>12.775458</td>
-          <td>9.189045</td>
+          <td>14.710164</td>
+          <td>10.591596</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>2.284116</td>
-          <td>15.910406</td>
-          <td>4.139736</td>
+          <td>2.543484</td>
+          <td>15.952262</td>
+          <td>3.994332</td>
           <td>0.602763</td>
-          <td>14.201794</td>
-          <td>9.273880</td>
+          <td>16.878512</td>
+          <td>10.273552</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>2.343420</td>
-          <td>14.921457</td>
-          <td>3.519820</td>
+          <td>2.596838</td>
+          <td>14.769421</td>
+          <td>3.448903</td>
           <td>0.544883</td>
-          <td>15.580067</td>
-          <td>9.723392</td>
+          <td>18.076397</td>
+          <td>11.332654</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>1.314940</td>
-          <td>11.055176</td>
-          <td>3.146972</td>
+          <td>1.519718</td>
+          <td>10.099609</td>
+          <td>2.566608</td>
           <td>0.423655</td>
-          <td>7.604743</td>
-          <td>5.312976</td>
+          <td>9.924640</td>
+          <td>6.948359</td>
         </tr>
       </tbody>
     </table>
@@ -177,7 +178,7 @@ We call :func:`~lingam.DirectLiNGAM.bootstrap` method instead of :func:`~lingam.
 
 .. code-block:: python
 
-    n_samples = 100
+    n_samples = 1000
     
     model = lingam.DirectLiNGAM()
     result = model.bootstrap(X, n_sampling=n_samples)
@@ -200,15 +201,15 @@ We can check the result by utility function.
 
 .. parsed-literal::
 
-    x5 <--- x0 (b>0) (100.0%)
-    x1 <--- x0 (b>0) (100.0%)
-    x1 <--- x2 (b>0) (100.0%)
-    x4 <--- x2 (b<0) (100.0%)
-    x0 <--- x3 (b>0) (98.0%)
-    x4 <--- x0 (b>0) (98.0%)
-    x2 <--- x3 (b>0) (96.0%)
-    x3 <--- x2 (b>0) (4.0%)
-
+    x4 <--- x2 (b<0) (87.9%)
+    x4 <--- x0 (b>0) (86.6%)
+    x1 <--- x2 (b>0) (77.5%)
+    x1 <--- x0 (b>0) (77.3%)
+    x2 <--- x3 (b>0) (76.1%)
+    x5 <--- x0 (b>0) (75.4%)
+    x0 <--- x3 (b>0) (45.4%)
+    x0 <--- x5 (b>0) (24.6%)
+    
 
 Directed Acyclic Graphs
 -----------------------
@@ -232,7 +233,7 @@ We can check the result by utility function.
 
 .. parsed-literal::
 
-    DAG[0]: 84.0%
+    DAG[0]: 17.0%
     	x0 <--- x3 (b>0)
     	x1 <--- x0 (b>0)
     	x1 <--- x2 (b>0)
@@ -240,7 +241,7 @@ We can check the result by utility function.
     	x4 <--- x0 (b>0)
     	x4 <--- x2 (b<0)
     	x5 <--- x0 (b>0)
-    DAG[1]: 3.0%
+    DAG[1]: 4.2%
     	x0 <--- x3 (b>0)
     	x1 <--- x0 (b>0)
     	x1 <--- x2 (b>0)
@@ -248,16 +249,15 @@ We can check the result by utility function.
     	x4 <--- x0 (b>0)
     	x4 <--- x2 (b<0)
     	x5 <--- x0 (b>0)
-    DAG[2]: 2.0%
-    	x0 <--- x3 (b>0)
+    DAG[2]: 3.9%
     	x1 <--- x0 (b>0)
     	x1 <--- x2 (b>0)
-    	x1 <--- x3 (b<0)
     	x2 <--- x3 (b>0)
+    	x3 <--- x0 (b>0)
     	x4 <--- x0 (b>0)
     	x4 <--- x2 (b<0)
     	x5 <--- x0 (b>0)
-
+    
 
 Probability
 -----------
@@ -273,13 +273,13 @@ bootstrapping.
 
 .. parsed-literal::
 
-    [[0.   0.   0.03 0.98 0.02 0.  ]
-     [1.   0.   1.   0.02 0.   0.01]
-     [0.01 0.   0.   0.96 0.   0.01]
-     [0.   0.   0.04 0.   0.   0.  ]
-     [0.98 0.01 1.   0.02 0.   0.02]
-     [1.   0.   0.02 0.02 0.   0.  ]]
-
+    [[0.    0.178 0.163 0.482 0.134 0.246]
+     [0.773 0.    0.775 0.202 0.069 0.064]
+     [0.2   0.225 0.    0.761 0.093 0.032]
+     [0.183 0.166 0.19  0.    0.031 0.084]
+     [0.866 0.074 0.88  0.121 0.    0.043]
+     [0.754 0.059 0.065 0.095 0.062 0.   ]]
+    
 
 Total Causal Effects
 --------------------
@@ -356,150 +356,213 @@ below.
       <tbody>
         <tr>
           <th>0</th>
-          <td>x3</td>
-          <td>x0</td>
-          <td>3.004106</td>
-          <td>1.00</td>
+          <td>x2</td>
+          <td>x4</td>
+          <td>-0.986006</td>
+          <td>0.884</td>
         </tr>
         <tr>
           <th>1</th>
           <td>x0</td>
-          <td>x1</td>
-          <td>2.963177</td>
-          <td>1.00</td>
+          <td>x4</td>
+          <td>7.975821</td>
+          <td>0.866</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>x2</td>
-          <td>x1</td>
-          <td>2.017539</td>
-          <td>1.00</td>
+          <td>x3</td>
+          <td>x4</td>
+          <td>17.169757</td>
+          <td>0.858</td>
         </tr>
         <tr>
           <th>3</th>
           <td>x3</td>
           <td>x1</td>
-          <td>20.928254</td>
-          <td>1.00</td>
+          <td>20.553538</td>
+          <td>0.794</td>
         </tr>
         <tr>
           <th>4</th>
           <td>x0</td>
-          <td>x5</td>
-          <td>3.997787</td>
-          <td>1.00</td>
+          <td>x1</td>
+          <td>3.020369</td>
+          <td>0.793</td>
         </tr>
         <tr>
           <th>5</th>
           <td>x3</td>
-          <td>x4</td>
-          <td>18.077943</td>
-          <td>1.00</td>
+          <td>x2</td>
+          <td>5.968590</td>
+          <td>0.788</td>
         </tr>
         <tr>
           <th>6</th>
-          <td>x3</td>
-          <td>x5</td>
-          <td>12.012988</td>
-          <td>1.00</td>
+          <td>x2</td>
+          <td>x1</td>
+          <td>1.992771</td>
+          <td>0.775</td>
         </tr>
         <tr>
           <th>7</th>
-          <td>x2</td>
-          <td>x4</td>
-          <td>-1.006362</td>
-          <td>1.00</td>
+          <td>x0</td>
+          <td>x5</td>
+          <td>3.984278</td>
+          <td>0.754</td>
         </tr>
         <tr>
           <th>8</th>
-          <td>x0</td>
-          <td>x4</td>
-          <td>8.011818</td>
-          <td>0.98</td>
+          <td>x3</td>
+          <td>x5</td>
+          <td>11.686617</td>
+          <td>0.657</td>
         </tr>
         <tr>
           <th>9</th>
           <td>x3</td>
-          <td>x2</td>
-          <td>5.964879</td>
-          <td>0.96</td>
+          <td>x0</td>
+          <td>2.920996</td>
+          <td>0.653</td>
         </tr>
         <tr>
           <th>10</th>
+          <td>x0</td>
           <td>x2</td>
-          <td>x5</td>
-          <td>0.396327</td>
-          <td>0.09</td>
+          <td>1.679845</td>
+          <td>0.343</td>
         </tr>
         <tr>
           <th>11</th>
           <td>x2</td>
-          <td>x0</td>
-          <td>0.487915</td>
-          <td>0.07</td>
+          <td>x5</td>
+          <td>0.155444</td>
+          <td>0.282</td>
         </tr>
         <tr>
           <th>12</th>
-          <td>x2</td>
-          <td>x3</td>
-          <td>0.164565</td>
-          <td>0.04</td>
+          <td>x5</td>
+          <td>x4</td>
+          <td>1.550997</td>
+          <td>0.266</td>
         </tr>
         <tr>
           <th>13</th>
-          <td>x5</td>
-          <td>x4</td>
-          <td>0.087437</td>
-          <td>0.03</td>
+          <td>x0</td>
+          <td>x3</td>
+          <td>0.305366</td>
+          <td>0.260</td>
         </tr>
         <tr>
           <th>14</th>
-          <td>x4</td>
           <td>x5</td>
-          <td>0.496445</td>
-          <td>0.02</td>
+          <td>x1</td>
+          <td>0.939446</td>
+          <td>0.259</td>
         </tr>
         <tr>
           <th>15</th>
           <td>x5</td>
-          <td>x1</td>
-          <td>-0.064703</td>
-          <td>0.02</td>
+          <td>x0</td>
+          <td>0.249365</td>
+          <td>0.246</td>
         </tr>
         <tr>
           <th>16</th>
-          <td>x4</td>
           <td>x1</td>
-          <td>0.367100</td>
-          <td>0.02</td>
+          <td>x4</td>
+          <td>0.863039</td>
+          <td>0.245</td>
         </tr>
         <tr>
           <th>17</th>
-          <td>x4</td>
+          <td>x2</td>
           <td>x0</td>
-          <td>0.124114</td>
-          <td>0.02</td>
+          <td>0.120842</td>
+          <td>0.244</td>
         </tr>
         <tr>
           <th>18</th>
-          <td>x0</td>
+          <td>x1</td>
           <td>x2</td>
-          <td>0.056261</td>
-          <td>0.01</td>
+          <td>0.285349</td>
+          <td>0.225</td>
         </tr>
         <tr>
           <th>19</th>
           <td>x1</td>
-          <td>x4</td>
-          <td>-0.097108</td>
-          <td>0.01</td>
+          <td>x5</td>
+          <td>0.576121</td>
+          <td>0.199</td>
         </tr>
         <tr>
           <th>20</th>
+          <td>x1</td>
+          <td>x0</td>
+          <td>0.144407</td>
+          <td>0.197</td>
+        </tr>
+        <tr>
+          <th>21</th>
           <td>x5</td>
           <td>x2</td>
-          <td>-0.111894</td>
-          <td>0.01</td>
+          <td>0.451434</td>
+          <td>0.196</td>
+        </tr>
+        <tr>
+          <th>22</th>
+          <td>x1</td>
+          <td>x3</td>
+          <td>0.046961</td>
+          <td>0.194</td>
+        </tr>
+        <tr>
+          <th>23</th>
+          <td>x2</td>
+          <td>x3</td>
+          <td>0.133917</td>
+          <td>0.191</td>
+        </tr>
+        <tr>
+          <th>24</th>
+          <td>x5</td>
+          <td>x3</td>
+          <td>0.076654</td>
+          <td>0.168</td>
+        </tr>
+        <tr>
+          <th>25</th>
+          <td>x4</td>
+          <td>x1</td>
+          <td>0.362045</td>
+          <td>0.144</td>
+        </tr>
+        <tr>
+          <th>26</th>
+          <td>x4</td>
+          <td>x5</td>
+          <td>0.478376</td>
+          <td>0.143</td>
+        </tr>
+        <tr>
+          <th>27</th>
+          <td>x4</td>
+          <td>x0</td>
+          <td>0.123534</td>
+          <td>0.134</td>
+        </tr>
+        <tr>
+          <th>28</th>
+          <td>x4</td>
+          <td>x2</td>
+          <td>-0.139721</td>
+          <td>0.097</td>
+        </tr>
+        <tr>
+          <th>29</th>
+          <td>x4</td>
+          <td>x3</td>
+          <td>-0.006454</td>
+          <td>0.043</td>
         </tr>
       </tbody>
     </table>
@@ -570,36 +633,36 @@ We can easily perform sorting operations with pandas.DataFrame.
           <th>3</th>
           <td>x3</td>
           <td>x1</td>
-          <td>20.928254</td>
-          <td>1.00</td>
+          <td>20.553538</td>
+          <td>0.794</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>x3</td>
+          <td>x4</td>
+          <td>17.169757</td>
+          <td>0.858</td>
+        </tr>
+        <tr>
+          <th>8</th>
+          <td>x3</td>
+          <td>x5</td>
+          <td>11.686617</td>
+          <td>0.657</td>
+        </tr>
+        <tr>
+          <th>1</th>
+          <td>x0</td>
+          <td>x4</td>
+          <td>7.975821</td>
+          <td>0.866</td>
         </tr>
         <tr>
           <th>5</th>
           <td>x3</td>
-          <td>x4</td>
-          <td>18.077943</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>6</th>
-          <td>x3</td>
-          <td>x5</td>
-          <td>12.012988</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>8</th>
-          <td>x0</td>
-          <td>x4</td>
-          <td>8.011818</td>
-          <td>0.98</td>
-        </tr>
-        <tr>
-          <th>9</th>
-          <td>x3</td>
           <td>x2</td>
-          <td>5.964879</td>
-          <td>0.96</td>
+          <td>5.968590</td>
+          <td>0.788</td>
         </tr>
       </tbody>
     </table>
@@ -665,39 +728,39 @@ We can easily perform sorting operations with pandas.DataFrame.
       </thead>
       <tbody>
         <tr>
-          <th>20</th>
+          <th>29</th>
+          <td>x4</td>
+          <td>x3</td>
+          <td>-0.006454</td>
+          <td>0.043</td>
+        </tr>
+        <tr>
+          <th>28</th>
+          <td>x4</td>
+          <td>x2</td>
+          <td>-0.139721</td>
+          <td>0.097</td>
+        </tr>
+        <tr>
+          <th>27</th>
+          <td>x4</td>
+          <td>x0</td>
+          <td>0.123534</td>
+          <td>0.134</td>
+        </tr>
+        <tr>
+          <th>26</th>
+          <td>x4</td>
           <td>x5</td>
-          <td>x2</td>
-          <td>-0.111894</td>
-          <td>0.01</td>
+          <td>0.478376</td>
+          <td>0.143</td>
         </tr>
         <tr>
-          <th>18</th>
-          <td>x0</td>
-          <td>x2</td>
-          <td>0.056261</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>19</th>
-          <td>x1</td>
-          <td>x4</td>
-          <td>-0.097108</td>
-          <td>0.01</td>
-        </tr>
-        <tr>
-          <th>17</th>
-          <td>x4</td>
-          <td>x0</td>
-          <td>0.124114</td>
-          <td>0.02</td>
-        </tr>
-        <tr>
-          <th>16</th>
+          <th>25</th>
           <td>x4</td>
           <td>x1</td>
-          <td>0.367100</td>
-          <td>0.02</td>
+          <td>0.362045</td>
+          <td>0.144</td>
         </tr>
       </tbody>
     </table>
@@ -766,39 +829,39 @@ following code extracts the causal direction towards x1.
       </thead>
       <tbody>
         <tr>
-          <th>1</th>
-          <td>x0</td>
-          <td>x1</td>
-          <td>2.963177</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>x2</td>
-          <td>x1</td>
-          <td>2.017539</td>
-          <td>1.00</td>
-        </tr>
-        <tr>
           <th>3</th>
           <td>x3</td>
           <td>x1</td>
-          <td>20.928254</td>
-          <td>1.00</td>
+          <td>20.553538</td>
+          <td>0.794</td>
         </tr>
         <tr>
-          <th>15</th>
+          <th>4</th>
+          <td>x0</td>
+          <td>x1</td>
+          <td>3.020369</td>
+          <td>0.793</td>
+        </tr>
+        <tr>
+          <th>6</th>
+          <td>x2</td>
+          <td>x1</td>
+          <td>1.992771</td>
+          <td>0.775</td>
+        </tr>
+        <tr>
+          <th>14</th>
           <td>x5</td>
           <td>x1</td>
-          <td>-0.064703</td>
-          <td>0.02</td>
+          <td>0.939446</td>
+          <td>0.259</td>
         </tr>
         <tr>
-          <th>16</th>
+          <th>25</th>
           <td>x4</td>
           <td>x1</td>
-          <td>0.367100</td>
-          <td>0.02</td>
+          <td>0.362045</td>
+          <td>0.144</td>
         </tr>
       </tbody>
     </table>
@@ -831,7 +894,7 @@ X and Y - the resulting histograms are shown below.
 
     import matplotlib.ticker as ticker
     
-    from_index, to_index = 0, 4
+    from_index, to_index = 2, 4
     
     te_xy = result.total_effects_[:, to_index, from_index]
     te_yx = result.total_effects_[:, from_index, to_index]
@@ -892,8 +955,6 @@ X and Y - the resulting histograms are shown below.
     
     plt.tight_layout()
     plt.show()
-
-
 
 .. image:: ../image/bootstrap_hists.png
 
@@ -967,57 +1028,237 @@ variable X0 to variable X1.
       <tbody>
         <tr>
           <th>0</th>
-          <td>[3, 0, 1]</td>
-          <td>8.893562</td>
-          <td>0.98</td>
+          <td>[3, 2, 1]</td>
+          <td>11.914854</td>
+          <td>0.660</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>[3, 2, 1]</td>
-          <td>12.030408</td>
-          <td>0.96</td>
+          <td>[3, 0, 1]</td>
+          <td>8.756234</td>
+          <td>0.443</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>[3, 2, 0, 1]</td>
-          <td>2.239175</td>
-          <td>0.03</td>
+          <td>[3, 1]</td>
+          <td>2.105700</td>
+          <td>0.202</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>[3, 1]</td>
-          <td>-0.639462</td>
-          <td>0.02</td>
+          <td>[3, 2, 0, 1]</td>
+          <td>1.635862</td>
+          <td>0.094</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>[3, 2, 4, 0, 1]</td>
-          <td>-3.194541</td>
-          <td>0.02</td>
+          <td>[3, 5, 0, 1]</td>
+          <td>8.670284</td>
+          <td>0.060</td>
         </tr>
         <tr>
           <th>5</th>
           <td>[3, 4, 0, 1]</td>
-          <td>9.820705</td>
-          <td>0.02</td>
+          <td>6.979752</td>
+          <td>0.054</td>
         </tr>
         <tr>
           <th>6</th>
-          <td>[3, 0, 2, 1]</td>
-          <td>3.061033</td>
-          <td>0.01</td>
+          <td>[3, 2, 4, 1]</td>
+          <td>-1.146483</td>
+          <td>0.038</td>
         </tr>
         <tr>
           <th>7</th>
-          <td>[3, 0, 5, 1]</td>
-          <td>1.176834</td>
-          <td>0.01</td>
+          <td>[3, 0, 4, 1]</td>
+          <td>4.459602</td>
+          <td>0.028</td>
         </tr>
         <tr>
           <th>8</th>
+          <td>[3, 0, 5, 1]</td>
+          <td>2.864025</td>
+          <td>0.026</td>
+        </tr>
+        <tr>
+          <th>9</th>
+          <td>[3, 2, 4, 0, 1]</td>
+          <td>-4.602396</td>
+          <td>0.024</td>
+        </tr>
+        <tr>
+          <th>10</th>
+          <td>[3, 0, 2, 1]</td>
+          <td>-1.512156</td>
+          <td>0.022</td>
+        </tr>
+        <tr>
+          <th>11</th>
+          <td>[3, 4, 1]</td>
+          <td>4.954881</td>
+          <td>0.019</td>
+        </tr>
+        <tr>
+          <th>12</th>
+          <td>[3, 2, 5, 0, 1]</td>
+          <td>0.374461</td>
+          <td>0.009</td>
+        </tr>
+        <tr>
+          <th>13</th>
+          <td>[3, 2, 0, 5, 1]</td>
+          <td>0.583856</td>
+          <td>0.008</td>
+        </tr>
+        <tr>
+          <th>14</th>
+          <td>[3, 5, 4, 0, 1]</td>
+          <td>6.941594</td>
+          <td>0.007</td>
+        </tr>
+        <tr>
+          <th>15</th>
+          <td>[3, 4, 5, 0, 1]</td>
+          <td>2.145360</td>
+          <td>0.007</td>
+        </tr>
+        <tr>
+          <th>16</th>
+          <td>[3, 4, 2, 1]</td>
+          <td>-1.080988</td>
+          <td>0.007</td>
+        </tr>
+        <tr>
+          <th>17</th>
+          <td>[3, 5, 1]</td>
+          <td>3.272935</td>
+          <td>0.006</td>
+        </tr>
+        <tr>
+          <th>18</th>
+          <td>[3, 4, 0, 5, 1]</td>
+          <td>2.697207</td>
+          <td>0.005</td>
+        </tr>
+        <tr>
+          <th>19</th>
+          <td>[3, 4, 2, 0, 1]</td>
+          <td>-0.219167</td>
+          <td>0.005</td>
+        </tr>
+        <tr>
+          <th>20</th>
           <td>[3, 0, 5, 2, 1]</td>
-          <td>-2.719517</td>
-          <td>0.01</td>
+          <td>5.181321</td>
+          <td>0.004</td>
+        </tr>
+        <tr>
+          <th>21</th>
+          <td>[3, 5, 0, 4, 1]</td>
+          <td>5.442240</td>
+          <td>0.004</td>
+        </tr>
+        <tr>
+          <th>22</th>
+          <td>[3, 5, 2, 1]</td>
+          <td>1.537410</td>
+          <td>0.003</td>
+        </tr>
+        <tr>
+          <th>23</th>
+          <td>[3, 4, 5, 1]</td>
+          <td>4.166390</td>
+          <td>0.003</td>
+        </tr>
+        <tr>
+          <th>24</th>
+          <td>[3, 0, 5, 4, 1]</td>
+          <td>-0.522766</td>
+          <td>0.003</td>
+        </tr>
+        <tr>
+          <th>25</th>
+          <td>[3, 2, 4, 5, 0, 1]</td>
+          <td>-1.083415</td>
+          <td>0.003</td>
+        </tr>
+        <tr>
+          <th>26</th>
+          <td>[3, 5, 4, 1]</td>
+          <td>-7.351469</td>
+          <td>0.002</td>
+        </tr>
+        <tr>
+          <th>27</th>
+          <td>[3, 2, 4, 5, 1]</td>
+          <td>0.203801</td>
+          <td>0.002</td>
+        </tr>
+        <tr>
+          <th>28</th>
+          <td>[3, 2, 4, 0, 5, 1]</td>
+          <td>-1.303056</td>
+          <td>0.002</td>
+        </tr>
+        <tr>
+          <th>29</th>
+          <td>[3, 5, 2, 0, 1]</td>
+          <td>-0.006054</td>
+          <td>0.002</td>
+        </tr>
+        <tr>
+          <th>30</th>
+          <td>[3, 5, 4, 2, 1]</td>
+          <td>-15.137090</td>
+          <td>0.002</td>
+        </tr>
+        <tr>
+          <th>31</th>
+          <td>[3, 4, 0, 2, 1]</td>
+          <td>-3.885974</td>
+          <td>0.001</td>
+        </tr>
+        <tr>
+          <th>32</th>
+          <td>[3, 2, 5, 4, 1]</td>
+          <td>-0.035426</td>
+          <td>0.001</td>
+        </tr>
+        <tr>
+          <th>33</th>
+          <td>[3, 5, 0, 2, 1]</td>
+          <td>7.112032</td>
+          <td>0.001</td>
+        </tr>
+        <tr>
+          <th>34</th>
+          <td>[3, 2, 0, 4, 1]</td>
+          <td>-3.206907</td>
+          <td>0.001</td>
+        </tr>
+        <tr>
+          <th>35</th>
+          <td>[3, 5, 2, 4, 0, 1]</td>
+          <td>0.351331</td>
+          <td>0.001</td>
+        </tr>
+        <tr>
+          <th>36</th>
+          <td>[3, 0, 4, 5, 1]</td>
+          <td>-0.695107</td>
+          <td>0.001</td>
+        </tr>
+        <tr>
+          <th>37</th>
+          <td>[3, 5, 4, 0, 2, 1]</td>
+          <td>14.386599</td>
+          <td>0.001</td>
+        </tr>
+        <tr>
+          <th>38</th>
+          <td>[3, 4, 2, 0, 5, 1]</td>
+          <td>-0.072976</td>
+          <td>0.001</td>
         </tr>
       </tbody>
     </table>
