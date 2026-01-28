@@ -73,9 +73,8 @@ def test_fit_invalid_data():
         raise AssertionError
 
     # Include non-numeric data
-    x0 = np.random.uniform(size=5)
-    x1 = np.array(['X', 'Y', 'X', 'Y', 'X'])
-    X = pd.DataFrame(np.array([x0, x1]).T, columns=['x0', 'x1'])
+    X = np.array([[1.2, 'X'],
+                  [3.4, 'Y']], dtype=object)
     try:
         model = HighDimDirectLiNGAM()
         model.fit(X)

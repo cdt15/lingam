@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lingam"
+description = "Python package for causal discovery based on LiNGAM."
+readme = "README.md"
+authors = [
+    { name = "Takashi Ikeuchi" },
+    { name = "Genya Haraoka" },
+    { name = "Mayumi Ide" },
+    { name = "Kouhei Nishikawa" },
+    { name = "Yan Zeng" },
+    { name = "Takashi Nicholas Maeda" },
+    { name = "Wataru Kurebayashi" },
+    { name = "Shohei Shimizu" }
+]
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "scipy",
+    "scikit-learn",
+    "graphviz",
+    "statsmodels",
+    "networkx",
+    "pandas",
+    "pygam",
+    "matplotlib",
+    "psy",
+    "semopy",
+    "autograd"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/cdt15/lingam"
+
+[tool.setuptools.packages.find]
+exclude = ["tests"]
+
+[tool.setuptools.dynamic]
+version = { attr = "lingam.__version__" }

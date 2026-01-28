@@ -957,7 +957,7 @@ def evaluate_model_fit(adjacency_matrix, X, is_ordinal=None):
     """
 
     # check inputs
-    adj = check_array(adjacency_matrix, force_all_finite="allow-nan")
+    adj = check_array(adjacency_matrix, ensure_all_finite="allow-nan")
     if adj.ndim != 2 or (adj.shape[0] != adj.shape[1]):
         raise ValueError("adj must be an square matrix.")
 
@@ -1037,7 +1037,7 @@ def calculate_distance_from_root_nodes(adjacency_matrix, max_distance=None):
         adjacency_matrix,
         ensure_min_samples=2,
         ensure_min_features=2,
-        force_all_finite="allow-nan",
+        ensure_all_finite="allow-nan",
     )
     if adjacency_matrix.shape[0] != adjacency_matrix.shape[1]:
         raise ValueError("adjacency_matrix must be an square matrix.")
@@ -1103,7 +1103,7 @@ def calculate_total_effect(adjacency_matrix, from_index, to_index, is_continuous
         adjacency_matrix,
         ensure_min_samples=2,
         ensure_min_features=2,
-        force_all_finite="allow-nan",
+        ensure_all_finite="allow-nan",
     )
     if adjacency_matrix.shape[0] != adjacency_matrix.shape[1]:
         raise ValueError(
