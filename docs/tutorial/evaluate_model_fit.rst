@@ -1,9 +1,9 @@
+
 EvaluateModelFit
 ================
 
-This notebook explains how to use ``lingam.utils.evaluate_model_fit``.
-This function returns the mode fit of the given adjacency matrix to the
-data.
+This example explains how to use `lingam.utils.evaluate_model_fit`. This function returns the mode fit of the given adjacency matrix to the data.
+
 
 Import and settings
 -------------------
@@ -33,8 +33,9 @@ Import and settings
 When all variables are continuous data
 --------------------------------------
 
+
 Test data
-~~~~~~~~~
+---------
 
 .. code-block:: python
 
@@ -48,22 +49,43 @@ Test data
     X.head()
 
 
-
-
 .. raw:: html
 
     <div>
     <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
+         .dataframe {
+            font-family: verdana, arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            border-width: 1px;
+            border-color: #B3B3B3;
+            border-collapse: collapse;
         }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
         .dataframe thead th {
-            text-align: right;
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #B3B3B3;
+        }
+        .dataframe tbody th {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+        }
+        .dataframe tr:nth-child(even) th{
+        background-color: #EAEAEA;
+        }
+        .dataframe tr:nth-child(even) td{
+            background-color: #EAEAEA;
+        }
+        .dataframe td {
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #B3B3B3;
+            background-color: #ffffff;
         }
     </style>
     <table border="1" class="dataframe">
@@ -128,20 +150,19 @@ Test data
     </table>
     </div>
 
-
+|
 
 Causal Discovery
-~~~~~~~~~~~~~~~~
+----------------
 
 Perform causal discovery to obtain the adjacency matrix.
+
 
 .. code-block:: python
 
     model = lingam.DirectLiNGAM()
     model.fit(X)
     model.adjacency_matrix_
-
-
 
 
 .. parsed-literal::
@@ -154,17 +175,15 @@ Perform causal discovery to obtain the adjacency matrix.
            [ 3.98 ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
 
 
-
 Evaluation
-~~~~~~~~~~
+----------
 
 Calculate the model fit of the given adjacency matrix to given data.
+
 
 .. code-block:: python
 
     lingam.utils.evaluate_model_fit(model.adjacency_matrix_, X)
-
-
 
 
 .. raw:: html
@@ -225,13 +244,14 @@ Calculate the model fit of the given adjacency matrix to given data.
     </table>
     </div>
 
-
+|
 
 When the data has hidden common causes
 --------------------------------------
 
+
 Test data
-~~~~~~~~~
+---------
 
 .. code-block:: python
 
@@ -249,9 +269,8 @@ Test data
     X.head()
 
 
-
-
 .. raw:: html
+
 
     <div>
     <style scoped>
@@ -329,20 +348,19 @@ Test data
     </table>
     </div>
 
-
+|
 
 Causal Discovery
-~~~~~~~~~~~~~~~~
+----------------
 
 nan represents having a hidden common cause.
+
 
 .. code-block:: python
 
     model = lingam.BottomUpParceLiNGAM()
     model.fit(X)
     model.adjacency_matrix_
-
-
 
 
 .. parsed-literal::
@@ -355,12 +373,9 @@ nan represents having a hidden common cause.
            [ 0.506,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
 
 
-
 .. code-block:: python
 
     lingam.utils.evaluate_model_fit(model.adjacency_matrix_, X)
-
-
 
 
 .. raw:: html
@@ -421,13 +436,14 @@ nan represents having a hidden common cause.
     </table>
     </div>
 
-
+|
 
 When the data has ordinal variables
 -----------------------------------
 
+
 Test data
-~~~~~~~~~
+---------
 
 .. code-block:: python
 
@@ -445,8 +461,6 @@ Test data
     x4 = 1.6*x0 - 0.2*x2 + np.random.uniform(size=1000)
     X = pd.DataFrame(np.array([x0, x1, x2, x3, x4, x5]).T ,columns=['x0', 'x1', 'x2', 'x3', 'x4', 'x5'])
     X.head()
-
-
 
 
 .. raw:: html
@@ -527,7 +541,7 @@ Test data
     </table>
     </div>
 
-
+|
 
 .. code-block:: python
 
@@ -540,13 +554,13 @@ Test data
         [0.8, 0.0, 0.0, 0.0, 0.0, 0.0]]
     )
 
-Specify whether each variable is an ordinal variable in ``is_ordinal``.
+
+Specify whether each variable is an ordinal variable in `is_ordinal`.
+
 
 .. code-block:: python
 
     lingam.utils.evaluate_model_fit(adjacency_matrix, X, is_ordinal=[0, 0, 1, 0, 0, 0])
-
-
 
 
 .. raw:: html
@@ -607,4 +621,5 @@ Specify whether each variable is an ordinal variable in ``is_ordinal``.
     </table>
     </div>
 
+|
 
