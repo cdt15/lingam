@@ -1,14 +1,14 @@
-
 EvaluateModelFit
 ================
 
-This example explains how to use `lingam.utils.evaluate_model_fit`. This function returns the mode fit of the given adjacency matrix to the data.
-
+This notebook explains how to use ``lingam.utils.evaluate_model_fit``.
+This function returns the mode fit of the given adjacency matrix to the
+data.
 
 Import and settings
 -------------------
 
-.. code-block:: python
+.. code:: ipython3
 
     import numpy as np
     import pandas as pd
@@ -27,17 +27,16 @@ Import and settings
 
 .. parsed-literal::
 
-    ['1.24.4', '2.0.3', '1.8.2']
-
+    ['1.26.4', '2.3.3', '1.12.1']
+    
 
 When all variables are continuous data
 --------------------------------------
 
-
 Test data
----------
+~~~~~~~~~
 
-.. code-block:: python
+.. code:: ipython3
 
     x3 = np.random.uniform(size=1000)
     x0 = 3.0*x3 + np.random.uniform(size=1000)
@@ -49,43 +48,22 @@ Test data
     X.head()
 
 
+
+
 .. raw:: html
 
     <div>
     <style scoped>
-         .dataframe {
-            font-family: verdana, arial, sans-serif;
-            font-size: 11px;
-            color: #333333;
-            border-width: 1px;
-            border-color: #B3B3B3;
-            border-collapse: collapse;
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
         }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
         .dataframe thead th {
-            border-width: 1px;
-            padding: 8px;
-            border-style: solid;
-            border-color: #B3B3B3;
-            background-color: #B3B3B3;
-        }
-        .dataframe tbody th {
-            border-width: 1px;
-            padding: 8px;
-            border-style: solid;
-            border-color: #B3B3B3;
-        }
-        .dataframe tr:nth-child(even) th{
-        background-color: #EAEAEA;
-        }
-        .dataframe tr:nth-child(even) td{
-            background-color: #EAEAEA;
-        }
-        .dataframe td {
-            border-width: 1px;
-            padding: 8px;
-            border-style: solid;
-            border-color: #B3B3B3;
-            background-color: #ffffff;
+            text-align: right;
         }
     </style>
     <table border="1" class="dataframe">
@@ -150,19 +128,20 @@ Test data
     </table>
     </div>
 
-|
+
 
 Causal Discovery
-----------------
+~~~~~~~~~~~~~~~~
 
 Perform causal discovery to obtain the adjacency matrix.
 
-
-.. code-block:: python
+.. code:: ipython3
 
     model = lingam.DirectLiNGAM()
     model.fit(X)
     model.adjacency_matrix_
+
+
 
 
 .. parsed-literal::
@@ -175,15 +154,17 @@ Perform causal discovery to obtain the adjacency matrix.
            [ 3.98 ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
 
 
+
 Evaluation
-----------
+~~~~~~~~~~
 
 Calculate the model fit of the given adjacency matrix to given data.
 
-
-.. code-block:: python
+.. code:: ipython3
 
     lingam.utils.evaluate_model_fit(model.adjacency_matrix_, X)
+
+
 
 
 .. raw:: html
@@ -225,35 +206,34 @@ Calculate the model fit of the given adjacency matrix to given data.
       <tbody>
         <tr>
           <th>Value</th>
+          <td>9</td>
           <td>16</td>
-          <td>16</td>
-          <td>997.342767</td>
-          <td>0.0</td>
+          <td>11.129623</td>
+          <td>0.266928</td>
           <td>22997.243286</td>
-          <td>0.957298</td>
-          <td>0.956632</td>
-          <td>0.956632</td>
-          <td>0.956632</td>
-          <td>0.957298</td>
-          <td>0.247781</td>
-          <td>8.005314</td>
-          <td>32.544091</td>
-          <td>0.997343</td>
+          <td>0.999907</td>
+          <td>0.999516</td>
+          <td>0.99914</td>
+          <td>0.999516</td>
+          <td>0.999835</td>
+          <td>0.01539</td>
+          <td>23.977741</td>
+          <td>82.870804</td>
+          <td>0.01113</td>
         </tr>
       </tbody>
     </table>
     </div>
 
-|
+
 
 When the data has hidden common causes
 --------------------------------------
 
-
 Test data
----------
+~~~~~~~~~
 
-.. code-block:: python
+.. code:: ipython3
 
     x6 = np.random.uniform(size=1000)
     x3 = 2.0*x6 + np.random.uniform(size=1000)
@@ -269,8 +249,9 @@ Test data
     X.head()
 
 
-.. raw:: html
 
+
+.. raw:: html
 
     <div>
     <style scoped>
@@ -348,19 +329,20 @@ Test data
     </table>
     </div>
 
-|
+
 
 Causal Discovery
-----------------
+~~~~~~~~~~~~~~~~
 
 nan represents having a hidden common cause.
 
-
-.. code-block:: python
+.. code:: ipython3
 
     model = lingam.BottomUpParceLiNGAM()
     model.fit(X)
     model.adjacency_matrix_
+
+
 
 
 .. parsed-literal::
@@ -373,9 +355,12 @@ nan represents having a hidden common cause.
            [ 0.506,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
 
 
-.. code-block:: python
+
+.. code:: ipython3
 
     lingam.utils.evaluate_model_fit(model.adjacency_matrix_, X)
+
+
 
 
 .. raw:: html
@@ -417,35 +402,34 @@ nan represents having a hidden common cause.
       <tbody>
         <tr>
           <th>Value</th>
-          <td>3</td>
+          <td>-3</td>
           <td>15</td>
-          <td>1673.491434</td>
-          <td>0.0</td>
+          <td>1673.491733</td>
+          <td>NaN</td>
           <td>4158.502617</td>
-          <td>0.596841</td>
-          <td>0.597574</td>
-          <td>-1.012132</td>
-          <td>0.597574</td>
-          <td>-1.015796</td>
-          <td>0.746584</td>
-          <td>32.653017</td>
-          <td>120.992612</td>
-          <td>1.673491</td>
+          <td>0.595393</td>
+          <td>0.597573</td>
+          <td>3.012133</td>
+          <td>0.597573</td>
+          <td>3.023037</td>
+          <td>NaN</td>
+          <td>44.653017</td>
+          <td>162.439143</td>
+          <td>1.673492</td>
         </tr>
       </tbody>
     </table>
     </div>
 
-|
+
 
 When the data has ordinal variables
 -----------------------------------
 
-
 Test data
----------
+~~~~~~~~~
 
-.. code-block:: python
+.. code:: ipython3
 
     x3 = np.random.uniform(size=1000)
     x0 = 0.6*x3 + np.random.uniform(size=1000)
@@ -461,6 +445,8 @@ Test data
     x4 = 1.6*x0 - 0.2*x2 + np.random.uniform(size=1000)
     X = pd.DataFrame(np.array([x0, x1, x2, x3, x4, x5]).T ,columns=['x0', 'x1', 'x2', 'x3', 'x4', 'x5'])
     X.head()
+
+
 
 
 .. raw:: html
@@ -541,9 +527,9 @@ Test data
     </table>
     </div>
 
-|
 
-.. code-block:: python
+
+.. code:: ipython3
 
     adjacency_matrix = np.array([
         [0.0, 0.0, 0.0, 0.6, 0.0, 0.0],
@@ -554,13 +540,13 @@ Test data
         [0.8, 0.0, 0.0, 0.0, 0.0, 0.0]]
     )
 
+Specify whether each variable is an ordinal variable in ``is_ordinal``.
 
-Specify whether each variable is an ordinal variable in `is_ordinal`.
-
-
-.. code-block:: python
+.. code:: ipython3
 
     lingam.utils.evaluate_model_fit(adjacency_matrix, X, is_ordinal=[0, 0, 1, 0, 0, 0])
+
+
 
 
 .. raw:: html
@@ -602,24 +588,23 @@ Specify whether each variable is an ordinal variable in `is_ordinal`.
       <tbody>
         <tr>
           <th>Value</th>
+          <td>9</td>
           <td>16</td>
-          <td>16</td>
-          <td>2239.89739</td>
-          <td>0.0</td>
+          <td>19.949525</td>
+          <td>0.018226</td>
           <td>2733.058196</td>
-          <td>0.181505</td>
-          <td>0.180443</td>
-          <td>0.180443</td>
-          <td>0.180443</td>
-          <td>0.181505</td>
-          <td>0.373005</td>
-          <td>5.520205</td>
-          <td>30.058982</td>
-          <td>2.239897</td>
+          <td>0.99597</td>
+          <td>0.992701</td>
+          <td>0.987023</td>
+          <td>0.992701</td>
+          <td>0.992836</td>
+          <td>0.034897</td>
+          <td>23.960101</td>
+          <td>82.853164</td>
+          <td>0.01995</td>
         </tr>
       </tbody>
     </table>
     </div>
 
-|
 
