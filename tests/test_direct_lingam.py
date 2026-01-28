@@ -62,7 +62,7 @@ def test_fit_invalid_data():
     try:
         model = DirectLiNGAM()
         model.fit(X)
-    except ValueError:
+    except TypeError:
         pass
     else:
         raise AssertionError
