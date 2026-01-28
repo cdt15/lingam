@@ -8,7 +8,7 @@ data.
 Import and settings
 -------------------
 
-.. code:: ipython3
+.. code-block:: python
 
     import numpy as np
     import pandas as pd
@@ -36,7 +36,7 @@ When all variables are continuous data
 Test data
 ~~~~~~~~~
 
-.. code:: ipython3
+.. code-block:: python
 
     x3 = np.random.uniform(size=1000)
     x0 = 3.0*x3 + np.random.uniform(size=1000)
@@ -135,7 +135,7 @@ Causal Discovery
 
 Perform causal discovery to obtain the adjacency matrix.
 
-.. code:: ipython3
+.. code-block:: python
 
     model = lingam.DirectLiNGAM()
     model.fit(X)
@@ -160,7 +160,7 @@ Evaluation
 
 Calculate the model fit of the given adjacency matrix to given data.
 
-.. code:: ipython3
+.. code-block:: python
 
     lingam.utils.evaluate_model_fit(model.adjacency_matrix_, X)
 
@@ -233,7 +233,7 @@ When the data has hidden common causes
 Test data
 ~~~~~~~~~
 
-.. code:: ipython3
+.. code-block:: python
 
     x6 = np.random.uniform(size=1000)
     x3 = 2.0*x6 + np.random.uniform(size=1000)
@@ -336,7 +336,7 @@ Causal Discovery
 
 nan represents having a hidden common cause.
 
-.. code:: ipython3
+.. code-block:: python
 
     model = lingam.BottomUpParceLiNGAM()
     model.fit(X)
@@ -356,7 +356,7 @@ nan represents having a hidden common cause.
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     lingam.utils.evaluate_model_fit(model.adjacency_matrix_, X)
 
@@ -429,7 +429,7 @@ When the data has ordinal variables
 Test data
 ~~~~~~~~~
 
-.. code:: ipython3
+.. code-block:: python
 
     x3 = np.random.uniform(size=1000)
     x0 = 0.6*x3 + np.random.uniform(size=1000)
@@ -529,7 +529,7 @@ Test data
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     adjacency_matrix = np.array([
         [0.0, 0.0, 0.0, 0.6, 0.0, 0.0],
@@ -542,7 +542,7 @@ Test data
 
 Specify whether each variable is an ordinal variable in ``is_ordinal``.
 
-.. code:: ipython3
+.. code-block:: python
 
     lingam.utils.evaluate_model_fit(adjacency_matrix, X, is_ordinal=[0, 0, 1, 0, 0, 0])
 
