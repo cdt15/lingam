@@ -31,5 +31,6 @@ API Reference
     missingness_lingam
     abic_lingam
     causal_effect
+    lewis
     utils
     tools
