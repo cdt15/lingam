@@ -27,6 +27,7 @@ from .group_lingam import GroupLiNGAM
 from .missingness_lingam import mLiNGAM
 from .multi_group_resit import MultiGroupRESIT
 from .abic_lingam import ABICLiNGAM
+from .lewis import LEWIS
 
 __all__ = [
     "ICALiNGAM",
@@ -56,6 +57,7 @@ __all__ = [
     "mLiNGAM",
     "MultiGroupRESIT",
     "ABICLiNGAM",
+    "LEWIS",
 ]
 
 __version__ = "1.12.1"
