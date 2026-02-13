@@ -35,6 +35,7 @@ class LiM:
         h_tol=1e-8,
         rho_max=1e16,
         w_threshold=0.1,
+        prior_knowledge=None,
     ):
         """Construct a LiM model.
 
@@ -52,6 +53,13 @@ class LiM:
              Maximum value of the regularization parameter rho.
         w_threshold : float (default=0.1)
              Drop edge if the weight btw. variables is less than w_threshold.
+        prior_knowledge : array-like, shape (n_features, n_features), optional (default=None)
+            Prior knowledge used for causal discovery, where ``n_features`` is the number of features.
+
+            The elements of prior knowledge matrix are defined as follows [1]_:
+
+            * ``0`` : :math:`x_i` does not have a directed path to :math:`x_j`
+            * ``-1`` : No prior knowledge is available to know if either of the two cases above (0 or 1) is true.
         """
         self._lambda1 = lambda1
         self._loss_type = loss_type
@@ -60,6 +68,10 @@ class LiM:
         self._rho_max = rho_max
         self._w_threshold = w_threshold
         self._adjacency_matrix = None
+        self._Aknw = prior_knowledge
+        if self._Aknw is not None:
+            self._Aknw = ut.check_array(self._Aknw)
+            self._Aknw = np.where(self._Aknw < 0, np.nan, self._Aknw)
 
     def fit(self, X, dis_con, only_global=False, is_poisson=False):
         """Fit the model to X with mixed data.
@@ -289,6 +301,9 @@ class LiM:
             for i in range(d)
             for j in range(d)
         ]
+        if self._Aknw is not None:
+            pk = np.concatenate((self._Aknw.flatten(), self._Aknw.flatten()))
+            bnds = [b if np.isnan(p) else (0, 0) for b, p in zip(bnds, pk)]
 
         # if self._loss_type == 'l2':
         #     X = X - np.mean(X, axis=0, keepdims=True)
@@ -319,7 +334,7 @@ class LiM:
                 w_est = np.random.random(2 * d * d)
         W_est = _adj(w_est)
         W_est[np.abs(W_est) < self._w_threshold] = 0
-        print("W_est (without the 2nd phase) is: \n", W_est)
+        # print("W_est (without the 2nd phase) is: \n", W_est)
 
         if not only_global:
             self._loss_type = "mixed_dag"
@@ -334,6 +349,9 @@ class LiM:
                 W_tmp = np.copy(W_est)
                 for iii in range(len(I[0])):  # transform to W_tmp
                     if candi_setting[candi_setting_i][iii] == 1:
+                        if self._Aknw is not None:
+                            if self._Aknw[I[1][iii], I[0][iii]] == 0:
+                                continue
                         W_tmp[I[0][iii], I[1][iii]] = 0
                         W_tmp[I[1][iii], I[0][iii]] = 1
                 lss, lss_G = _loss(W_tmp)
@@ -368,6 +386,8 @@ class LiM:
             if d > 2 and len(I[0]) < (d * (d - 1) / 2):
                 W0 = np.copy(W_min_lss)
                 W_edges = W0 + W0.T + np.eye(d)
+                if self._Aknw is not None:
+                    W_edges = np.where(self._Aknw == 0, 1, W_edges)
                 I_add = np.where(W_edges == 0)  # add undirected edges' indices
                 for add_i in range(len(I_add[0])):
                     W_tmp = np.copy(W0)
@@ -382,6 +402,8 @@ class LiM:
                 ):  # if they are different
                     W0 = np.copy(W_est)
                     W_edges = W0 + W0.T + np.eye(d)
+                    if self._Aknw is not None:
+                        W_edges = np.where(self._Aknw == 0, 1, W_edges)
                     I_add = np.where(W_edges == 0)  # add undirected edges' indices
                     for add_i in range(len(I_add[0])):
                         W_tmp = np.copy(W0)
