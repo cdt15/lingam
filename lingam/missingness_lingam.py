@@ -99,16 +99,44 @@ class mLiNGAM(_BaseLiNGAM):
         R = {i : missing_mask[:, i] for i in missing_column_indices}
         for k in R.keys():
             # Find the parent nodes of the missingness mechanism
-            available_rows = ~np.any(np.isnan(np.delete(X_, k, axis=1)), axis=1)
+            all_features = [i for i in range(self.n_features) if i != k]
 
-            X_lreg = np.delete(X_, k, axis=1)[available_rows]
-            scaler = StandardScaler()
-            X_lreg = scaler.fit_transform(X_lreg)
+            available_rows = ~np.any(np.isnan(X_[:, all_features]), axis=1)
 
-            best_coef, _, _, _, _ = bic_select_logistic_l1(X_lreg, R[k][available_rows], Cs=50, max_iter=1000)
+            # If there are no complete samples to be used for the logistic regression 
+            # try removing as few features with missing data as possible
+            if np.unique(R[k][available_rows]).size < 2:
+              missing_cols = [i for i in missing_column_indices if i != k]
+              non_missing_cols = [i for i in all_features if i not in missing_cols]
 
-            self._missingness_mechanisms_parents[k] = list(np.arange(self.n_features)[np.where(best_coef != 0)])
-            self._missingness_mechanisms_parents[k] = [idx if idx < k else idx + 1 for idx in self._missingness_mechanisms_parents[k]]
+              best_subset = ()
+
+              for size in range(len(missing_cols)-1, -1, -1):
+                  for comb in itertools.combinations(missing_cols, size):
+                      current_subset = non_missing_cols + list(comb)
+
+                      available_rows = ~np.any(np.isnan(X_[:, current_subset]), axis=1)
+
+                      if np.unique(R[k][available_rows]).size >= 2:
+                          best_subset = current_subset
+                          break
+                  if len(best_subset) > 0:
+                      break
+            else:
+              best_subset = all_features
+
+            if len(best_subset)>0:
+                X_lreg = X_[:,sorted(best_subset)][available_rows]
+                scaler = StandardScaler()
+                X_lreg = scaler.fit_transform(X_lreg)
+
+                best_coef, _, _, _, _ = bic_select_logistic_l1(X_lreg, R[k][available_rows], Cs=50, max_iter=1000)
+
+                selected_idx = np.where(best_coef != 0)[0]
+                self._missingness_mechanisms_parents[k] = [best_subset[i] for i in selected_idx]
+            else:
+                self._missingness_mechanisms_parents[k] = []
+
             available_rows = ~np.any(np.isnan(X_[:, self._missingness_mechanisms_parents[k]]), axis=1)
 
             if len(self._missingness_mechanisms_parents[k]) == 0:
@@ -118,7 +146,6 @@ class mLiNGAM(_BaseLiNGAM):
                     max_iter=1000,
                     fit_intercept=False
                 )
-                # independent_vars = np.ones_like(R[k])
                 independent_vars = np.ones_like(R[k]).reshape(-1, 1)
                 clf.fit(independent_vars, R[k][available_rows])
                 self._missingness_mechanisms_coef[k] = np.concatenate([clf.coef_.ravel()])
