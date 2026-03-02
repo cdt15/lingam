@@ -1,6 +1,6 @@
 numpy
 scipy<=1.13.1
-scikit-learn>=1.2
+scikit-learn>=1.6 # sklearn.utils.check_array with the ensure_all_finite argument.
 graphviz
 statsmodels
 networkx
