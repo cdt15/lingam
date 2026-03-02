@@ -1,5 +1,5 @@
 numpy
-scipy<=1.13.1
+scipy<=1.13.1 # Scipy version limitation due to semopy using the deprecated scipy.stats.mvn.
 scikit-learn>=1.6 # sklearn.utils.check_array with the ensure_all_finite argument.
 graphviz
 statsmodels
