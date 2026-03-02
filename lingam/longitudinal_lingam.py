@@ -191,7 +191,7 @@ class LongitudinalLiNGAM:
 
         return self
 
-    def bootstrap(self, X_list, n_sampling, start_from_t=1):
+    def bootstrap(self, X_list, n_sampling, start_from_t=None):
         """Evaluate the statistical reliability of DAG based on the bootstrapping.
 
         Parameters
@@ -202,6 +202,8 @@ class LongitudinalLiNGAM:
             where ``n_samples`` is the number of samples and ``n_features`` is the number of features.
         n_sampling : int
             Number of bootstrapping samples.
+        start_from_t : int, optional
+            The time step to calculate total effects from. If None, defaults to the number of lags.
 
         Returns
         -------
@@ -224,6 +226,13 @@ class LongitudinalLiNGAM:
             if X.shape != (self._n, self._p):
                 raise ValueError("X_list must be a list with the same shape")
             X_t.append(X)
+
+        # Check and set start_from_t
+        if start_from_t is None:
+            start_from_t = self._n_lags
+        else:
+            if start_from_t < self._n_lags:
+                raise ValueError(f"start_from_t must be greater than or equal to n_lags ({self._n_lags})")
 
         # Bootstrapping
         adjacency_matrices = np.zeros(

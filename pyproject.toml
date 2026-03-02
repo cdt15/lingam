@@ -17,11 +17,11 @@ authors = [
     { name = "Shohei Shimizu" }
 ]
 license = { file = "LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy",
-    "scipy",
-    "scikit-learn",
+    "scipy<=1.13.1",
+    "scikit-learn>=1.6",
     "graphviz",
     "statsmodels",
     "networkx",

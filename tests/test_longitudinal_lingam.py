@@ -289,7 +289,7 @@ def test_bootstrap_success():
     # fit by list
     X_list = [X1, X2, X3]
     model = LongitudinalLiNGAM()
-    result = model.bootstrap(X_list, n_sampling=3)
+    result = model.bootstrap(X_list, n_sampling=3, start_from_t=1)
 
     result.adjacency_matrices_
     result.total_effects_
@@ -527,6 +527,15 @@ def test_bootstrap_invalid_data():
     model = LongitudinalLiNGAM()
     try:
         result = model.bootstrap(X_list, n_sampling=-1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+    # Invalid argument: start_from_t must be greater than or equal to n_lags
+    model = LongitudinalLiNGAM(n_lags=2)
+    try:
+        result = model.bootstrap(X_list, n_sampling=3, start_from_t=1)
     except ValueError:
         pass
     else:
