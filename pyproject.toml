@@ -17,7 +17,7 @@ authors = [
     { name = "Shohei Shimizu" }
 ]
 license = { file = "LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "scipy<=1.13.1",
