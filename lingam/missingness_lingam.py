@@ -153,6 +153,7 @@ class mLiNGAM(_BaseLiNGAM):
             else:
                 clf = LogisticRegression(
                     C=0.5,
+                    l1_ratio=0,
                     solver='lbfgs',
                     max_iter=1000,
                     fit_intercept=True
@@ -165,7 +166,7 @@ class mLiNGAM(_BaseLiNGAM):
         X_top = X_.copy()
 
         for _ in range(len(U)):
-            m = self._search_causal_order_top_down(X_top, U, min_samples=self.n_features + 1)
+            m = self._search_causal_order_top_down(X_top, U)
             for i in U:
                 if i != m:
                     X_top[:, i][~np.isnan(X[:, [i, m]]).any(axis=1)] = self._residual(X_top[:, i][~np.isnan(X[:, [i, m]]).any(axis=1)], X_top[:, m][~np.isnan(X[:, [i, m]]).any(axis=1)])
@@ -228,7 +229,6 @@ class mLiNGAM(_BaseLiNGAM):
                         # Correction reduces the sample size, if samples < features try Adaptive Lasso again w/o correction
                         involved_variables = [target] + predictors
                         X_m = X[~np.any(np.isnan(X[:, involved_variables]), axis=1)]
-                        print("c ",X_m.shape, len(involved_variables))#
                         
                         X_std = scaler.fit_transform(X_m)
 
@@ -376,7 +376,7 @@ class mLiNGAM(_BaseLiNGAM):
                 Vj.append(i)
         return Uc, Vj
 
-    def _search_causal_order_top_down(self, X, U, min_samples=0):
+    def _search_causal_order_top_down(self, X, U):
         """Search the causal ordering from top to bottom."""
         Uc, Vj = self._search_candidate_top_down(U)
         if len(Uc) == 1:
@@ -389,8 +389,6 @@ class mLiNGAM(_BaseLiNGAM):
                 if i != j:
                     X_m = X[:, [i, j]].copy()
                     X_m = X_m[~np.isnan(X_m).any(axis=1)]
-                    if X_m.shape[0] < min_samples:
-                        return -1
                     xi_std = (X_m[:, 0] - np.mean(X_m[:, 0])) / np.std(X_m[:, 0])
                     xj_std = (X_m[:, 1] - np.mean(X_m[:, 1])) / np.std(X_m[:, 1])
                     ri_j = (
