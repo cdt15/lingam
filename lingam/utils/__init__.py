@@ -1192,7 +1192,7 @@ def bic_select_logistic_l1(X, y, Cs=50, max_iter=1000):
     coefs, Cs, _ = _logistic_regression_path(
         X, y,
         classes=np.unique(y),
-        penalty='l1',
+        l1_ratio=1.,
         solver='saga',
         fit_intercept=True,
         max_iter=max_iter,

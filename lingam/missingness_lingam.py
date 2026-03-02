@@ -8,6 +8,7 @@ import statsmodels.api as sm
 from sklearn.utils import check_array
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression, LogisticRegression, Lasso, LassoLarsIC
+import itertools
 
 from .base import _BaseLiNGAM
 from .utils import bic_select_logistic_l1
@@ -141,7 +142,7 @@ class mLiNGAM(_BaseLiNGAM):
 
             if len(self._missingness_mechanisms_parents[k]) == 0:
                 clf = LogisticRegression(
-                    penalty=None,
+                    C=np.inf,
                     solver='lbfgs',
                     max_iter=1000,
                     fit_intercept=False
@@ -151,7 +152,6 @@ class mLiNGAM(_BaseLiNGAM):
                 self._missingness_mechanisms_coef[k] = np.concatenate([clf.coef_.ravel()])
             else:
                 clf = LogisticRegression(
-                    penalty='l2',
                     C=0.5,
                     solver='lbfgs',
                     max_iter=1000,
