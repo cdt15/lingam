@@ -216,10 +216,29 @@ class mLiNGAM(_BaseLiNGAM):
 
                 # Pruning with Adaptive Lasso
                 lr = Lasso(alpha=0.1)
-                lr.fit(X_std[:, predictors], X_std[:, target], sample_weight=sample_weight)
-                weight = np.power(np.abs(lr.coef_), 1.0)
-                reg = LassoLarsIC(criterion="bic")
-                reg.fit(X_std[:, predictors] * weight, X_std[:, target])
+
+                try:
+                    lr.fit(X_std[:, predictors], X_std[:, target], sample_weight=sample_weight)
+                    weight = np.power(np.abs(lr.coef_), 1.0)
+                    reg = LassoLarsIC(criterion="bic")
+                    reg.fit(X_std[:, predictors] * weight, X_std[:, target])
+                except ValueError as e:
+                    msg = "You are using LassoLarsIC in the case where the number of samples is smaller than the number of features"
+                    if msg in str(e):
+                        # Correction reduces the sample size, if samples < features try Adaptive Lasso again w/o correction
+                        involved_variables = [target] + predictors
+                        X_m = X[~np.any(np.isnan(X[:, involved_variables]), axis=1)]
+                        print("c ",X_m.shape, len(involved_variables))#
+                        
+                        X_std = scaler.fit_transform(X_m)
+
+                        lr.fit(X_std[:, predictors], X_std[:, target])
+                        weight = np.power(np.abs(lr.coef_), 1.0)
+                        reg = LassoLarsIC(criterion="bic")
+                        reg.fit(X_std[:, predictors] * weight, X_std[:, target])
+                    else:
+                        raise
+                    
                 pruned_idx = np.abs(reg.coef_ * weight) > 0.0
 
                 pred = np.array(predictors)
