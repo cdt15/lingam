@@ -35,7 +35,7 @@ where :math:`i\in\{1,\dots,n\}\mapsto k(i)` denotes a causal order, and the non-
 The induced subgraph :math:`G[V_o \cup V_m \cup R]` follows a LiM model. The missingness mechanisms :math:`R_i \in R` follow a logistic model as for binary variables in LiM [4]_:
 
 .. math::
-    x_i = \mathbf 1\llbracket\sum_{k(j)<k(i)} b_{ij} x_j + e_i > 0\rrbracket, \qquad e_i \sim \text{Logistic}(0,1)
+    x_i = \mathbf 1[\sum_{k(j)<k(i)} b_{ij} x_j + e_i > 0], \qquad e_i \sim \text{Logistic}(0,1)
 
 
 Assumptions
@@ -49,6 +49,9 @@ The following assumptions are made to ensure identifiability:
 
 Note that even if self-masking is not allowed, indirect self-masking is: a partially observed variable can be an indirect cause (an ancestor) of its own missingness mechanism.
 Under these assumptions, m-LiNGAM guarantees identifiability of both the causal structure and parameters from observational data in the large-sample limit.
+
+Example
+^^^^^^^^^^^^^^^^^^
 
 An example Python notebook demonstrating m-LiNGAM is available `here <https://github.com/cdt15/lingam/blob/master/examples/MissingnessLiNGAM.ipynb>`__.
 

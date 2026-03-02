@@ -8,6 +8,7 @@ import statsmodels.api as sm
 from sklearn.utils import check_array
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression, LogisticRegression, Lasso, LassoLarsIC
+import itertools
 
 from .base import _BaseLiNGAM
 from .utils import bic_select_logistic_l1
@@ -99,33 +100,60 @@ class mLiNGAM(_BaseLiNGAM):
         R = {i : missing_mask[:, i] for i in missing_column_indices}
         for k in R.keys():
             # Find the parent nodes of the missingness mechanism
-            available_rows = ~np.any(np.isnan(np.delete(X_, k, axis=1)), axis=1)
+            all_features = [i for i in range(self.n_features) if i != k]
 
-            X_lreg = np.delete(X_, k, axis=1)[available_rows]
-            scaler = StandardScaler()
-            X_lreg = scaler.fit_transform(X_lreg)
+            available_rows = ~np.any(np.isnan(X_[:, all_features]), axis=1)
 
-            best_coef, _, _, _, _ = bic_select_logistic_l1(X_lreg, R[k][available_rows], Cs=50, max_iter=1000)
+            # If there are no complete samples to be used for the logistic regression 
+            # try removing as few features with missing data as possible
+            if np.unique(R[k][available_rows]).size < 2:
+              missing_cols = [i for i in missing_column_indices if i != k]
+              non_missing_cols = [i for i in all_features if i not in missing_cols]
 
-            self._missingness_mechanisms_parents[k] = list(np.arange(self.n_features)[np.where(best_coef != 0)])
-            self._missingness_mechanisms_parents[k] = [idx if idx < k else idx + 1 for idx in self._missingness_mechanisms_parents[k]]
+              best_subset = ()
+
+              for size in range(len(missing_cols)-1, -1, -1):
+                  for comb in itertools.combinations(missing_cols, size):
+                      current_subset = non_missing_cols + list(comb)
+
+                      available_rows = ~np.any(np.isnan(X_[:, current_subset]), axis=1)
+
+                      if np.unique(R[k][available_rows]).size >= 2:
+                          best_subset = current_subset
+                          break
+                  if len(best_subset) > 0:
+                      break
+            else:
+              best_subset = all_features
+
+            if len(best_subset)>0:
+                X_lreg = X_[:,sorted(best_subset)][available_rows]
+                scaler = StandardScaler()
+                X_lreg = scaler.fit_transform(X_lreg)
+
+                best_coef, _, _, _, _ = bic_select_logistic_l1(X_lreg, R[k][available_rows], Cs=50, max_iter=1000)
+
+                selected_idx = np.where(best_coef != 0)[0]
+                self._missingness_mechanisms_parents[k] = [best_subset[i] for i in selected_idx]
+            else:
+                self._missingness_mechanisms_parents[k] = []
+
             available_rows = ~np.any(np.isnan(X_[:, self._missingness_mechanisms_parents[k]]), axis=1)
 
             if len(self._missingness_mechanisms_parents[k]) == 0:
                 clf = LogisticRegression(
-                    penalty=None,
+                    C=np.inf,
                     solver='lbfgs',
                     max_iter=1000,
                     fit_intercept=False
                 )
-                # independent_vars = np.ones_like(R[k])
                 independent_vars = np.ones_like(R[k]).reshape(-1, 1)
                 clf.fit(independent_vars, R[k][available_rows])
                 self._missingness_mechanisms_coef[k] = np.concatenate([clf.coef_.ravel()])
             else:
                 clf = LogisticRegression(
-                    penalty='l2',
                     C=0.5,
+                    l1_ratio=0,
                     solver='lbfgs',
                     max_iter=1000,
                     fit_intercept=True
@@ -138,7 +166,7 @@ class mLiNGAM(_BaseLiNGAM):
         X_top = X_.copy()
 
         for _ in range(len(U)):
-            m = self._search_causal_order_top_down(X_top, U, min_samples=self.n_features + 1)
+            m = self._search_causal_order_top_down(X_top, U)
             for i in U:
                 if i != m:
                     X_top[:, i][~np.isnan(X[:, [i, m]]).any(axis=1)] = self._residual(X_top[:, i][~np.isnan(X[:, [i, m]]).any(axis=1)], X_top[:, m][~np.isnan(X[:, [i, m]]).any(axis=1)])
@@ -189,10 +217,28 @@ class mLiNGAM(_BaseLiNGAM):
 
                 # Pruning with Adaptive Lasso
                 lr = Lasso(alpha=0.1)
-                lr.fit(X_std[:, predictors], X_std[:, target], sample_weight=sample_weight)
-                weight = np.power(np.abs(lr.coef_), 1.0)
-                reg = LassoLarsIC(criterion="bic")
-                reg.fit(X_std[:, predictors] * weight, X_std[:, target])
+
+                try:
+                    lr.fit(X_std[:, predictors], X_std[:, target], sample_weight=sample_weight)
+                    weight = np.power(np.abs(lr.coef_), 1.0)
+                    reg = LassoLarsIC(criterion="bic")
+                    reg.fit(X_std[:, predictors] * weight, X_std[:, target])
+                except ValueError as e:
+                    msg = "You are using LassoLarsIC in the case where the number of samples is smaller than the number of features"
+                    if msg in str(e):
+                        # Correction reduces the sample size, if samples < features try Adaptive Lasso again w/o correction
+                        involved_variables = [target] + predictors
+                        X_m = X[~np.any(np.isnan(X[:, involved_variables]), axis=1)]
+                        
+                        X_std = scaler.fit_transform(X_m)
+
+                        lr.fit(X_std[:, predictors], X_std[:, target])
+                        weight = np.power(np.abs(lr.coef_), 1.0)
+                        reg = LassoLarsIC(criterion="bic")
+                        reg.fit(X_std[:, predictors] * weight, X_std[:, target])
+                    else:
+                        raise
+                    
                 pruned_idx = np.abs(reg.coef_ * weight) > 0.0
 
                 pred = np.array(predictors)
@@ -330,7 +376,7 @@ class mLiNGAM(_BaseLiNGAM):
                 Vj.append(i)
         return Uc, Vj
 
-    def _search_causal_order_top_down(self, X, U, min_samples=0):
+    def _search_causal_order_top_down(self, X, U):
         """Search the causal ordering from top to bottom."""
         Uc, Vj = self._search_candidate_top_down(U)
         if len(Uc) == 1:
@@ -343,8 +389,6 @@ class mLiNGAM(_BaseLiNGAM):
                 if i != j:
                     X_m = X[:, [i, j]].copy()
                     X_m = X_m[~np.isnan(X_m).any(axis=1)]
-                    if X_m.shape[0] < min_samples:
-                        return -1
                     xi_std = (X_m[:, 0] - np.mean(X_m[:, 0])) / np.std(X_m[:, 0])
                     xj_std = (X_m[:, 1] - np.mean(X_m[:, 1])) / np.std(X_m[:, 1])
                     ri_j = (
