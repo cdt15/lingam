@@ -24,6 +24,9 @@ from lingam.utils import (
     make_dot_for_nan_probability_matrix,
     MGGD,
     MGGDEstimator,
+    make_dot_ancestors,
+    make_dot_descendants,
+    make_dot_paths,
 )
 
 
@@ -680,6 +683,110 @@ def test_mggd_and_estimator():
 
     try:
         MGGD(mean, cov, -1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+
+def test_make_dot_ancestors():
+    prob_matrix = np.array([
+        [0, 0.7, 0.8, 0],
+        [0, 0, 0, 0],
+        [0, 0.9, 0, 0],
+        [0, 0.6, 0, 0],
+    ])
+    g = make_dot_ancestors(prob_matrix, response_vars=1)
+    g = make_dot_ancestors(prob_matrix, response_vars=[1,2])
+    g = make_dot_ancestors(prob_matrix, response_vars=1, treatment_vars=0)
+    g = make_dot_ancestors(prob_matrix, response_vars=1, labels=["a","b","c","d"])
+    g = make_dot_ancestors(prob_matrix, response_vars=1, max_anc=1)
+    g = make_dot_ancestors(prob_matrix, response_vars=1, alpha=0.5)
+    try:
+        make_dot_ancestors(prob_matrix, response_vars=None)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+    try:
+        make_dot_ancestors(prob_matrix, response_vars=10)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+    try:
+        make_dot_ancestors(prob_matrix, response_vars=1, treatment_vars=10)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+    try:
+        make_dot_ancestors(prob_matrix, response_vars=1, max_anc=-1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+def test_make_dot_descendants():
+    prob_matrix = np.array([
+        [0, 0.7, 0.8, 0],
+        [0, 0, 0, 0],
+        [0, 0.9, 0, 0],
+        [0, 0.6, 0, 0],
+    ])
+    g = make_dot_descendants(prob_matrix, treatment_vars=0)
+    g = make_dot_descendants(prob_matrix, treatment_vars=[0,2])
+    g = make_dot_descendants(prob_matrix, treatment_vars=0, labels=["a","b","c","d"])
+    g = make_dot_descendants(prob_matrix, treatment_vars=0, max_dsc=1)
+    g = make_dot_descendants(prob_matrix, treatment_vars=0, alpha=0.5)
+    try:
+        make_dot_descendants(prob_matrix, treatment_vars=None)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+    try:
+        make_dot_descendants(prob_matrix, treatment_vars=10)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+    try:
+        make_dot_descendants(prob_matrix, treatment_vars=0, max_dsc=-1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+
+def test_make_dot_paths():
+    prob_matrix = np.array([
+        [0, 0.7, 0],
+        [0, 0, 0.8],
+        [0, 0, 0],
+    ])
+    g = make_dot_paths(prob_matrix, treatment_var=0, response_var=2)
+    g = make_dot_paths(prob_matrix, treatment_var=0, response_var=2, labels=["a","b","c"])
+    g = make_dot_paths(prob_matrix, treatment_var=0, response_var=2, alpha=0.5)
+    try:
+        make_dot_paths(prob_matrix, treatment_var=None, response_var=2)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+    try:
+        make_dot_paths(prob_matrix, treatment_var=0, response_var=None)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+    try:
+        make_dot_paths(prob_matrix, treatment_var=[0,1], response_var=2)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError
+    try:
+        make_dot_paths(prob_matrix, treatment_var=0, response_var=0)
     except ValueError:
         pass
     else:

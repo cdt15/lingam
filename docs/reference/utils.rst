@@ -31,3 +31,6 @@ utils
 .. autoclass:: MGGDEstimator
     :members:
     :inherited-members:
+.. autofunction:: make_dot_ancestors
+.. autofunction:: make_dot_descendants
+.. autofunction:: make_dot_paths

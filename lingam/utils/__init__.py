@@ -52,6 +52,9 @@ __all__ = [
     "bic_select_logistic_l1",
     "MGGD",
     "MGGDEstimator",
+    "make_dot_ancestors",
+    "make_dot_descendants",
+    "make_dot_paths",
 ]
 
 
@@ -1231,3 +1234,304 @@ def bic_select_logistic_l1(X, y, Cs=50, max_iter=1000):
     best_intercept = coefs[best_index, -1]
 
     return best_coef, best_intercept, best_C, bic_scores, Cs
+
+
+def make_dot_ancestors(prob_matrix, response_vars, *,
+                       treatment_vars=None, alpha=0.6,
+                       labels=None, max_anc=None):
+    """Draw a subgraph of ancestors of response_vars.
+
+    Parameters
+    ----------
+    prob_matrix : array-like, shape (n_features, n_features)
+        Probability matrix where ``prob_matrix[j, i] = P(X_i -> X_j)``.
+    response_vars : array-like of int or int
+        Response (effect) variable indices whose ancestors are drawn.
+    treatment_vars : array-like of int or int, optional (default=None)
+        If given, these nodes are highlighted red, and their direct children
+        that are also direct parents of any response variable are highlighted
+        green.
+    alpha : float, optional (default=0.6)
+        Edge probability threshold. Edges with ``P < alpha`` are excluded.
+    labels : array-like, optional (default=None)
+        Node labels. Defaults to ``x1, x2, ...``.
+    max_anc : int or None, optional (default=None)
+        Number of ancestor levels to traverse. ``None`` traverses all.
+
+    Returns
+    -------
+    graph : graphviz.Digraph
+    """
+    P = np.nan_to_num(np.asarray(prob_matrix, dtype=float))
+    if P.ndim != 2 or P.shape[0] != P.shape[1]:
+        raise ValueError("prob_matrix must be a square 2D array.")
+    n = P.shape[0]
+    if not (0.0 <= float(alpha) <= 1.0):
+        raise ValueError("alpha must be in [0, 1].")
+
+    if response_vars is None:
+        raise ValueError("response_vars is required for ancestors mode.")
+    if isinstance(response_vars, (int, np.integer)):
+        response_vars = [response_vars]
+    rvars = [int(v) for v in response_vars]
+    for v in rvars:
+        if not (0 <= v < n):
+            raise ValueError(
+                f"response index {v} is out of range [0, {n}).")
+
+    tvars = None
+    if treatment_vars is not None:
+        if isinstance(treatment_vars, (int, np.integer)):
+            treatment_vars = [treatment_vars]
+        tvars = [int(v) for v in treatment_vars]
+        for v in tvars:
+            if not (0 <= v < n):
+                raise ValueError(
+                    f"treatment index {v} is out of range [0, {n}).")
+
+    if max_anc is not None and (
+            not isinstance(max_anc, (int, np.integer)) or max_anc < 0):
+        raise ValueError("max_anc must be a non-negative int or None.")
+
+    mask = P >= float(alpha)
+    np.fill_diagonal(mask, False)
+
+    keep_nodes = set(rvars)
+    kept_edges = set()
+    response_set = set(rvars)
+    treatment_set = set()
+    green_nodes = set()
+
+    frontier = set(rvars)
+    depth = 0
+    while frontier and (max_anc is None or depth < max_anc):
+        nxt = set()
+        for cur in frontier:
+            for p in np.where(mask[cur, :])[0]:
+                p = int(p)
+                kept_edges.add((p, cur))
+                if p not in keep_nodes:
+                    keep_nodes.add(p)
+                    nxt.add(p)
+        frontier = nxt
+        depth += 1
+
+    if tvars is not None:
+        parent_set = set()
+        for child in rvars:
+            for p in np.where(mask[child, :])[0]:
+                parent_set.add(int(p))
+        for tv in tvars:
+            treatment_set.add(tv)
+            for c in np.where(mask[:, tv])[0]:
+                c = int(c)
+                if c in (parent_set - response_set - {tv}):
+                    green_nodes.add(c)
+
+    if labels is None:
+        labels_local = [f"x{i+1}" for i in range(n)]
+    else:
+        labels_local = list(labels)
+
+    graph = graphviz.Digraph(engine='dot')
+    if not keep_nodes:
+        return graph
+
+    for v in sorted(keep_nodes):
+        kwargs = {}
+        if v in treatment_set:
+            kwargs.update(style='filled', fillcolor='lightcoral')
+        elif v in response_set:
+            kwargs.update(style='filled', fillcolor='lightblue')
+        elif v in green_nodes:
+            kwargs.update(style='filled', fillcolor='lightgreen')
+        graph.node(labels_local[v], **kwargs)
+
+    for parent, child in kept_edges:
+        graph.edge(labels_local[parent], labels_local[child],
+                   label=f"{P[child, parent]:.2f}")
+
+    return graph
+
+
+def make_dot_descendants(prob_matrix, treatment_vars, *,
+                         alpha=0.6, labels=None, max_dsc=None):
+    """Draw a subgraph of descendants of treatment_vars.
+
+    Parameters
+    ----------
+    prob_matrix : array-like, shape (n_features, n_features)
+        Probability matrix where ``prob_matrix[j, i] = P(X_i -> X_j)``.
+    treatment_vars : array-like of int or int
+        Treatment (cause) variable indices whose descendants are drawn.
+    alpha : float, optional (default=0.6)
+        Edge probability threshold. Edges with ``P < alpha`` are excluded.
+    labels : array-like, optional (default=None)
+        Node labels. Defaults to ``x1, x2, ...``.
+    max_dsc : int or None, optional (default=None)
+        Number of descendant levels to traverse. ``None`` traverses all.
+
+    Returns
+    -------
+    graph : graphviz.Digraph
+    """
+    P = np.nan_to_num(np.asarray(prob_matrix, dtype=float))
+    if P.ndim != 2 or P.shape[0] != P.shape[1]:
+        raise ValueError("prob_matrix must be a square 2D array.")
+    n = P.shape[0]
+    if not (0.0 <= float(alpha) <= 1.0):
+        raise ValueError("alpha must be in [0, 1].")
+
+    if treatment_vars is None:
+        raise ValueError("treatment_vars is required for descendants mode.")
+    if isinstance(treatment_vars, (int, np.integer)):
+        treatment_vars = [treatment_vars]
+    tvars = [int(v) for v in treatment_vars]
+    for v in tvars:
+        if not (0 <= v < n):
+            raise ValueError(
+                f"treatment index {v} is out of range [0, {n}).")
+
+    if max_dsc is not None and (
+            not isinstance(max_dsc, (int, np.integer)) or max_dsc < 0):
+        raise ValueError("max_dsc must be a non-negative int or None.")
+
+    mask = P >= float(alpha)
+    np.fill_diagonal(mask, False)
+
+    keep_nodes = set(tvars)
+    kept_edges = set()
+    treatment_set = set(tvars)
+
+    frontier = set(tvars)
+    depth = 0
+    while frontier and (max_dsc is None or depth < max_dsc):
+        nxt = set()
+        for cur in frontier:
+            for c in np.where(mask[:, cur])[0]:
+                c = int(c)
+                kept_edges.add((cur, c))
+                if c not in keep_nodes:
+                    keep_nodes.add(c)
+                    nxt.add(c)
+        frontier = nxt
+        depth += 1
+
+    if labels is None:
+        labels_local = [f"x{i+1}" for i in range(n)]
+    else:
+        labels_local = list(labels)
+
+    graph = graphviz.Digraph(engine='dot')
+    if not keep_nodes:
+        return graph
+
+    for v in sorted(keep_nodes):
+        kwargs = {}
+        if v in treatment_set:
+            kwargs.update(style='filled', fillcolor='lightcoral')
+        graph.node(labels_local[v], **kwargs)
+
+    for parent, child in kept_edges:
+        graph.edge(labels_local[parent], labels_local[child],
+                   label=f"{P[child, parent]:.2f}")
+
+    return graph
+
+
+def make_dot_paths(prob_matrix, treatment_var, response_var, *,
+                   alpha=0.6, labels=None):
+    """Draw all simple directed paths between a single pair of variables.
+
+    Parameters
+    ----------
+    prob_matrix : array-like, shape (n_features, n_features)
+        Probability matrix where ``prob_matrix[j, i] = P(X_i -> X_j)``.
+    treatment_var : int or single-element array-like of int
+        Single treatment (cause) variable index.
+    response_var : int or single-element array-like of int
+        Single response (effect) variable index.
+    alpha : float, optional (default=0.6)
+        Edge probability threshold. Edges with ``P < alpha`` are excluded.
+    labels : array-like, optional (default=None)
+        Node labels. Defaults to ``x1, x2, ...``.
+
+    Returns
+    -------
+    graph : graphviz.Digraph
+    """
+    P = np.nan_to_num(np.asarray(prob_matrix, dtype=float))
+    if P.ndim != 2 or P.shape[0] != P.shape[1]:
+        raise ValueError("prob_matrix must be a square 2D array.")
+    n = P.shape[0]
+    if not (0.0 <= float(alpha) <= 1.0):
+        raise ValueError("alpha must be in [0, 1].")
+
+    if treatment_var is None or response_var is None:
+        raise ValueError(
+            "Both treatment_var and response_var are required for paths mode.")
+
+    if isinstance(treatment_var, (int, np.integer)):
+        treatment_var = [treatment_var]
+    tvars = [int(v) for v in treatment_var]
+    for v in tvars:
+        if not (0 <= v < n):
+            raise ValueError(
+                f"treatment index {v} is out of range [0, {n}).")
+
+    if isinstance(response_var, (int, np.integer)):
+        response_var = [response_var]
+    rvars = [int(v) for v in response_var]
+    for v in rvars:
+        if not (0 <= v < n):
+            raise ValueError(
+                f"response index {v} is out of range [0, {n}).")
+
+    if len(tvars) != 1 or len(rvars) != 1:
+        raise ValueError(
+            "'paths' mode requires a single treatment_var and "
+            "a single response_var.")
+    tv, rv = tvars[0], rvars[0]
+    if tv == rv:
+        raise ValueError(
+            "treatment_var and response_var must be different.")
+
+    mask = P >= float(alpha)
+    np.fill_diagonal(mask, False)
+
+    keep_nodes = {tv, rv}
+    kept_edges = set()
+    treatment_set = {tv}
+    response_set = {rv}
+
+    G = nx.DiGraph()
+    G.add_nodes_from(range(n))
+    rows, cols = np.where(mask)
+    G.add_edges_from((int(i), int(j)) for j, i in zip(rows, cols))
+    if nx.has_path(G, tv, rv):
+        for path in nx.all_simple_paths(G, tv, rv):
+            keep_nodes.update(path)
+            kept_edges.update(zip(path[:-1], path[1:]))
+
+    if labels is None:
+        labels_local = [f"x{i+1}" for i in range(n)]
+    else:
+        labels_local = list(labels)
+
+    graph = graphviz.Digraph(engine='dot')
+    if not keep_nodes:
+        return graph
+
+    for v in sorted(keep_nodes):
+        kwargs = {}
+        if v in treatment_set:
+            kwargs.update(style='filled', fillcolor='lightcoral')
+        elif v in response_set:
+            kwargs.update(style='filled', fillcolor='lightblue')
+        graph.node(labels_local[v], **kwargs)
+
+    for parent, child in kept_edges:
+        graph.edge(labels_local[parent], labels_local[child],
+                   label=f"{P[child, parent]:.2f}")
+
+    return graph
