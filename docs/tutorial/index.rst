@@ -46,4 +46,5 @@ Contents:
     high_dim_direct_lingam
     missingness_lingam
     abic_lingam
+    longitudinal_resit
     lewis

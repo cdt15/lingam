@@ -30,6 +30,7 @@ API Reference
     group_direct_lingam
     missingness_lingam
     abic_lingam
+    longitudinal_resit
     causal_effect
     lewis
     utils
