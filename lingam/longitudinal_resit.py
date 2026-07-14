@@ -150,6 +150,7 @@ class LongitudinalRESIT:
         B_lists = []
         A_lists = []
         adjacency_matrices_list = []
+        resampled_indices = []
 
         # Bootstrapping
         for i in range(n_sampling):
@@ -163,6 +164,7 @@ class LongitudinalRESIT:
             B_lists.append(self.B_list_)
             A_lists.append(self.A_list_)
             adjacency_matrices_list.append(self.adjacency_matrices_)
+            resampled_indices.append(indices)
 
         return LongitudinalRESITBootstrapResult(
             T,
@@ -171,6 +173,7 @@ class LongitudinalRESIT:
             A_lists,
             np.array(adjacency_matrices_list),
             self._is_common_graph,
+            resampled_indices,
         )
 
     @property
@@ -665,6 +668,7 @@ class LongitudinalRESITBootstrapResult(object):
         A_lists,
         adjacency_matrices_list,
         is_common_graph,
+        resampled_indices=None
     ):
         """Construct a BootstrapResult.
 
@@ -682,6 +686,8 @@ class LongitudinalRESITBootstrapResult(object):
             The combined adjacency matrices list by bootstrapping.
         is_common_graph : bool
             Whether the estimated graph is common across all time points or separate for each time point.
+        resampled_indices :  array-like, shape (n_sampling, resample_size), optional (default=None)
+            The list of original index of resampled samples.
         """
         self._n_timepoints = n_timepoints
         self._causal_orders = causal_orders
@@ -689,6 +695,7 @@ class LongitudinalRESITBootstrapResult(object):
         self._A_lists = A_lists
         self._adjacency_matrices_list = adjacency_matrices_list
         self._is_common_graph = is_common_graph
+        self._resampled_indices = resampled_indices
 
     @property
     def causal_orders_(self):
@@ -723,7 +730,20 @@ class LongitudinalRESITBootstrapResult(object):
             The list of estimated lag causal graphs for each bootstrap sample.
         """
         return self._A_lists
+    
+    @property
+    def resampled_indices_(self):
+        """The list of original index of resampled samples.
 
+        Returns
+        -------
+        resampled_indices_ : array-like, shape (n_sampling, resample_size)
+            The list of original index of resampled samples,
+            where ``n_sampling`` is the number of bootstrap sampling
+            and ``resample_size`` is the size of each subsample set.
+        """
+        return self._resampled_indices
+    
     def get_causal_direction_counts(
         self,
         n_directions=None,
@@ -856,14 +876,9 @@ class LongitudinalRESITBootstrapResult(object):
         probabilities : array-like
             List of bootstrap probability matrix.
         """
-        if self._is_common_graph:
-            T = 1
-        else:
-            T = self._n_timepoints
-
         # Count directed acyclic graphs
         probs = np.zeros(self._adjacency_matrices_list[0].shape)
-        for t in range(T):
+        for t in range(self._n_timepoints):
             for am in self._adjacency_matrices_list:
                 probs[t] += np.where(np.abs(am[t]) > 0.0, 1.0, 0.0)
             probs[t] = probs[t] / len(self._adjacency_matrices_list)
