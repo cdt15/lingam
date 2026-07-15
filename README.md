@@ -1,13 +1,21 @@
-# LiNGAM - Discovery of non-gaussian linear causal models
+<div align="center">
 
+# 🔗 LiNGAM - Discovery of non-gaussian linear causal models
+
+[![PyPI version](https://img.shields.io/pypi/v/lingam.svg)](https://pypi.org/project/lingam/)
+[![Python versions](https://img.shields.io/pypi/pyversions/lingam.svg)](https://pypi.org/project/lingam/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/cdt15/lingam/blob/master/LICENSE)
 [![Read the Docs](https://readthedocs.org/projects/lingam/badge/?version=latest)](https://lingam.readthedocs.io/)
+[![Downloads](https://static.pepy.tech/badge/lingam)](https://pepy.tech/project/lingam)
+
+</div>
 
 LiNGAM is a new method for estimating structural equation models or linear Bayesian networks. It is based on using the non-Gaussianity of the data.
 
 * [The LiNGAM Project](https://sites.google.com/view/sshimizu06/lingam)
 
-## Requirements
+
+## 📦 Requirements
 
 * Python3
 * numpy
@@ -22,7 +30,7 @@ LiNGAM is a new method for estimating structural equation models or linear Bayes
 * autograd
 
 
-## Installation
+## 🛠️ Installation
 
 To install lingam package, use `pip` as follows:
 
@@ -30,7 +38,7 @@ To install lingam package, use `pip` as follows:
 pip install lingam
 ```
 
-## Usage
+## 🚀 Usage
 
 ```python
 import numpy as np
@@ -50,26 +58,26 @@ print(model.causal_order_)
 print(model.adjacency_matrix_)
 ```
 
-## Documentation
+## 📚 Documentation
 
 [Tutorial and API reference](https://lingam.readthedocs.io/)
 
 [Tutorial slides](https://speakerdeck.com/sshimizu2006/lingam-python-package)
 
-## Examples
+## 💡 Examples
 
 We provide several examples of running the LiNGAM algorithm in Jupyter Notebook.
  [lingam/examples](./examples)
 
-## License
+## 📄 License
 
 This project is licensed under the terms of the [MIT license](./LICENSE).
 
-## Contribution
+## 🤝 Contribution
 
 For guidelines how to contribute to lingam package, take a look at [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## References
+## 📖 References
 
 ### Package
 
