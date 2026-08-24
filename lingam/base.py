@@ -120,7 +120,7 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
 
         return p_values
 
-    def _estimate_adjacency_matrix(self, X, prior_knowledge=None):
+    def _estimate_adjacency_matrix(self, X, prior_knowledge=None, adaptive_lasso=True):
         """Estimate adjacency matrix by causal order.
 
         Parameters
@@ -130,6 +130,8 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
             and n_features is the number of features.
         prior_knowledge : array-like, shape (n_variables, n_variables), optional (default=None)
             Prior knowledge matrix.
+        adaptive_lasso : boolean, optional (default=True)
+            If True, prune coefficients with Adaptive Lasso. If False, use ordinary LinearRegression.
 
         Returns
         -------
@@ -153,7 +155,12 @@ class _BaseLiNGAM(BootstrapMixin, metaclass=ABCMeta):
             if len(predictors) == 0:
                 continue
 
-            B[target, predictors] = predict_adaptive_lasso(X, predictors, target)
+            if adaptive_lasso:
+                B[target, predictors] = predict_adaptive_lasso(X, predictors, target)
+            else:
+                lr = LinearRegression()
+                lr.fit(X[:, predictors], X[:, target])
+                B[target, predictors] = lr.coef_
 
         self._adjacency_matrix = B
         return self
