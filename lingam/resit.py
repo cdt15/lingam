@@ -250,11 +250,15 @@ class RESIT(_BaseLiNGAM):
             Original data, where n_samples is the number of samples
             and n_features is the number of features.
 
-        Returns
-        -------
-        independence_p_values : array-like, shape (n_features, n_features)
-            **RESIT always returns zero**
+        Raises
+        ------
+        NotImplementedError
+            **Because RESIT is a nonlinear algorithm, the linear error
+            computation used by other estimators does not apply, and this
+            method is not implemented for RESIT.**
         """
-        n_features = X.shape[1]
-        p_values = np.zeros([n_features, n_features])
-        return p_values
+        raise NotImplementedError(
+            "RESIT does not implement get_error_independence_p_values, "
+            "because its regressions are nonlinear and the residuals "
+            "cannot be computed as X - B @ X."
+        )

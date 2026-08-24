@@ -28,7 +28,12 @@ def test_fit_success():
     te = model.estimate_total_effect(X, 0, 3)
 
     # check get_error_independence_p_values (Not implement)
-    p_values = model.get_error_independence_p_values(X)
+    try:
+        model.get_error_independence_p_values(X)
+    except NotImplementedError:
+        pass
+    else:
+        raise AssertionError
 
 
 def test_fit_invalid():
