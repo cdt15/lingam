@@ -28,6 +28,7 @@ class DirectLiNGAM(_BaseLiNGAM):
         prior_knowledge=None,
         apply_prior_knowledge_softly=False,
         measure="pwling",
+        adaptive_lasso=True,
     ):
         """Construct a DirectLiNGAM model.
 
@@ -48,11 +49,15 @@ class DirectLiNGAM(_BaseLiNGAM):
         measure : {'pwling', 'kernel', 'pwling_fast'}, optional (default='pwling')
             Measure to evaluate independence: 'pwling' [2]_ or 'kernel' [1]_.
             For fast execution with GPU, 'pwling_fast' can be used (culingam is required).
+        adaptive_lasso : boolean, optional (default=True)
+            If True, prune the adjacency matrix with Adaptive Lasso.
+            If False, use ordinary LinearRegression instead.
         """
         super().__init__(random_state)
         self._Aknw = prior_knowledge
         self._apply_prior_knowledge_softly = apply_prior_knowledge_softly
         self._measure = measure
+        self._adaptive_lasso = adaptive_lasso
 
         if self._Aknw is not None:
             self._Aknw = check_array(self._Aknw)
@@ -113,7 +118,9 @@ class DirectLiNGAM(_BaseLiNGAM):
                 ]
 
         self._causal_order = K
-        return self._estimate_adjacency_matrix(X, prior_knowledge=self._Aknw)
+        return self._estimate_adjacency_matrix(
+            X, prior_knowledge=self._Aknw, adaptive_lasso=self._adaptive_lasso
+        )
 
     def _extract_partial_orders(self, pk):
         """Extract partial orders from prior knowledge."""

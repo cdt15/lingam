@@ -43,6 +43,10 @@ def test_fit_success():
 
     p_values = model.get_error_independence_p_values(X)
 
+    # adaptive_lasso=False
+    model = DirectLiNGAM(adaptive_lasso=False)
+    model.fit(X)
+
 
 def test_fit_invalid_data():
     # Not array data
