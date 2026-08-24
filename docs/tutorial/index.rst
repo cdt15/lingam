@@ -22,6 +22,7 @@ Basic DAG models
     bootstrap
     bootstrap_with_imputation
     pk_direct
+    directlingam_gpu
     resit
     pk_resit
     group_direct_lingam
