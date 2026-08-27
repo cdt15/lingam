@@ -32,7 +32,10 @@ def test_fit_success():
     assert len(model.causal_order_) == 4
 
     model.estimate_total_effect(X_list[0], 0, 0)
-    model.get_error_independence_p_values(X_list[0])
+
+    # check get_error_independence_p_values (Not implement)
+    with pytest.raises(NotImplementedError):
+        model.get_error_independence_p_values(X_list[0])
 
 
 def test_fit_invalid():
