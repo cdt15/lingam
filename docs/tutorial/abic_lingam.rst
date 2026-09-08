@@ -39,6 +39,7 @@ In this example, we need to import ``numpy``, ``pandas``, and
     import lingam
     from lingam.utils import make_dot
     from lingam.utils import MGGD, MGGDEstimator
+    from lingam.experimental import ABICLiNGAM
     
     print([np.__version__, pd.__version__, graphviz.__version__, lingam.__version__])
     
@@ -209,7 +210,7 @@ MGGD estimator.
     beta_hat = float(mggd_est.beta)
     print(f"beta_hat: {beta_hat}")
     
-    model = lingam.ABICLiNGAM(beta=beta_hat)
+    model = ABICLiNGAM(beta=beta_hat)
     model.fit(X)
 
 
