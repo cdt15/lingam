@@ -26,7 +26,6 @@ from .group_direct_lingam import GroupDirectLiNGAM
 from .group_lingam import GroupLiNGAM
 from .missingness_lingam import mLiNGAM
 from .multi_group_resit import MultiGroupRESIT
-from .abic_lingam import ABICLiNGAM
 from .lewis import LEWIS
 from .longitudinal_resit import LongitudinalRESIT
 
@@ -57,7 +56,6 @@ __all__ = [
     "GroupLiNGAM",
     "mLiNGAM",
     "MultiGroupRESIT",
-    "ABICLiNGAM",
     "LEWIS",
     "LongitudinalRESIT",
 ]

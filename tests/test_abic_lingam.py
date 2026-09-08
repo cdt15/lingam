@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
-from lingam.abic_lingam import ABICLiNGAM
+from lingam.experimental.abic_lingam import ABICLiNGAM
 from lingam.utils._mggd import MGGD
 
 

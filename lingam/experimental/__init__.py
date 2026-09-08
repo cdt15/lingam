@@ -5,8 +5,10 @@ The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 
 from .oct import OutOfSampleCausalTuning
 from .cdg import CausalDataGenerator
+from .abic_lingam import ABICLiNGAM
 
 __all__ = [
     "OutOfSampleCausalTuning",
     "CausalDataGenerator",
+    "ABICLiNGAM",
 ]

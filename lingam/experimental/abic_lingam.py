@@ -14,8 +14,8 @@ import functools
 from sklearn.utils import check_array, resample
 from sklearn.linear_model import LinearRegression
 
-from .base import _BaseLiNGAM
-from .bootstrap import BootstrapResult
+from ..base import _BaseLiNGAM
+from ..bootstrap import BootstrapResult
 
 
 class ABICLiNGAM(_BaseLiNGAM):
