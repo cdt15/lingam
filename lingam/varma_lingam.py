@@ -173,6 +173,7 @@ class VARMALiNGAM:
         total_effects = np.zeros([n_sampling, n_features, n_features * (1 + p)])
 
         adjacency_matrices = []
+        causal_orders = []
         for i in range(n_sampling):
             sampled_residuals = resample(self._residuals, n_samples=n_samples)
 
@@ -202,6 +203,7 @@ class VARMALiNGAM:
             omega = self._adjacency_matrices[1]
             am = np.concatenate([*psi, *omega], axis=1)
             adjacency_matrices.append(am)
+            causal_orders.append(list(self._causal_order))
 
             # total effects
             for c, to in enumerate(reversed(self._causal_order)):
@@ -220,7 +222,12 @@ class VARMALiNGAM:
 
         self._criterion = criterion
 
-        return VARMABootstrapResult(adjacency_matrices, total_effects, self._order)
+        return VARMABootstrapResult(
+            adjacency_matrices,
+            total_effects,
+            self._order,
+            causal_orders=causal_orders,
+        )
 
     def estimate_total_effect(self, X, E, from_index, to_index, from_lag=0):
         """Estimate total effect using causal model.
@@ -507,7 +514,7 @@ class VARMALiNGAM:
 class VARMABootstrapResult(BootstrapResult):
     """The result of bootstrapping for Time series algorithm."""
 
-    def __init__(self, adjacency_matrices, total_effects, order):
+    def __init__(self, adjacency_matrices, total_effects, order, causal_orders=None):
         """Construct a BootstrapResult.
 
         Parameters
@@ -516,9 +523,15 @@ class VARMABootstrapResult(BootstrapResult):
             The adjacency matrix list by bootstrapping.
         total_effects : array-like, shape (n_sampling)
             The total effects list by bootstrapping.
+        order : tuple
+            The order (p, q) of the VARMA model.
+        causal_orders : array-like, shape (n_sampling, n_features), optional (default=None)
+            The list of causal orders by bootstrapping.
         """
         self._order = order
-        super().__init__(adjacency_matrices, total_effects)
+        super().__init__(
+            adjacency_matrices, total_effects, causal_orders=causal_orders
+        )
 
     def get_paths(
         self, from_index, to_index, from_lag=0, to_lag=0, min_causal_effect=None

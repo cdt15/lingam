@@ -149,15 +149,19 @@ class MultiGroupRESIT:
         total_effects_list = np.zeros(
             [len(X_list), n_sampling, self._n_features, self._n_features]
         )
+        causal_orders = []
         for n in range(n_sampling):
             resampled_X_list = [resample(X) for X in X_list]
             self.fit(resampled_X_list)
+            causal_orders.append(list(self._causal_order))
             for i, am in enumerate(self._adjacency_matrices):
                 adjacency_matrices_list[i][n] = am
 
         result_list = []
         for am, te in zip(adjacency_matrices_list, total_effects_list):
-            result_list.append(BootstrapResult(am, te))
+            result_list.append(
+                BootstrapResult(am, te, causal_orders=causal_orders)
+            )
 
         return result_list
 

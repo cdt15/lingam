@@ -261,6 +261,7 @@ class ABICLiNGAM(_BaseLiNGAM):
         total_effects = anp.zeros((n_sampling, d, d))
         index = anp.arange(X.shape[0])
         resampled_indices = []
+        causal_orders = []
 
         for i in range(n_sampling):
             resampled_X, resampled_index = resample(X, index)
@@ -269,6 +270,7 @@ class ABICLiNGAM(_BaseLiNGAM):
             adjacency_matrices[i] = self._adjacency_matrix
             Bs[i] = self._B
             Omegas[i] = self._omega
+            causal_orders.append(list(self._causal_order))
 
             # Calculate total effects
             for c, from_ in enumerate(self._causal_order):
@@ -286,6 +288,7 @@ class ABICLiNGAM(_BaseLiNGAM):
             Omegas,
             total_effects,
             resampled_indices=resampled_indices,
+            causal_orders=causal_orders,
         )
 
     def _acyclicity_penalty(self, W, K=None):
@@ -566,6 +569,7 @@ class ABICBootstrapResult(BootstrapResult):
         error_covariance_matrices,
         total_effects,
         resampled_indices=None,
+        causal_orders=None,
     ):
         """Construct a BootstrapResult.
 
@@ -581,9 +585,14 @@ class ABICBootstrapResult(BootstrapResult):
             The total effects list by bootstrapping.
         resampled_indices : list of array-like, shape (n_sampling), optional (default=None)
             The list of resampled indices used in bootstrapping.
+        causal_orders : array-like, shape (n_sampling, n_features), optional (default=None)
+            The list of causal orders by bootstrapping.
         """
         super().__init__(
-            adjacency_matrices, total_effects, resampled_indices=resampled_indices
+            adjacency_matrices,
+            total_effects,
+            resampled_indices=resampled_indices,
+            causal_orders=causal_orders,
         )
         self._coefficient_matrices = coefficient_matrices
         self._error_covariance_matrices = error_covariance_matrices

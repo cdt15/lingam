@@ -322,6 +322,7 @@ class GroupDirectLiNGAM:
         total_effects = np.zeros([n_sampling, X.shape[1], X.shape[1]])
         index = np.arange(X.shape[0])
         resampled_indices = []
+        causal_orders = []
         for i in range(n_sampling):
             resampled_X, resampled_index = resample(X, index)
             self.fit(resampled_X, groups)
@@ -337,5 +338,11 @@ class GroupDirectLiNGAM:
                             )
 
             resampled_indices.append(resampled_index)
+            causal_orders.append(list(self._causal_order))
 
-        return BootstrapResult(adjacency_matrices, total_effects, resampled_indices=resampled_indices)
+        return BootstrapResult(
+            adjacency_matrices,
+            total_effects,
+            resampled_indices=resampled_indices,
+            causal_orders=causal_orders,
+        )

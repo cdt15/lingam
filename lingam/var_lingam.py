@@ -152,6 +152,7 @@ class VARLiNGAM:
         )
 
         adjacency_matrices = []
+        causal_orders = []
         for i in range(n_sampling):
             sampled_residuals = resample(residuals, n_samples=n_samples)
 
@@ -174,6 +175,7 @@ class VARLiNGAM:
             self.fit(resampled_X)
             am = np.concatenate([*self._adjacency_matrices], axis=1)
             adjacency_matrices.append(am)
+            causal_orders.append(list(self._causal_order))
 
             # total effects
             for c, to in enumerate(reversed(self._causal_order)):
@@ -192,7 +194,9 @@ class VARLiNGAM:
 
         self._criterion = criterion
 
-        return VARBootstrapResult(adjacency_matrices, total_effects)
+        return VARBootstrapResult(
+            adjacency_matrices, total_effects, causal_orders=causal_orders
+        )
 
     def estimate_total_effect(self, X, from_index, to_index, from_lag=0):
         """Estimate total effect using causal model.
@@ -441,7 +445,7 @@ class VARLiNGAM:
 class VARBootstrapResult(BootstrapResult):
     """The result of bootstrapping for Time series algorithm."""
 
-    def __init__(self, adjacency_matrices, total_effects):
+    def __init__(self, adjacency_matrices, total_effects, causal_orders=None):
         """Construct a BootstrapResult.
 
         Parameters
@@ -450,8 +454,12 @@ class VARBootstrapResult(BootstrapResult):
             The adjacency matrix list by bootstrapping.
         total_effects : array-like, shape (n_sampling)
             The total effects list by bootstrapping.
+        causal_orders : array-like, shape (n_sampling, n_features), optional (default=None)
+            The list of causal orders by bootstrapping.
         """
-        super().__init__(adjacency_matrices, total_effects)
+        super().__init__(
+            adjacency_matrices, total_effects, causal_orders=causal_orders
+        )
 
     def get_paths(
         self, from_index, to_index, from_lag=0, to_lag=0, min_causal_effect=None

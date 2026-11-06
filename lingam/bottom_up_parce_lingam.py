@@ -597,10 +597,12 @@ class BottomUpParceLiNGAM:
         # Bootstrapping
         adjacency_matrices = np.zeros([n_sampling, X.shape[1], X.shape[1]])
         total_effects = np.zeros([n_sampling, X.shape[1], X.shape[1]])
+        causal_orders = []
         for i in range(n_sampling):
             resampled_X = resample(X)
             self.fit(resampled_X)
             adjacency_matrices[i] = self._adjacency_matrix
+            causal_orders.append(list(self._causal_order))
 
             # Calculate total effects
             for c, from_ in enumerate(self._causal_order):
@@ -615,4 +617,6 @@ class BottomUpParceLiNGAM:
                             from_, to
                         )
 
-        return BootstrapResult(adjacency_matrices, total_effects)
+        return BootstrapResult(
+            adjacency_matrices, total_effects, causal_orders=causal_orders
+        )

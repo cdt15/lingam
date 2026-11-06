@@ -44,6 +44,7 @@ class BootstrapMixin:
         total_effects = np.zeros([n_sampling, X.shape[1], X.shape[1]])
         index = np.arange(X.shape[0])
         resampled_indices = []
+        causal_orders = []
         for i in range(n_sampling):
             resampled_X, resampled_index = resample(X, index)
             self.fit(resampled_X)
@@ -57,14 +58,26 @@ class BootstrapMixin:
                     )
 
             resampled_indices.append(resampled_index)
+            causal_orders.append(list(self._causal_order))
 
-        return BootstrapResult(adjacency_matrices, total_effects, resampled_indices=resampled_indices)
+        return BootstrapResult(
+            adjacency_matrices,
+            total_effects,
+            resampled_indices=resampled_indices,
+            causal_orders=causal_orders,
+        )
 
 
 class BootstrapResult(object):
     """The result of bootstrapping."""
 
-    def __init__(self, adjacency_matrices, total_effects, resampled_indices=None):
+    def __init__(
+        self,
+        adjacency_matrices,
+        total_effects,
+        resampled_indices=None,
+        causal_orders=None,
+    ):
         """Construct a BootstrapResult.
 
         Parameters
@@ -75,10 +88,13 @@ class BootstrapResult(object):
             The total effects list by bootstrapping.
         resampled_indices :  array-like, shape (n_sampling, resample_size), optional (default=None)
             The list of original index of resampled samples.
+        causal_orders : array-like, shape (n_sampling, n_features), optional (default=None)
+            The list of causal orders by bootstrapping.
         """
         self._adjacency_matrices = adjacency_matrices
         self._total_effects = total_effects
         self._resampled_indices = resampled_indices
+        self._causal_orders = causal_orders
 
     @property
     def adjacency_matrices_(self):
@@ -116,6 +132,18 @@ class BootstrapResult(object):
             and ``resample_size`` is the size of each subsample set.
         """
         return self._resampled_indices
+
+    @property
+    def causal_orders_(self):
+        """The list of causal orders by bootstrapping.
+
+        Returns
+        -------
+        causal_orders_ : array-like, shape (n_sampling, n_features), or None
+            The list of causal orders, where ``n_sampling`` is
+            the number of bootstrap sampling. None if not provided.
+        """
+        return self._causal_orders
 
     def get_causal_direction_counts(
         self,
