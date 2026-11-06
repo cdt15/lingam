@@ -15,6 +15,7 @@ from .bootstrap import BootstrapResult
 from .direct_lingam import DirectLiNGAM
 from .hsic import hsic_test_gamma
 from .utils import predict_adaptive_lasso, find_all_paths, calculate_total_effect
+# from .utils import calculate_total_effect_matrix, calculate_total_effect_var
 
 
 class VARLiNGAM:
@@ -191,6 +192,18 @@ class VARLiNGAM:
                         total_effects[
                             i, to, from_ + n_features * (lag + 1)
                         ] = self.estimate_total_effect2(n_features, from_, to, lag + 1)
+
+            # total effects (calculate_total_effect_matrix / calculate_total_effect_var version)
+            # total_effects[i, :, :n_features] = calculate_total_effect_matrix(
+            #     self._adjacency_matrices[0], self._causal_order
+            # )
+            # psi = calculate_total_effect_var(
+            #     self._adjacency_matrices[0], self._adjacency_matrices[1:], self._lags
+            # )
+            # for lag in range(self._lags):
+            #     total_effects[
+            #         i, :, n_features * (lag + 1) : n_features * (lag + 2)
+            #     ] = psi[lag + 1]
 
         self._criterion = criterion
 

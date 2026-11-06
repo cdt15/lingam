@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.utils import check_array, resample
 
 from .utils import find_all_paths, calculate_total_effect
+# from .utils import calculate_total_effect_matrix
 
 
 class BootstrapMixin:
@@ -56,6 +57,11 @@ class BootstrapMixin:
                     total_effects[i, to, from_] = calculate_total_effect(
                         self._adjacency_matrix, from_, to
                     )
+
+            # Calculate total effects (matrix version)
+            # total_effects[i] = calculate_total_effect_matrix(
+            #     self._adjacency_matrix, self._causal_order
+            # )
 
             resampled_indices.append(resampled_index)
             causal_orders.append(list(self._causal_order))

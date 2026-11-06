@@ -46,6 +46,8 @@ __all__ = [
     "evaluate_model_fit",
     "calculate_distance_from_root_nodes",
     "calculate_total_effect",
+    "calculate_total_effect_matrix",
+    "calculate_total_effect_var",
     "get_common_edge_probabilities",
     "print_common_edge_directions",
     "make_dot_for_nan_probability_matrix",
@@ -1151,6 +1153,91 @@ def calculate_total_effect(adjacency_matrix, from_index, to_index, is_continuous
     total_effect = sum(effects)
 
     return total_effect
+
+
+def calculate_total_effect_matrix(adjacency_matrix, causal_order):
+    """Calculate the total effects between all pairs of variables.
+
+    The total effect matrix is computed as ``(I - B)^-1 - I``, where ``B`` is
+    the adjacency matrix. This equals the sum of the products of coefficients
+    over all directed paths, as ``calculate_total_effect`` does for a single pair.
+    Only effects from a variable to the variables that come later in
+    ``causal_order`` are kept; all other elements are set to zero.
+
+    Parameters
+    ----------
+    adjacency_matrix : array_like, shape (n_features, n_features)
+        The adjacency matrix, where ``adjacency_matrix[to, from]`` is the
+        coefficient of the edge ``from -> to``. NaN elements are treated as 0.
+    causal_order : array_like, shape (n_features,)
+        The causal order of the variables, i.e. a permutation of
+        ``0, ..., n_features - 1`` sorted from upstream to downstream.
+
+    Returns
+    -------
+    total_effects : numpy.ndarray, shape (n_features, n_features)
+        ``total_effects[to, from]`` is the total effect of ``from`` on ``to``.
+        The diagonal is zero.
+    """
+
+    adjacency_matrix = np.nan_to_num(adjacency_matrix)
+    n_features = adjacency_matrix.shape[0]
+
+    identity = np.eye(n_features)
+    full = np.linalg.inv(identity - adjacency_matrix) - identity
+
+    # keep only the effects from a variable to variables later in causal_order
+    rank = np.empty(n_features, dtype=int)
+    rank[causal_order] = np.arange(n_features)
+    mask = rank[:, np.newaxis] > rank[np.newaxis, :]
+
+    return np.where(mask, full, 0.0)
+
+
+def calculate_total_effect_var(B0, Bs, H):
+    """Calculate the total effects of a structural VAR model for each lag.
+
+    For the model ``x(t) = B0 x(t) + sum_{tau=1}^{p} B_tau x(t - tau) + e(t)``,
+    this function computes ``Psi_h = Phi_h A`` for ``h = 0, ..., H``, where
+    ``A = (I - B0)^-1``, ``M_tau = A B_tau``, ``Phi_0 = I`` and
+    ``Phi_h = sum_{k=1}^{min(h, p)} M_k Phi_{h-k}``.
+    All matrices are built explicitly.
+
+    Parameters
+    ----------
+    B0 : array_like, shape (n_features, n_features)
+        The instantaneous coefficient matrix. ``B0[to, from]`` is the
+        coefficient of the edge ``from -> to``. It must correspond to a DAG.
+    Bs : sequence of array_like, each of shape (n_features, n_features)
+        The lagged coefficient matrices ``[B_1, ..., B_p]``.
+    H : int
+        The maximum horizon.
+
+    Returns
+    -------
+    total_effects : numpy.ndarray, shape (H + 1, n_features, n_features)
+        ``total_effects[h, to, from]`` is the total effect of ``x_from(t)``
+        on ``x_to(t + h)``. ``total_effects[0]`` equals ``(I - B0)^-1``, so
+        its diagonal is 1 unlike ``calculate_total_effect_matrix``.
+    """
+    B0 = np.asarray(B0, dtype=float)
+    Bs = [np.asarray(B, dtype=float) for B in Bs]
+    n_features = B0.shape[0]
+    n_lags = len(Bs)
+
+    identity = np.eye(n_features)
+    A = np.linalg.inv(identity - B0)
+    Ms = [A @ B for B in Bs]
+
+    Phi = np.empty((H + 1, n_features, n_features))
+    Phi[0] = identity
+    for h in range(1, H + 1):
+        Phi[h] = sum(
+            (Ms[k - 1] @ Phi[h - k] for k in range(1, min(h, n_lags) + 1)),
+            np.zeros((n_features, n_features)),
+        )
+
+    return Phi @ A
 
 
 def get_cuda_version():
