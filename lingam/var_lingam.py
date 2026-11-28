@@ -15,12 +15,8 @@ from .base import _BaseLiNGAM
 from .bootstrap import BootstrapResult
 from .direct_lingam import DirectLiNGAM
 from .hsic import hsic_test_gamma
-from .utils import (
-    calculate_total_effect,
-    calculate_total_effect_var,
-    find_all_paths,
-    predict_adaptive_lasso,
-)
+from .utils import predict_adaptive_lasso, find_all_paths, calculate_total_effect
+from .utils import calculate_total_effect_matrix, calculate_total_effect_var
 
 
 class VARLiNGAM:
@@ -183,19 +179,17 @@ class VARLiNGAM:
             adjacency_matrices.append(am)
             causal_orders.append(list(self._causal_order))
 
-            # Instantaneous effects retain the causal order and zero diagonal.
-            for c, to in enumerate(reversed(self._causal_order)):
-                for from_ in self._causal_order[: n_features - (c + 1)]:
-                    total_effects[i, to, from_] = self.estimate_total_effect2(
-                        n_features, from_, to
-                    )
-
-            if self._lags:
-                contemporaneous, *lagged = self._adjacency_matrices
-                effects = calculate_total_effect_var(contemporaneous, lagged, self._lags)
-                for lag, effect in enumerate(effects[1:], start=1):
-                    start = n_features * lag
-                    total_effects[i, :, start : start + n_features] = effect
+            # total effects
+            total_effects[i, :, :n_features] = calculate_total_effect_matrix(
+                self._adjacency_matrices[0], self._causal_order
+            )
+            psi = calculate_total_effect_var(
+                self._adjacency_matrices[0], self._adjacency_matrices[1:], self._lags
+            )
+            for lag in range(self._lags):
+                total_effects[
+                    i, :, n_features * (lag + 1) : n_features * (lag + 2)
+                ] = psi[lag + 1]
 
         self._criterion = criterion
 
@@ -278,6 +272,7 @@ class VARLiNGAM:
             Estimated total effect.
         """
         if from_lag == 0:
+            # Check from/to causal order
             from_order = self._causal_order.index(from_index)
             to_order = self._causal_order.index(to_index)
             if from_order > to_order:
@@ -290,6 +285,7 @@ class VARLiNGAM:
                 self._adjacency_matrices[0], from_index, to_index
             )
 
+        # Lagged effects include paths through earlier time slices.
         contemporaneous, *lagged = self._adjacency_matrices
         check_scalar(from_lag, "from_lag", Integral, min_val=1, max_val=len(lagged))
         check_scalar(from_index, "from_index", Integral, min_val=0, max_val=n_features - 1)

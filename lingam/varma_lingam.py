@@ -5,10 +5,11 @@ The LiNGAM Project: https://sites.google.com/view/sshimizu06/lingam
 
 import itertools
 import warnings
+from numbers import Integral
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from sklearn.utils import check_array, resample
+from sklearn.utils import check_array, check_scalar, resample
 from statsmodels.tsa.statespace.varmax import VARMAX
 
 from .base import _BaseLiNGAM
@@ -16,6 +17,7 @@ from .bootstrap import BootstrapResult
 from .direct_lingam import DirectLiNGAM
 from .hsic import hsic_test_gamma
 from .utils import predict_adaptive_lasso, find_all_paths, calculate_total_effect
+from .utils import calculate_total_effect_matrix, calculate_total_effect_var
 
 
 class VARMALiNGAM:
@@ -205,20 +207,15 @@ class VARMALiNGAM:
             adjacency_matrices.append(am)
             causal_orders.append(list(self._causal_order))
 
-            # total effects
-            for c, to in enumerate(reversed(self._causal_order)):
-                # time t
-                for from_ in self._causal_order[: n_features - (c + 1)]:
-                    total_effects[i, to, from_] = self.estimate_total_effect2(
-                        n_features, from_, to
-                    )
-
-                # time t-tau
-                for lag in range(p):
-                    for from_ in range(n_features):
-                        total_effects[i, to, from_ + n_features * (lag + 1)] = (
-                            self.estimate_total_effect2(n_features, from_, to, lag + 1)
-                        )
+            # total effects (only psi is used; see estimate_total_effect2)
+            total_effects[i, :, :n_features] = calculate_total_effect_matrix(
+                psi[0], self._causal_order
+            )
+            effects = calculate_total_effect_var(psi[0], psi[1:], p)
+            for lag in range(p):
+                total_effects[
+                    i, :, n_features * (lag + 1) : n_features * (lag + 2)
+                ] = effects[lag + 1]
 
         self._criterion = criterion
 
@@ -302,20 +299,31 @@ class VARMALiNGAM:
 
         Parameters
         ----------
-        n_features :
+        n_features : int
             The number of features.
-        from_index :
+        from_index : int
             Index of source variable to estimate total effect.
-        to_index :
+        to_index : int
             Index of destination variable to estimate total effect.
+        from_lag : int, optional (default=0)
+            Lag of the source variable relative to the destination, up to the
+            fitted AR order. Zero requests an instantaneous effect.
 
         Returns
         -------
         total_effect : float
             Estimated total effect.
+
+        Notes
+        -----
+        Only the AR coefficients (psi) are used. The MA terms act on past
+        external influences, which are not changed by an intervention on
+        the observed variables.
         """
-        # Check from/to causal order
+        psi0, *psi_lagged = self._adjacency_matrices[0]
+
         if from_lag == 0:
+            # Check from/to causal order
             from_order = self._causal_order.index(from_index)
             to_order = self._causal_order.index(to_index)
             if from_order > to_order:
@@ -324,19 +332,14 @@ class VARMALiNGAM:
                     f"the causal order of the destination variable (to_index={to_index}) "
                     f"is earlier than the source variable (from_index={from_index})."
                 )
+            return calculate_total_effect(psi0, from_index, to_index)
 
-        # concat psi and omega
-        psi = self._adjacency_matrices[0]
-        am = np.concatenate([*psi], axis=1)
-        am = np.pad(am, [(0, am.shape[1] - am.shape[0]), (0, 0)])
-
-        # from_index + parents indices
-        from_index = from_index if from_lag == 0 else from_index + n_features
-
-        # Estimate total effect
-        effect = calculate_total_effect(am, from_index, to_index)
-
-        return effect
+        # Lagged effects include paths through earlier time slices.
+        check_scalar(from_lag, "from_lag", Integral, min_val=1, max_val=len(psi_lagged))
+        check_scalar(from_index, "from_index", Integral, min_val=0, max_val=n_features - 1)
+        check_scalar(to_index, "to_index", Integral, min_val=0, max_val=n_features - 1)
+        effects = calculate_total_effect_var(psi0, psi_lagged, int(from_lag))
+        return effects[int(from_lag), int(to_index), int(from_index)]
 
     def get_error_independence_p_values(self):
         """Calculate the p-value matrix of independence between error variables.

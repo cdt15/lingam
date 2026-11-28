@@ -2,9 +2,19 @@ import os
 
 import numpy as np
 import pandas as pd
+import pytest
+from threadpoolctl import threadpool_limits
 
 from lingam.direct_lingam import DirectLiNGAM
 from lingam.varma_lingam import VARMALiNGAM
+
+
+@pytest.fixture(autouse=True, scope="module")
+def _single_thread_blas():
+    # VARMAX repeats many tiny matrix operations; multi-threaded BLAS makes
+    # them orders of magnitude slower on many-core machines.
+    with threadpool_limits(limits=1, user_api="blas"):
+        yield
 
 def randnetbalanced(dims, samples, indegree, parminmax, errminmax):
     """
